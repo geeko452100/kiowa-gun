@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Kiowa Gun Club</title>
+    <meta name="description" content="Kiowa Gun Club is one of the oldest established shooting clubs in the central Kansas region, offering monthly matches, membership, and range facilities near Great Bend, KS.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="../index.html#home" class="logo">
+                <img src="../assets/kiowa-gun.avif" alt="Kiowa Gun Club emblem">
+                <span class="site-title">Kiowa Gun Club<br><small>Great Bend, Kansas</small></span>
+            </a>
+            <div class="hero-image">
+                <img src="../assets/gun-club.avif" alt="Kiowa Gun Club range">
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="../index.html#home">Home</a></li>
+                    <li><a href="calendar.html">Calendar</a></li>
+                    <li><a href="about.html">About Us / Map</a></li>
+                    <li><a href="rules.html">Range Rules</a></li>
+                    <li><a href="membership.html">Membership Info</a></li>
+                    <li><a href="matches.html">Matches</a></li>
+                    <li><a href="contact.html" aria-current="page">Contact Us</a></li>
+                    <li><a href="news.html">News</a></li>
+                    <li><a class="nra-link" href="https://membership.nra.org/" target="_blank" rel="noopener">Join the NRA</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" id="main">
+        <section id="contact" class="content-section">
+            <h1><strong>Let's Talk</h1>
+            <h2>Kiowa Gun Club</h2>
+            <p>
+                Mailing Address:
+                PO Box 562
+                Great Bend, KS  67530
+            </p>
+            <p>Email: <a href="mailto:kiowa369@outlook.com">kiowa369@outlook.com</a></p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Kiowa Gun Club. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

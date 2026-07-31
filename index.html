@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiowa Gun Club - Great Bend Kansas</title>
+    <meta name="description" content="Kiowa Gun Club is one of the oldest established shooting clubs in the central Kansas region, offering monthly matches, membership, and range facilities near Great Bend, KS.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="#" class="logo">
+                <img src="assets/kiowa-gun.avif" alt="Kiowa Gun Club emblem">
+                <span class="site-title">Kiowa Gun Club<br><small>Great Bend, Kansas</small></span>
+            </a>
+            <div class="hero-image">
+                    <img src="assets/gun-club.avif" alt="Kiowa Gun Club range">
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#home" aria-current="page">Home</a></li>
+                    <li><a href="pages/calendar.html">Calendar</a></li>
+                    <li><a href="pages/about.html">About Us / Map</a></li>
+                    <li><a href="pages/rules.html">Range Rules</a></li>
+                    <li><a href="pages/membership.html">Membership Info</a></li>
+                    <li><a href="pages/matches.html">Matches</a></li>
+                    <li><a href="pages/contact.html">Contact Us</a></li>
+                    <li><a href="pages/news.html">News</a></li>
+                    <li><a class="nra-link" href="https://membership.nra.org/" target="_blank" rel="noopener">Join the NRA</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" id="main">
+        <section id="welcome" class="content-section">
+            <h2>Welcome!</h2>
+            <p>
+                The Kiowa Gun Club, one of the oldest established clubs in the central Kansas Region, is a membership driven club. 
+                The club is proud to be a National Rifle Association affiliated club. 
+                Current active membership in the NRA is a requirement of club membership. 
+                Membership dues are $150 annually, membership period is from August 1st to July 31st.  
+            </p>
+        </section>
+
+        <section id="rules" class="content-section rules-summary">
+            <h2>Jeff Cooper's Rules of Gun Safety</h2>
+            <ol>
+                <li>All guns are always loaded.</li>
+                <li>Never let the muzzle cover anything you are not willing to destroy.</li>
+                <li>Keep your finger off the trigger until your sights are on the target.</li>
+                <li>Always be sure of your target and what is beyond it.</li>
+            </ol>
+            <p><a href="pages/rules.html">View full range rules &rarr;</a></p>
+        </section>
+
+        <section id="matches" class="content-section">
+            <h2>Scheduled Pistol Shoots 2026</h2>
+            <p>
+                Join us for monthly defensive pistol competitions held on the second Saturday of each month,
+                beginning in March, starting at 1:00 PM.
+            </p>
+            <p>
+                Cost is $15 per shooter after your first shoot, which is free. Entry fee includes immediate family.
+            </p>
+            <p><a href="pages/matches.html">View full match schedule &rarr;</a></p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Kiowa Gun Club. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

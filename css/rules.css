@@ -1,0 +1,14 @@
+/* Range Rules page (rules.html) */
+.safety-rules ol {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.safety-rules li {
+    margin-bottom: 10px;
+}
+
+.safety-rules h3 {
+    color: var(--color-text);
+    margin-bottom: 4px;
+}

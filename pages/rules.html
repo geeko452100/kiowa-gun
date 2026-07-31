@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Range Rules - Kiowa Gun Club</title>
+    <meta name="description" content="Kiowa Gun Club is one of the oldest established shooting clubs in the central Kansas region, offering monthly matches, membership, and range facilities near Great Bend, KS.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/rules-body.css">
+    <link rel="stylesheet" href="../css/rules.css">
+</head>
+<body>
+    <a href="#main" class="skip-link">Skip to main content</a>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="../index.html#home" class="logo">
+                <img src="../assets/kiowa-gun.avif" alt="Kiowa Gun Club emblem">
+                <span class="site-title">Kiowa Gun Club<br><small>Great Bend, Kansas</small></span>
+            </a>
+            <div class="hero-image">
+                <img src="../assets/gun-club.avif" alt="Kiowa Gun Club range">
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="../index.html#home">Home</a></li>
+                    <li><a href="calendar.html">Calendar</a></li>
+                    <li><a href="about.html">About Us / Map</a></li>
+                    <li><a href="rules.html" aria-current="page">Range Rules</a></li>
+                    <li><a href="membership.html">Membership Info</a></li>
+                    <li><a href="matches.html">Matches</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="news.html">News</a></li>
+                    <li><a class="nra-link" href="https://membership.nra.org/" target="_blank" rel="noopener">Join the NRA</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container" id="main">
+        <section id="rules" class="content-section safety-rules">
+            <h2>Range Rules</h2>
+            <p>The club establishes the following regulations for safe and responsible range use:</p>
+
+            <div class="rules-body">
+                <img src="../assets/guns-welcome.avif" alt="Firearms laid out at the Kiowa Gun Club range" class="rules-image">
+                <div class="rules-text">
+                    <h3>Flag and Firing Line Requirements</h3>
+                    <p>
+                        Range flag at gate must be raised anytime you are on the property. Range flag at firing line
+                        must be raised when shooting on the line or downrange. Rifle shooting must occur exclusively
+                        from designated firing lines.
+                    </p>
+
+                    <h3>Safety and Conduct Standards</h3>
+                    <p>
+                        Members must adhere to all safe handling guidelines and bear responsibility for guest behavior.
+                        The club prohibits artificial lighting during shooting. Eye and ear protection is required at
+                        all matches.
+                    </p>
+
+                    <h3>Firearm Restrictions</h3>
+                    <p>
+                        Center fire rifles, including .223 pistols, may not be fired toward or in pistol ranges #1 and
+                        #2. Shotgun use, hunting, and binary explosives are completely banned on the property.
+                    </p>
+
+                    <h3>Target and Range Management</h3>
+                    <p>
+                        Shooters must take all targets and trash they brought to the range home, and shoot only at
+                        appropriate targets, avoiding items that create ricochets. Live ammunition should be disposed
+                        of in designated containers.
+                    </p>
+
+                    <h3>Operational Policies</h3>
+                    <p>
+                        Members must follow the club calendar. A member must accompany guests at all times. No alcohol
+                        is permitted. Vehicles may access backstops on designated rock surfaces only.
+                    </p>
+
+                    <h3>Membership Terms</h3>
+                    <p>
+                        Annual dues of $150 are due by September 10th. New members complete mandatory range orientation
+                        before receiving membership cards.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Kiowa Gun Club. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

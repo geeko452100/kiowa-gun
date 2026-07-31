@@ -1,0 +1,123 @@
+/* Matches page (matches.html) */
+.match-schedule {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.match-schedule th,
+.match-schedule td {
+    text-align: left;
+    padding: 4px 12px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.match-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.match-results li {
+    padding: 3px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.results-pending {
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+.match-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.match-gallery img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+}
+
+.results-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+}
+
+.flyer-trigger {
+    display: block;
+    flex-shrink: 0;
+    width: 280px;
+    max-width: 40%;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0;
+    cursor: pointer;
+    line-height: 0;
+}
+
+@media (max-width: 768px) {
+    .results-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .flyer-trigger {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+.flyer-thumb {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    border-radius: 5px;
+}
+
+.flyer-dialog {
+    position: relative;
+    max-width: 95vw;
+    max-height: 95vh;
+    padding: 0;
+    background: transparent;
+    color: var(--color-text);
+    border: none;
+}
+
+.flyer-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.flyer-dialog img {
+    display: block;
+    max-width: 95vw;
+    max-height: 95vh;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+}
+
+.flyer-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    background: var(--color-header-bg);
+    color: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.flyer-close:hover {
+    background: var(--color-accent);
+}
