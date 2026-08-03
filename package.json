@@ -1,0 +1,38 @@
+{
+  "name": "kiowa-gun-club",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:typegen": "wrangler types cloudflare-env.d.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply kiowa-gun-club --local",
+    "db:migrate:remote": "wrangler d1 migrations apply kiowa-gun-club --remote",
+    "seed:admin": "node scripts/seed-admin.mjs"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "next": "^16.2.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "resend": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260801.1",
+    "@opennextjs/cloudflare": "^1.20.2",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "typescript": "^5",
+    "wrangler": "^4.86.0"
+  }
+}

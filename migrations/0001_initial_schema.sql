@@ -1,0 +1,80 @@
+CREATE TABLE IF NOT EXISTS admin_users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  name TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id TEXT PRIMARY KEY,
+  admin_user_id INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL,
+  FOREIGN KEY (admin_user_id) REFERENCES admin_users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS page_sections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  page_slug TEXT NOT NULL,
+  section_key TEXT NOT NULL,
+  heading TEXT,
+  body_html TEXT NOT NULL,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_page_sections_slug_key ON page_sections(page_slug, section_key);
+
+CREATE TABLE IF NOT EXISTS calendar_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  start TEXT NOT NULL,
+  color TEXT DEFAULT '#2c3e1f',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_calendar_events_start ON calendar_events(start);
+
+CREATE TABLE IF NOT EXISTS news_posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  body_html TEXT NOT NULL,
+  is_published INTEGER DEFAULT 1,
+  published_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS matches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_date TEXT NOT NULL,
+  event_time TEXT NOT NULL,
+  notes TEXT,
+  results_url TEXT,
+  sort_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  description TEXT,
+  category TEXT NOT NULL,
+  r2_key TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS members (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  phone TEXT,
+  status TEXT DEFAULT 'active',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS email_campaigns (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  subject TEXT NOT NULL,
+  body_html TEXT NOT NULL,
+  sent_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  sent_count INTEGER DEFAULT 0,
+  failed_count INTEGER DEFAULT 0,
+  created_by TEXT
+);

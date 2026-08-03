@@ -1,0 +1,123 @@
+/* Calendar page (calendar.html) */
+#range-calendar {
+    --fc-border-color: var(--color-border);
+    --fc-page-bg-color: var(--color-bg);
+    --fc-neutral-bg-color: #1a1c14;
+    --fc-list-event-hover-bg-color: #1a1c14;
+    --fc-today-bg-color: rgba(138, 31, 17, 0.25);
+    --fc-button-bg-color: var(--color-primary);
+    --fc-button-border-color: var(--color-primary);
+    --fc-button-hover-bg-color: var(--color-accent);
+    --fc-button-hover-border-color: var(--color-accent);
+    --fc-button-active-bg-color: var(--color-accent);
+    --fc-button-active-border-color: var(--color-accent);
+    color: var(--color-text);
+}
+
+#range-calendar a {
+    color: var(--color-text);
+}
+
+#range-calendar .fc-scrollgrid {
+    border-width: 2px !important;
+}
+
+#range-calendar .fc-theme-standard td,
+#range-calendar .fc-theme-standard th {
+    border-width: 2px !important;
+}
+
+#range-calendar .fc-daygrid-day-frame {
+    border: 2px solid var(--fc-border-color) !important;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    #range-calendar .fc-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    #range-calendar .fc-toolbar-title {
+        font-size: 1.1rem;
+        text-align: center;
+    }
+
+    #range-calendar .fc-button {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+
+    #range-calendar .fc-daygrid-day-number {
+        font-size: 0.75rem;
+        padding: 2px 4px;
+    }
+
+    #range-calendar .fc-event-title,
+    #range-calendar .fc-event-time {
+        font-size: 0.7rem;
+    }
+
+    #range-calendar .fc-list-event-title,
+    #range-calendar .fc-list-event-time {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 599px) {
+    #range-calendar .fc-scrollgrid,
+    #range-calendar .fc-theme-standard td,
+    #range-calendar .fc-theme-standard th,
+    #range-calendar .fc-daygrid-day-frame {
+        border-width: 1px !important;
+    }
+
+    #range-calendar .fc-toolbar-title {
+        font-size: 0.95rem;
+    }
+
+    #range-calendar .fc-button {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+    }
+
+    #range-calendar .fc-daygrid-day-top {
+        flex-direction: row;
+    }
+
+    #range-calendar .fc-daygrid-day-frame {
+        min-height: 48px;
+    }
+
+    #range-calendar .fc-daygrid-day-number {
+        font-size: 0.65rem;
+        padding: 3px 4px;
+    }
+
+    #range-calendar .fc-daygrid-day-events {
+        margin-top: 3px;
+    }
+
+    #range-calendar .fc-daygrid-event {
+        margin: 0 1px 1px;
+        padding: 0;
+    }
+
+    #range-calendar .fc-event-title {
+        font-size: 0.6rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #range-calendar .fc-daygrid-event-dot {
+        margin: 0 2px;
+        border-width: 3px;
+    }
+
+    #range-calendar .fc-list-event-title,
+    #range-calendar .fc-list-event-time {
+        font-size: 0.8rem;
+    }
+}

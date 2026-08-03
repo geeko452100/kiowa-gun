@@ -1,0 +1,42 @@
+/* Shared side-by-side text/image block, used by rules.html and matches.html */
+.rules-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+}
+
+.rules-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.rules-list {
+    margin: 0 0 16px;
+    padding-left: 20px;
+}
+
+.rules-list li {
+    margin-bottom: 10px;
+}
+
+.rules-image {
+    flex-shrink: 0;
+    width: 280px;
+    max-width: 40%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+    .rules-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .rules-image {
+        width: 100%;
+        max-width: 100%;
+        order: -1;
+    }
+}

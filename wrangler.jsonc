@@ -1,0 +1,30 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "kiowa-gun-club",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-07-31",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"observability": {
+		"enabled": true
+	},
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "kiowa-gun-club",
+			"database_id": "442b8ada-99a9-4ae4-a760-a345cb494d5b",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "DOCS",
+			"bucket_name": "kiowa-gun-club-docs"
+		}
+	]
+}
