@@ -261,6 +261,26 @@ button.danger {
   flex-shrink: 0;
 }
 
+.event-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.admin-inline-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-inline-check input {
+  min-height: auto;
+  width: 18px;
+  height: 18px;
+}
+
 .event-details {
   flex: 1;
   font-size: 1rem;

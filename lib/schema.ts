@@ -54,7 +54,19 @@ export const calendarEvents = sqliteTable("calendar_events", {
   title: text("title").notNull(),
   start: text("start").notNull(),
   color: text("color").notNull().default("#2c3e1f"),
+  description: text("description"),
+  imageR2Key: text("image_r2_key"),
+  imageFileName: text("image_file_name"),
   createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
+// Singleton row (id=1) controlling how large the public calendar grid renders --
+// a preset dropdown in the admin CMS instead of a raw pixel value, since the
+// audience is non-technical board members, not developers.
+export const calendarSettings = sqliteTable("calendar_settings", {
+  id: integer("id").primaryKey(),
+  sizePreset: text("size_preset").notNull().default("comfortable"), // "compact" | "comfortable" | "large"
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
 export const newsPosts = sqliteTable("news_posts", {

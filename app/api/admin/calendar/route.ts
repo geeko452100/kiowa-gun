@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { calendarEvents } from "@/lib/schema";
 import { buildRecurringSeries } from "@/lib/recurrence";
 import { getCurrentAdmin } from "@/lib/auth";
+import { validateCalendarImage } from "@/lib/calendarImage";
 
 export async function GET() {
   const admin = await getCurrentAdmin();
@@ -12,14 +14,13 @@ export async function GET() {
   return NextResponse.json(rows);
 }
 
-type CalendarPostBody = {
-  mode?: "series";
+type SeriesPostBody = {
+  mode: "series";
   title: string;
-  start?: string;
-  color?: string;
   weekday?: number;
   nth?: number;
   time?: string;
+  color?: string;
   startYear?: number;
   startMonth?: number;
   monthCount?: number;
@@ -28,33 +29,61 @@ type CalendarPostBody = {
 export async function POST(request: Request) {
   const admin = await getCurrentAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const body = (await request.json()) as CalendarPostBody;
   const db = await getDb();
+  const contentType = request.headers.get("content-type") || "";
 
-  if (body.mode === "series") {
-    const events = buildRecurringSeries({
-      title: body.title,
-      weekday: Number(body.weekday),
-      nth: Number(body.nth),
-      time: body.time || "12:00",
-      color: body.color || "#2c3e1f",
-      startYear: Number(body.startYear),
-      startMonth: Number(body.startMonth),
-      monthCount: Number(body.monthCount),
-    });
-    if (events.length > 0) {
-      await db.insert(calendarEvents).values(events);
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    const title = String(formData.get("title") ?? "");
+    const start = String(formData.get("start") ?? "");
+    const color = String(formData.get("color") || "#2c3e1f");
+    const description = String(formData.get("description") ?? "");
+    const image = formData.get("image");
+
+    if (!title || !start) {
+      return NextResponse.json({ error: "Title and date & time are required" }, { status: 400 });
     }
-    return NextResponse.json({ ok: true, created: events.length });
+
+    let imageR2Key: string | null = null;
+    let imageFileName: string | null = null;
+    if (image instanceof File && image.size > 0) {
+      const error = validateCalendarImage(image);
+      if (error) return NextResponse.json({ error }, { status: 400 });
+      const { env } = await getCloudflareContext({ async: true });
+      imageR2Key = `calendar/${crypto.randomUUID()}-${image.name}`;
+      await env.DOCS.put(imageR2Key, await image.arrayBuffer(), {
+        httpMetadata: { contentType: image.type },
+      });
+      imageFileName = image.name;
+    }
+
+    await db.insert(calendarEvents).values({
+      title,
+      start,
+      color,
+      description: description || null,
+      imageR2Key,
+      imageFileName,
+    });
+    return NextResponse.json({ ok: true });
   }
 
-  if (!body.start) {
-    return NextResponse.json({ error: "start is required" }, { status: 400 });
+  const body = (await request.json()) as SeriesPostBody;
+  if (body.mode !== "series") {
+    return NextResponse.json({ error: "Unsupported request" }, { status: 400 });
   }
-  await db.insert(calendarEvents).values({
+  const events = buildRecurringSeries({
     title: body.title,
-    start: body.start,
+    weekday: Number(body.weekday),
+    nth: Number(body.nth),
+    time: body.time || "12:00",
     color: body.color || "#2c3e1f",
+    startYear: Number(body.startYear),
+    startMonth: Number(body.startMonth),
+    monthCount: Number(body.monthCount),
   });
-  return NextResponse.json({ ok: true });
+  if (events.length > 0) {
+    await db.insert(calendarEvents).values(events);
+  }
+  return NextResponse.json({ ok: true, created: events.length });
 }

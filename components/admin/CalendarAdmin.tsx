@@ -1,22 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
 
-type EventRow = { id: number; title: string; start: string; color: string };
+type EventRow = {
+  id: number;
+  title: string;
+  start: string;
+  color: string;
+  description: string | null;
+  imageR2Key: string | null;
+  imageFileName: string | null;
+};
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const SIZE_PRESETS: { value: string; label: string }[] = [
+  { value: "compact", label: "Compact" },
+  { value: "comfortable", label: "Comfortable (recommended)" },
+  { value: "large", label: "Large" },
+];
 
 export default function CalendarAdmin() {
   const { confirm, dialog } = useConfirm();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [start, setStart] = useState("");
   const [color, setColor] = useState("#2c3e1f");
+  const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [existingImage, setExistingImage] = useState<{ id: number; fileName: string } | null>(null);
 
   const [seriesTitle, setSeriesTitle] = useState("");
   const [weekday, setWeekday] = useState(6);
@@ -27,6 +46,9 @@ export default function CalendarAdmin() {
   const [startMonth, setStartMonth] = useState(new Date().getMonth());
   const [monthCount, setMonthCount] = useState(12);
 
+  const [sizePreset, setSizePreset] = useState("comfortable");
+  const [sizeSaved, setSizeSaved] = useState(false);
+
   async function load() {
     setLoading(true);
     const res = await fetch("/api/admin/calendar");
@@ -36,24 +58,62 @@ export default function CalendarAdmin() {
     setLoading(false);
   }
 
+  async function loadSettings() {
+    const res = await fetch("/api/calendar-settings");
+    const data = (await res.json()) as { sizePreset: string };
+    setSizePreset(data.sizePreset);
+  }
+
   useEffect(() => {
     void load();
+    void loadSettings();
   }, []);
 
-  async function addEvent(e: React.FormEvent) {
+  function resetForm() {
+    setEditingId(null);
+    setTitle("");
+    setStart("");
+    setColor("#2c3e1f");
+    setDescription("");
+    setImageFile(null);
+    setRemoveImage(false);
+    setExistingImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function startEdit(ev: EventRow) {
+    setEditingId(ev.id);
+    setTitle(ev.title);
+    setStart(ev.start.slice(0, 16));
+    setColor(ev.color);
+    setDescription(ev.description ?? "");
+    setImageFile(null);
+    setRemoveImage(false);
+    setExistingImage(ev.imageR2Key ? { id: ev.id, fileName: ev.imageFileName ?? "image" } : null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function submitEvent(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    const result = await adminFetch("/api/admin/calendar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, start, color }),
-    });
+    const formData = new FormData();
+    formData.set("title", title);
+    formData.set("start", start);
+    formData.set("color", color);
+    formData.set("description", description);
+    if (imageFile) formData.set("image", imageFile);
+    if (editingId !== null) formData.set("removeImage", removeImage ? "true" : "false");
+
+    const result = editingId !== null
+      ? await adminFetch(`/api/admin/calendar/${editingId}`, { method: "PATCH", body: formData })
+      : await adminFetch("/api/admin/calendar", { method: "POST", body: formData });
+
     if (!result.ok) {
       setError(result.error);
       return;
     }
-    setTitle("");
-    setStart("");
+    resetForm();
     void load();
   }
 
@@ -92,7 +152,23 @@ export default function CalendarAdmin() {
       setError(result.error);
       return;
     }
+    if (editingId === ev.id) resetForm();
     void load();
+  }
+
+  async function saveSizePreset(value: string) {
+    setSizePreset(value);
+    setSizeSaved(false);
+    const result = await adminFetch("/api/admin/calendar-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sizePreset: value }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setSizeSaved(true);
   }
 
   const now = new Date();
@@ -116,8 +192,8 @@ export default function CalendarAdmin() {
       <h1>Calendar</h1>
       {error && <p className="admin-error">{error}</p>}
 
-      <form className="admin-form" onSubmit={addEvent}>
-        <strong>Add a single event</strong>
+      <form className="admin-form" onSubmit={submitEvent}>
+        <strong>{editingId !== null ? "Edit event" : "Add a single event"}</strong>
         <label>
           Title
           <input value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -135,7 +211,42 @@ export default function CalendarAdmin() {
           Color
           <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
         </label>
-        <button type="submit">Add event</button>
+        <label>
+          Description (optional)
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            placeholder="Details shown when someone clicks this date"
+          />
+        </label>
+        <label>
+          Picture (optional)
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+          />
+        </label>
+        {existingImage && !imageFile && (
+          <label className="admin-inline-check">
+            <input
+              type="checkbox"
+              checked={removeImage}
+              onChange={(e) => setRemoveImage(e.target.checked)}
+            />
+            Remove current picture ({existingImage.fileName})
+          </label>
+        )}
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="submit">{editingId !== null ? "Save changes" : "Add event"}</button>
+          {editingId !== null && (
+            <button type="button" onClick={resetForm}>
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
 
       <form className="admin-form" onSubmit={addSeries}>
@@ -206,6 +317,22 @@ export default function CalendarAdmin() {
         <button type="submit">Generate series</button>
       </form>
 
+      <div className="admin-form">
+        <strong>Calendar display size</strong>
+        <p className="admin-note">Changes how big the squares and text are on the public calendar page.</p>
+        <label>
+          Size
+          <select value={sizePreset} onChange={(e) => void saveSizePreset(e.target.value)}>
+            {SIZE_PRESETS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {sizeSaved && <p className="admin-saved">Saved ✓</p>}
+      </div>
+
       <h2>Upcoming events (next 3 months)</h2>
       {loading ? (
         <p>Loading…</p>
@@ -220,6 +347,13 @@ export default function CalendarAdmin() {
                 {monthEvents.map((ev) => (
                   <li key={ev.id} className="event-list-item">
                     <span className="event-swatch" style={{ backgroundColor: ev.color }} />
+                    {ev.imageR2Key && (
+                      <img
+                        src={`/api/calendar-events/${ev.id}/image`}
+                        alt=""
+                        className="event-thumb"
+                      />
+                    )}
                     <span className="event-details">
                       <strong>{ev.title}</strong>
                       <br />
@@ -234,6 +368,9 @@ export default function CalendarAdmin() {
                         minute: "2-digit",
                       })}
                     </span>
+                    <button type="button" onClick={() => startEdit(ev)}>
+                      Edit
+                    </button>
                     <button type="button" className="danger" onClick={() => removeEvent(ev)}>
                       Delete
                     </button>

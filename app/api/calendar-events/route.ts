@@ -10,6 +10,8 @@ export async function GET() {
     title: row.title,
     start: row.start,
     color: row.color,
+    description: row.description,
+    imageUrl: row.imageR2Key ? `/api/calendar-events/${row.id}/image` : null,
   }));
   return NextResponse.json(events);
 }
