@@ -10,7 +10,7 @@
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf:typegen": "wrangler types cloudflare-env.d.ts",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply kiowa-gun-club --local",
     "db:migrate:remote": "wrangler d1 migrations apply kiowa-gun-club --remote",
@@ -24,7 +24,6 @@
     "resend": "^4.0.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260801.1",
     "@opennextjs/cloudflare": "^1.20.2",
     "@types/node": "^20",
     "@types/react": "^19",
