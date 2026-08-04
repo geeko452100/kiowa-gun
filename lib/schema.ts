@@ -7,9 +7,20 @@ export const adminUsers = sqliteTable("admin_users", {
   salt: text("salt").notNull(),
   name: text("name").notNull(),
   role: text("role").notNull().default("board_member"), // "tech_admin" | "president" | "board_member"
+  position: text("position"), // free-text title (Vice President, Treasurer, etc.) -- display only, grants no access
+  phone: text("phone"),
   createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
   failedLoginCount: integer("failed_login_count").notNull().default(0),
   lockedUntil: integer("locked_until"), // epoch ms; login is blocked while this is in the future
+});
+
+// Shared, growable list of board titles (Vice President, Treasurer, etc.)
+// offered in the Board Members "Title" dropdown. Presidents/tech admins can
+// add to it; a member's actual title (admin_users.position) is still free
+// text, so nothing breaks if this list doesn't have every title ever used.
+export const positionOptions = sqliteTable("position_options", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  label: text("label").notNull().unique(),
 });
 
 // One-time links for setting up a new board member login or resetting a

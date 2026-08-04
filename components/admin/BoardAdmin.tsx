@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
+import PositionSelect from "./PositionSelect";
 import { canManageRole, roleLabel, type Role } from "@/lib/roles";
 
 type BoardMember = {
@@ -10,6 +11,8 @@ type BoardMember = {
   name: string;
   email: string;
   role: string;
+  position: string | null;
+  phone: string | null;
   createdAt: string;
 };
 
@@ -23,20 +26,42 @@ export default function BoardAdmin({
   const { confirm, dialog } = useConfirm();
   const isTechAdmin = currentAdminRole === "tech_admin";
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
+  const [positionOptions, setPositionOptions] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<Role>("board_member");
+  const [position, setPosition] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [savedField, setSavedField] = useState<{ id: number; field: string } | null>(null);
 
   async function load() {
     const res = await fetch("/api/admin/board");
     if (res.ok) setBoardMembers((await res.json()) as BoardMember[]);
   }
 
+  async function loadPositionOptions() {
+    const res = await fetch("/api/admin/position-options");
+    if (res.ok) setPositionOptions((await res.json()) as string[]);
+  }
+
   useEffect(() => {
     void load();
+    void loadPositionOptions();
   }, []);
+
+  async function addPositionOption(label: string): Promise<string | null> {
+    const result = await adminFetch<{ label?: string }>("/api/admin/position-options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label }),
+    });
+    if (!result.ok) return result.error;
+    const added = result.data.label!;
+    setPositionOptions((opts) => (opts.includes(added) ? opts : [...opts, added].sort()));
+    return null;
+  }
 
   async function addBoardMember(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +70,7 @@ export default function BoardAdmin({
     const result = await adminFetch<{ email?: string }>("/api/admin/board", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, role }),
+      body: JSON.stringify({ name, email, phone, role, position }),
     });
     if (!result.ok) {
       setError(result.error);
@@ -56,7 +81,9 @@ export default function BoardAdmin({
     );
     setName("");
     setEmail("");
+    setPhone("");
     setRole("board_member");
+    setPosition("");
     void load();
   }
 
@@ -100,6 +127,47 @@ export default function BoardAdmin({
     void load();
   }
 
+  async function savePosition(m: BoardMember, nextPosition: string) {
+    const trimmed = nextPosition.trim();
+    if (trimmed === (m.position ?? "")) return;
+    setError("");
+    const result = await adminFetch(`/api/admin/board/${m.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "set_position", position: trimmed }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setBoardMembers((rows) => rows.map((r) => (r.id === m.id ? { ...r, position: trimmed || null } : r)));
+    setSavedField({ id: m.id, field: "position" });
+    setTimeout(() => setSavedField(null), 3000);
+  }
+
+  async function saveDetail(m: BoardMember, field: "name" | "email" | "phone", nextValue: string) {
+    const trimmed = nextValue.trim();
+    const required = field !== "phone";
+    if ((required && !trimmed) || trimmed === (m[field] ?? "")) return;
+    setError("");
+    const result = await adminFetch<{ name?: string; email?: string; phone?: string | null }>(
+      `/api/admin/board/${m.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_details", [field]: trimmed }),
+      }
+    );
+    if (!result.ok) {
+      setError(result.error);
+      void load();
+      return;
+    }
+    setBoardMembers((rows) => rows.map((r) => (r.id === m.id ? { ...r, ...result.data } : r)));
+    setSavedField({ id: m.id, field });
+    setTimeout(() => setSavedField(null), 3000);
+  }
+
   async function remove(m: BoardMember) {
     const ok = await confirm(`Remove ${m.name}'s (${m.email}) CMS login? This cannot be undone.`);
     if (!ok) return;
@@ -120,7 +188,8 @@ export default function BoardAdmin({
         People listed here can log in to this admin site. Adding someone or sending a reset link
         emails them a one-time link to set their own password — nobody else ever sees it.
         Presidents can add and manage regular board members and other presidents; only a tech
-        admin can create or change a tech admin login.
+        admin can create or change a tech admin login. Title (Vice President, Treasurer, etc.) is
+        just a label — it doesn't change what someone can do here, only their access level does.
       </p>
 
       <form className="admin-form" onSubmit={addBoardMember}>
@@ -134,6 +203,10 @@ export default function BoardAdmin({
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </label>
         <label>
+          Phone (optional)
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </label>
+        <label>
           Access level
           <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
             <option value="board_member">Board member (regular admin access)</option>
@@ -142,6 +215,15 @@ export default function BoardAdmin({
               <option value="tech_admin">Tech Admin (full system access)</option>
             )}
           </select>
+        </label>
+        <label>
+          Title (optional)
+          <PositionSelect
+            value={position}
+            options={positionOptions}
+            onChange={setPosition}
+            onAddOption={addPositionOption}
+          />
         </label>
         {error && <p className="admin-note">{error}</p>}
         <button type="submit">Add board member</button>
@@ -154,6 +236,8 @@ export default function BoardAdmin({
           <tr>
             <th>Name</th>
             <th>Email</th>
+            <th>Phone</th>
+            <th>Title</th>
             <th>Access</th>
             <th></th>
           </tr>
@@ -163,8 +247,74 @@ export default function BoardAdmin({
             const canManage = canManageRole(currentAdminRole, m.role);
             return (
               <tr key={m.id}>
-                <td>{m.name}</td>
-                <td>{m.email}</td>
+                <td>
+                  {canManage ? (
+                    <div className="admin-row-actions">
+                      <input
+                        key={`name-${m.id}-${m.name}`}
+                        defaultValue={m.name}
+                        onBlur={(e) => saveDetail(m, "name", e.target.value)}
+                      />
+                      {savedField?.id === m.id && savedField.field === "name" && (
+                        <span className="admin-saved">✓</span>
+                      )}
+                    </div>
+                  ) : (
+                    m.name
+                  )}
+                </td>
+                <td>
+                  {canManage ? (
+                    <div className="admin-row-actions">
+                      <input
+                        key={`email-${m.id}-${m.email}`}
+                        type="email"
+                        defaultValue={m.email}
+                        onBlur={(e) => saveDetail(m, "email", e.target.value)}
+                      />
+                      {savedField?.id === m.id && savedField.field === "email" && (
+                        <span className="admin-saved">✓</span>
+                      )}
+                    </div>
+                  ) : (
+                    m.email
+                  )}
+                </td>
+                <td>
+                  {canManage ? (
+                    <div className="admin-row-actions">
+                      <input
+                        key={`phone-${m.id}-${m.phone ?? ""}`}
+                        type="tel"
+                        defaultValue={m.phone ?? ""}
+                        placeholder="No phone"
+                        onBlur={(e) => saveDetail(m, "phone", e.target.value)}
+                      />
+                      {savedField?.id === m.id && savedField.field === "phone" && (
+                        <span className="admin-saved">✓</span>
+                      )}
+                    </div>
+                  ) : (
+                    m.phone || <span className="admin-note">—</span>
+                  )}
+                </td>
+                <td>
+                  {canManage ? (
+                    <div className="admin-row-actions">
+                      <PositionSelect
+                        value={m.position ?? ""}
+                        options={positionOptions}
+                        onChange={(next) => savePosition(m, next)}
+                        onAddOption={addPositionOption}
+                      />
+                      {savedField?.id === m.id && savedField.field === "position" && (
+                        <span className="admin-saved">✓</span>
+                      )}
+                    </div>
+                  ) : (
+                    m.position || <span className="admin-note">—</span>
+                  )}
+                </td>
                 <td>
                   {canManage ? (
                     <select

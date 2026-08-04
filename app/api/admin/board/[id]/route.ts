@@ -33,7 +33,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Only a tech admin can change this login" }, { status: 403 });
   }
 
-  const body = (await request.json()) as { action: string; role?: string };
+  const body = (await request.json()) as {
+    action: string;
+    role?: string;
+    position?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
 
   if (body.action === "reset_password") {
     // Invalidate any outstanding links for this login, then email a fresh
@@ -78,6 +85,38 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     await db.update(adminUsers).set({ role: nextRole }).where(eq(adminUsers.id, targetId));
     return NextResponse.json({ ok: true });
+  }
+
+  if (body.action === "set_position") {
+    const position = body.position?.trim() || null;
+    await db.update(adminUsers).set({ position }).where(eq(adminUsers.id, targetId));
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.action === "set_details") {
+    const updates: { name?: string; email?: string; phone?: string | null } = {};
+    if (body.name !== undefined) {
+      const name = body.name.trim();
+      if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+      updates.name = name;
+    }
+    if (body.email !== undefined) {
+      const normalizedEmail = body.email.toLowerCase().trim();
+      if (!normalizedEmail) return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      updates.email = normalizedEmail;
+    }
+    if (body.phone !== undefined) {
+      updates.phone = body.phone.trim() || null;
+    }
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+    }
+    try {
+      await db.update(adminUsers).set(updates).where(eq(adminUsers.id, targetId));
+    } catch {
+      return NextResponse.json({ error: "Another login already uses that email" }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true, ...updates });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

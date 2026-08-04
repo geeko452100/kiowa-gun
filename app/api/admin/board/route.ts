@@ -15,7 +15,15 @@ export async function GET() {
   }
   const db = await getDb();
   const rows = await db
-    .select({ id: adminUsers.id, name: adminUsers.name, email: adminUsers.email, role: adminUsers.role, createdAt: adminUsers.createdAt })
+    .select({
+      id: adminUsers.id,
+      name: adminUsers.name,
+      email: adminUsers.email,
+      role: adminUsers.role,
+      position: adminUsers.position,
+      phone: adminUsers.phone,
+      createdAt: adminUsers.createdAt,
+    })
     .from(adminUsers)
     .orderBy(desc(adminUsers.createdAt));
   return NextResponse.json(rows);
@@ -27,10 +35,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "President or tech admin access required" }, { status: 403 });
   }
 
-  const { name, email, role } = (await request.json()) as {
+  const { name, email, role, position, phone } = (await request.json()) as {
     name: string;
     email: string;
     role?: string;
+    position?: string;
+    phone?: string;
   };
   if (!name || !email) {
     return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
@@ -54,6 +64,8 @@ export async function POST(request: Request) {
       passwordHash: hash,
       salt,
       role: finalRole,
+      position: position?.trim() || null,
+      phone: phone?.trim() || null,
     });
   } catch {
     return NextResponse.json({ error: "A board member with that email already exists" }, { status: 400 });
@@ -61,7 +73,10 @@ export async function POST(request: Request) {
 
   // Board members are club members too — make sure they show up on the Members
   // page and receive newsletters, without clobbering an existing member entry.
-  await db.insert(members).values({ name, email: normalizedEmail, status: "active" }).onConflictDoNothing();
+  await db
+    .insert(members)
+    .values({ name, email: normalizedEmail, phone: phone?.trim() || null, status: "active" })
+    .onConflictDoNothing();
 
   const [created] = await db
     .select({ id: adminUsers.id })
