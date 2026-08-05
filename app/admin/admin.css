@@ -122,7 +122,7 @@ select:focus-visible {
 
 .admin-password-field input {
   flex: 1;
-  padding-right: 60px;
+  padding-right: 44px;
 }
 
 .admin-password-toggle {
@@ -131,12 +131,14 @@ select:focus-visible {
   right: 0;
   bottom: 0;
   min-height: auto;
-  padding: 0 14px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: none;
   color: var(--color-text, #f2f0ea);
-  font-size: 0.9rem;
-  font-weight: 600;
+  opacity: 0.7;
   cursor: pointer;
 }
 
