@@ -2,7 +2,13 @@
   min-height: 100vh;
   background: var(--color-bg, #17250f);
   color: var(--color-text, #f2f0ea);
-  font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "Public Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   font-size: 17px;
   line-height: 1.5;
 }
@@ -86,6 +92,35 @@
 
 .admin-main h1 {
   margin-top: 0;
+}
+
+@media (max-width: 720px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border, #3a3d33);
+    padding: 16px 0;
+  }
+
+  .admin-sidebar nav {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-sidebar nav a {
+    padding: 10px 16px;
+    white-space: nowrap;
+  }
+
+  .admin-main {
+    padding: 20px 16px;
+    max-width: 100%;
+  }
 }
 
 label {
@@ -182,6 +217,11 @@ textarea {
   background: var(--color-accent, #4c5e3a);
 }
 
+.rte-toolbar button.active {
+  background: var(--color-accent, #4c5e3a);
+  border-color: var(--color-text, #f2f0ea);
+}
+
 .rte-content {
   min-height: 140px;
   padding: 10px 12px;
@@ -196,7 +236,8 @@ textarea {
   outline-offset: -1px;
 }
 
-.rte-content ul {
+.rte-content ul,
+.rte-content ol {
   margin: 0;
   padding-left: 24px;
 }
@@ -204,6 +245,67 @@ textarea {
 .rte-content a {
   color: #9fd3ff;
   text-decoration: underline;
+  cursor: text;
+}
+
+.rte-content a:not([href]) {
+  text-decoration-style: dashed;
+  opacity: 0.85;
+}
+
+.link-popover {
+  position: absolute;
+  z-index: 1000;
+  min-width: 220px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #3a3d33);
+  background: #0d0f0a;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.link-popover-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.link-popover-url {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  color: #9fd3ff;
+}
+
+.link-popover-caret {
+  padding: 2px 8px;
+  min-height: auto;
+  font-size: 0.8rem;
+  background: transparent;
+  border: 1px solid var(--color-border, #3a3d33);
+}
+
+.link-popover-caret:hover {
+  background: var(--color-accent, #4c5e3a);
+}
+
+.link-popover-edit label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.link-popover-edit input {
+  width: 100%;
+}
+
+.link-popover-hint {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: #cbc6b8;
 }
 
 button {
@@ -237,10 +339,15 @@ button.danger {
   background: #a8291a;
 }
 
+.admin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 12px;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 12px;
 }
 
 .admin-table th,
@@ -250,6 +357,65 @@ button.danger {
   border-bottom: 1px solid var(--color-border, #3a3d33);
   font-size: 1rem;
   vertical-align: top;
+}
+
+@media (max-width: 720px) {
+  .admin-table-wrap {
+    overflow-x: visible;
+  }
+
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-table tr {
+    margin-bottom: 14px;
+    border: 1px solid var(--color-border, #3a3d33);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .admin-table tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .admin-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-border, #3a3d33);
+  }
+
+  .admin-table tr td:last-child {
+    border-bottom: none;
+  }
+
+  .admin-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text, #f2f0ea);
+    opacity: 0.6;
+    margin-bottom: 4px;
+  }
+
+  .admin-table input,
+  .admin-table select {
+    width: 100%;
+  }
+
+  .admin-row-actions {
+    flex-wrap: wrap;
+  }
 }
 
 .admin-form {
@@ -359,6 +525,11 @@ button.danger {
   margin: 0 0 20px;
   font-size: 1.15rem;
   line-height: 1.5;
+}
+
+.confirm-box input {
+  width: 100%;
+  margin-bottom: 20px;
 }
 
 .confirm-actions {

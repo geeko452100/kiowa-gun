@@ -52,11 +52,14 @@ export default function MembersAdmin() {
   async function importCsv(e: React.FormEvent) {
     e.preventDefault();
     setImportMsg("Importing…");
-    const result = await adminFetch<{ imported?: number }>("/api/admin/members/import", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ csv }),
-    });
+    const result = await adminFetch<{ imported?: number }>(
+      "/api/admin/members/import",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv }),
+      },
+    );
     if (!result.ok) {
       setImportMsg(result.error);
       return;
@@ -84,10 +87,14 @@ export default function MembersAdmin() {
   }
 
   async function remove(m: Member) {
-    const ok = await confirm(`Delete ${m.name} (${m.email}) from the member list? This cannot be undone.`);
+    const ok = await confirm(
+      `Delete ${m.name} (${m.email}) from the member list? This cannot be undone.`,
+    );
     if (!ok) return;
     setError("");
-    const result = await adminFetch(`/api/admin/members/${m.id}`, { method: "DELETE" });
+    const result = await adminFetch(`/api/admin/members/${m.id}`, {
+      method: "DELETE",
+    });
     if (!result.ok) {
       setError(result.error);
       return;
@@ -101,21 +108,33 @@ export default function MembersAdmin() {
     <div>
       {dialog}
       <h1>Members</h1>
-      <p className="admin-note">{activeCount} active members will receive newsletters.</p>
       <p className="admin-note">
-        Board members are included in this list. Deactivating or deleting a board member here only
-        affects newsletters — it does not remove their CMS login (manage that from Board Members).
+        {activeCount} active members will receive newsletters.
+      </p>
+      <p className="admin-note">
+        Board members are included in this list. Deactivating or deleting a
+        board member here only affects newsletters — it does not remove their
+        CMS login (manage that from Board Members).
       </p>
 
       <form className="admin-form" onSubmit={addMember}>
         <strong>Add a member</strong>
         <label>
           Name
-          <input value={name} onChange={(e) => setName(e.target.value)} required />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
         </label>
         <label>
           Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </label>
         <label>
           Phone
@@ -128,12 +147,14 @@ export default function MembersAdmin() {
       <form className="admin-form" onSubmit={importCsv}>
         <strong>Add many members at once (from a spreadsheet)</strong>
         <p className="admin-note">
-          1. Download the example spreadsheet below and fill it in, one member per row (a phone
-          number is optional).
+          1. Download the example spreadsheet below and fill it in, one member
+          per row (a phone number is optional).
           <br />
-          2. In Excel or Google Sheets, save or export it as a &quot;CSV&quot; file.
+          2. In Excel or Google Sheets, save or export it as a &quot;CSV&quot;
+          file.
           <br />
-          3. Open that file in a text editor, copy all the text, and paste it into the box below.
+          3. Open that file in a text editor, copy all the text, and paste it
+          into the box below.
         </p>
         <p>
           <a className="admin-link" href="/members-template.csv" download>
@@ -143,41 +164,49 @@ export default function MembersAdmin() {
         <textarea
           value={csv}
           onChange={(e) => setCsv(e.target.value)}
-          placeholder={"name,email,phone\nJane Doe,jane@example.com,620-555-0100"}
+          placeholder={
+            "name,email,phone\nJane Doe,jane@example.com,620-555-0100"
+          }
         />
         {importMsg && <p className="admin-note">{importMsg}</p>}
         <button type="submit">Add members from spreadsheet</button>
       </form>
 
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((m) => (
-            <tr key={m.id}>
-              <td>{m.name}</td>
-              <td>{m.email}</td>
-              <td>{m.phone}</td>
-              <td>{m.status}</td>
-              <td className="admin-row-actions">
-                <button type="button" onClick={() => toggleStatus(m)}>
-                  {m.status === "active" ? "Deactivate" : "Activate"}
-                </button>
-                <button type="button" className="danger" onClick={() => remove(m)}>
-                  Delete
-                </button>
-              </td>
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {members.map((m) => (
+              <tr key={m.id}>
+                <td data-label="Name">{m.name}</td>
+                <td data-label="Email">{m.email}</td>
+                <td data-label="Phone">{m.phone}</td>
+                <td data-label="Status">{m.status}</td>
+                <td className="admin-row-actions">
+                  <button type="button" onClick={() => toggleStatus(m)}>
+                    {m.status === "active" ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={() => remove(m)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
