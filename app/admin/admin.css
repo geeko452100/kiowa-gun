@@ -115,6 +115,35 @@ select:focus-visible {
   outline-offset: 1px;
 }
 
+.admin-password-field {
+  position: relative;
+  display: flex;
+}
+
+.admin-password-field input {
+  flex: 1;
+  padding-right: 60px;
+}
+
+.admin-password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  min-height: auto;
+  padding: 0 14px;
+  border: none;
+  background: none;
+  color: var(--color-text, #f2f0ea);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-password-toggle:hover {
+  color: var(--color-accent, #4c5e3a);
+}
+
 textarea {
   min-height: 140px;
   resize: vertical;
