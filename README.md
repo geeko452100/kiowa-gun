@@ -12,7 +12,7 @@ code.
 - **D1** (SQLite) via **Drizzle ORM** for the database — schema in `lib/schema.ts`, migrations in
   `migrations/`
 - **R2** for uploaded PDF forms (`documents` table)
-- **Resend** for bulk member email
+- **Postmark** for bulk member email, **SignalWire** for bulk/automated member SMS
 - Session-based admin auth (email/password, PBKDF2 hashing, DB-backed sessions) — no third-party
   login provider
 
@@ -44,7 +44,8 @@ npm run db:migrate:local
 INITIAL_ADMIN_EMAIL=you@kiowagunclub.org INITIAL_ADMIN_PASSWORD='choose-a-password' \
   INITIAL_ADMIN_NAME="Your Name" node scripts/seed-admin.mjs --local
 
-# Copy .dev.vars.example -> .dev.vars and fill in a Resend API key for local email testing
+# Copy .dev.vars.example -> .dev.vars and fill in a Postmark server token for local email testing,
+# plus SignalWire credentials and a from-number for local SMS testing
 cp .dev.vars.example .dev.vars
 
 npm run dev
@@ -57,9 +58,23 @@ Visit `http://localhost:3000` for the public site and `/admin/login` for the CMS
 ```bash
 npm run db:migrate:remote
 INITIAL_ADMIN_EMAIL=... INITIAL_ADMIN_PASSWORD=... node scripts/seed-admin.mjs   # no --local = remote
-npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put POSTMARK_SERVER_TOKEN
+npx wrangler secret put SIGNALWIRE_SPACE_URL
+npx wrangler secret put SIGNALWIRE_PROJECT_ID
+npx wrangler secret put SIGNALWIRE_API_TOKEN
+npx wrangler secret put SIGNALWIRE_FROM_NUMBER
+npx wrangler secret put CRON_SECRET   # also set as CRON_SECRET in ../kiowa-gun-cron — see below
 npm run cf:deploy
 ```
+
+## Automated renewal reminder texts
+
+`/api/cron/renewal-reminders` texts members whose `renewal_date` (set per-member in
+`/admin/members`) is 45 or 15 days out, once per threshold per renewal cycle. It's a normal
+protected API route, not a Cron Trigger itself — OpenNext's generated Worker has no `scheduled`
+handler to attach one to. A separate, minimal Worker at `../kiowa-gun-cron` has its own daily Cron
+Trigger and calls this route with a shared `CRON_SECRET` bearer token. See that project's README
+for its own setup/deploy steps.
 
 > **Windows note:** `@opennextjs/cloudflare` builds a Workers bundle that relies on symlinks, which
 > plain Windows accounts can't create. Either enable Windows *Developer Mode* (Settings → Privacy &
@@ -76,8 +91,10 @@ npm run cf:deploy
 - `/admin/matches` — edit the match schedule table
 - `/admin/documents` — upload a PDF (print/export to PDF from any app — no Word needed); it
   appears as a download link on the Membership page
-- `/admin/members` — add members one at a time or bulk-import a CSV (`name,email,phone` header)
-- `/admin/email` — compose and send to every active member via Resend; every send is logged
+- `/admin/members` — add members one at a time or bulk-import a CSV (`name,email,phone` header);
+  each member can also have a renewal date, which drives the automated renewal reminder texts below
+- `/admin/email` — compose and send to every active member via Postmark; every send is logged
+- `/admin/sms` — compose and send a text to selected members via SignalWire; every send is logged
 
 ## Content notes
 
