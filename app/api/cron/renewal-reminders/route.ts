@@ -1,0 +1,98 @@
+import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getDb } from "@/lib/db";
+import { members, smsCampaigns } from "@/lib/schema";
+import { sendSignalWireSms, toE164 } from "@/lib/sms";
+
+// Triggered daily by a companion Cloudflare Worker's Cron Trigger (this app's
+// own Worker has no scheduled handler). Texts members whose renewal_date is
+// within 45 or 15 days, once per renewal cycle per threshold -- tracked via
+// renewal_45/15_reminder_sent_for so a missed day still catches up on the
+// next run instead of silently skipping the window.
+// Ascending order: the smallest threshold a member currently falls under is
+// the one that actually applies (a member added 10 days before renewal is
+// "within 15 days", not "within 45 days", even though both are technically
+// true) -- and it implies every larger threshold has effectively fired too.
+const THRESHOLDS = [
+  { days: 15, field: "renewal15ReminderSentFor" as const },
+  { days: 45, field: "renewal45ReminderSentFor" as const },
+];
+
+function daysUntil(dateStr: string, today: Date): number {
+  const target = new Date(`${dateStr}T00:00:00Z`);
+  const diffMs = target.getTime() - Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  return Math.round(diffMs / 86_400_000);
+}
+
+function messageFor(daysOut: number, renewalDate: string): string {
+  const formatted = new Date(`${renewalDate}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return `Kiowa Gun Club: Your annual membership renewal will be processed in ${daysOut} days (on ${formatted}). Questions? Contact the board.`;
+}
+
+export async function POST(request: Request) {
+  const { env } = await getCloudflareContext({ async: true });
+  const auth = request.headers.get("authorization");
+  if (auth !== `Bearer ${env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const db = await getDb();
+  const rows = await db.select().from(members).where(eq(members.status, "Member"));
+  const today = new Date();
+
+  let sentCount = 0;
+  let failedCount = 0;
+
+  for (const m of rows) {
+    if (!m.renewalDate || !m.phone) continue;
+    const to = toE164(m.phone);
+    if (!to) continue;
+
+    const daysOut = daysUntil(m.renewalDate, today);
+    if (daysOut < 0) continue;
+
+    const due = THRESHOLDS.find(
+      ({ days, field }) => daysOut <= days && m[field] !== m.renewalDate
+    );
+    if (!due) continue;
+
+    const { error } = await sendSignalWireSms(
+      env.SIGNALWIRE_SPACE_URL,
+      env.SIGNALWIRE_PROJECT_ID,
+      env.SIGNALWIRE_API_TOKEN,
+      env.SIGNALWIRE_FROM_NUMBER,
+      { to, text: messageFor(daysOut, m.renewalDate) }
+    );
+
+    if (error) {
+      failedCount += 1;
+      continue;
+    }
+    sentCount += 1;
+    // Mark every threshold at or above the one that just fired as sent for
+    // this cycle, so a late-added renewal date doesn't also fire the larger
+    // threshold's message right after.
+    const updates = Object.fromEntries(
+      THRESHOLDS.filter(({ days }) => days >= due.days).map(({ field }) => [field, m.renewalDate])
+    );
+    await db.update(members).set(updates).where(eq(members.id, m.id));
+  }
+
+  if (sentCount > 0 || failedCount > 0) {
+    await db.insert(smsCampaigns).values({
+      body: "[Automated renewal reminders]",
+      sentCount,
+      failedCount,
+      createdBy: "System (renewal reminder cron)",
+      recipientPhone: null,
+    });
+  }
+
+  return NextResponse.json({ ok: true, sentCount, failedCount });
+}

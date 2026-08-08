@@ -1,4 +1,4 @@
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
 const MAX_BYTES = 5 * 1024 * 1024;
 
 // Shared by the calendar admin create and edit routes so both give board

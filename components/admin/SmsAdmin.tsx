@@ -1,50 +1,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import RichTextEditor from "./RichTextEditor";
 import RecipientPicker from "./RecipientPicker";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
-import { MAX_FILE_ATTACHMENTS } from "@/lib/emailAttachments";
 
 const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
 
 type Campaign = {
   id: number;
-  subject: string;
+  body: string;
   sentAt: string;
   sentCount: number;
   failedCount: number;
   createdBy: string | null;
-  recipientEmail: string | null;
+  recipientPhone: string | null;
+  mediaUrl: string | null;
 };
 
 type Member = {
   id: number;
   name: string;
   email: string;
+  phone: string | null;
   status: string;
 };
 
-type FileAttachment = { r2Key: string; fileName: string };
-
-export default function EmailAdmin() {
+export default function SmsAdmin() {
   const { confirm, dialog } = useConfirm();
-  const [subject, setSubject] = useState("");
-  const [bodyHtml, setBodyHtml] = useState("");
+  const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState("");
   const [history, setHistory] = useState<Campaign[]>([]);
-  const [formKey, setFormKey] = useState(0);
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [statusGroups, setStatusGroups] = useState<Set<string>>(new Set(["Member"]));
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [fileAttachments, setFileAttachments] = useState<FileAttachment[]>([]);
-  const [attaching, setAttaching] = useState(false);
-  const [attachError, setAttachError] = useState("");
+  const [mediaUrl, setMediaUrl] = useState("");
+  const [mediaFileName, setMediaFileName] = useState("");
+  const [attachingMedia, setAttachingMedia] = useState(false);
+  const [mediaError, setMediaError] = useState("");
 
   async function loadHistory() {
-    const res = await fetch("/api/admin/email");
+    const res = await fetch("/api/admin/sms");
     setHistory((await res.json()) as Campaign[]);
   }
 
@@ -53,7 +50,9 @@ export default function EmailAdmin() {
     const rows = (await res.json()) as Member[];
     setAllMembers(rows);
     if (resetSelection) {
-      setSelectedIds(new Set(rows.filter((m) => statusGroups.has(m.status)).map((m) => m.id)));
+      setSelectedIds(
+        new Set(rows.filter((m) => statusGroups.has(m.status) && m.phone).map((m) => m.id))
+      );
     }
   }
 
@@ -62,53 +61,42 @@ export default function EmailAdmin() {
     void loadMembers(true);
   }, []);
 
-  async function uploadEmailImage(file: File): Promise<string> {
-    const formData = new FormData();
-    formData.append("image", file);
-    const result = await adminFetch<{ url: string }>("/api/admin/email/images", {
-      method: "POST",
-      body: formData,
-    });
-    if (!result.ok) throw new Error(result.error);
-    return result.data.url;
-  }
-
-  async function attachFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function attachMedia(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    setAttachError("");
-    if (fileAttachments.length >= MAX_FILE_ATTACHMENTS) {
-      setAttachError(`You can attach at most ${MAX_FILE_ATTACHMENTS} files.`);
-      return;
-    }
-    setAttaching(true);
+    setMediaError("");
+    setAttachingMedia(true);
     const formData = new FormData();
-    formData.append("file", file);
-    const result = await adminFetch<FileAttachment>("/api/admin/email/attachments", {
+    formData.append("image", file);
+    const result = await adminFetch<{ url: string }>("/api/admin/sms/media", {
       method: "POST",
       body: formData,
     });
-    setAttaching(false);
+    setAttachingMedia(false);
     if (!result.ok) {
-      setAttachError(result.error);
+      setMediaError(result.error);
       return;
     }
-    setFileAttachments((prev) => [...prev, result.data]);
+    setMediaUrl(result.data.url);
+    setMediaFileName(file.name);
   }
 
-  function removeAttachment(r2Key: string) {
-    setFileAttachments((prev) => prev.filter((a) => a.r2Key !== r2Key));
+  function removeMedia() {
+    setMediaUrl("");
+    setMediaFileName("");
   }
 
-  const activeMembers = allMembers.filter((m) => statusGroups.has(m.status));
+  const withPhone = allMembers.filter((m) => m.phone);
+  const activeMembers = withPhone.filter((m) => statusGroups.has(m.status));
+  const noPhoneCount = allMembers.filter((m) => statusGroups.has(m.status) && !m.phone).length;
 
   function toggleStatusGroup(status: string) {
     const next = new Set(statusGroups);
     if (next.has(status)) next.delete(status);
     else next.add(status);
     setStatusGroups(next);
-    setSelectedIds(new Set(allMembers.filter((m) => next.has(m.status)).map((m) => m.id)));
+    setSelectedIds(new Set(withPhone.filter((m) => next.has(m.status)).map((m) => m.id)));
   }
 
   async function send(e: React.FormEvent) {
@@ -119,32 +107,25 @@ export default function EmailAdmin() {
     }
     const allSelected = selectedIds.size === activeMembers.length;
     const confirmMessage = allSelected
-      ? "Send this email to every member? There is no undo."
-      : `Send this email to the ${selectedIds.size} selected member${selectedIds.size === 1 ? "" : "s"}? There is no undo.`;
+      ? "Send this text to every selected contact? There is no undo."
+      : `Send this text to the ${selectedIds.size} selected contact${selectedIds.size === 1 ? "" : "s"}? There is no undo.`;
     const ok = await confirm(confirmMessage, "Yes, send");
     if (!ok) return;
     setSending(true);
     setResult("");
-    const result = await adminFetch<{ sentCount?: number; failedCount?: number }>("/api/admin/email", {
+    const result = await adminFetch<{ sentCount?: number; failedCount?: number }>("/api/admin/sms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject,
-        bodyHtml,
-        memberIds: Array.from(selectedIds),
-        attachments: fileAttachments,
-      }),
+      body: JSON.stringify({ body, memberIds: Array.from(selectedIds), mediaUrl: mediaUrl || undefined }),
     });
     setSending(false);
     if (!result.ok) {
       setResult(result.error);
       return;
     }
-    setResult(`Sent to ${result.data.sentCount} members (${result.data.failedCount} failed).`);
-    setSubject("");
-    setBodyHtml("");
-    setFileAttachments([]);
-    setFormKey((k) => k + 1);
+    setResult(`Sent to ${result.data.sentCount} contacts (${result.data.failedCount} failed).`);
+    setBody("");
+    removeMedia();
     void loadHistory();
     void loadMembers(true);
   }
@@ -154,7 +135,7 @@ export default function EmailAdmin() {
   return (
     <div>
       {dialog}
-      <h1>Send Email</h1>
+      <h1>Send Text Message</h1>
       <p className="admin-note">
         Choose who should receive this message below, then double-check it before sending — there
         is no undo.
@@ -162,37 +143,34 @@ export default function EmailAdmin() {
 
       <form className="admin-form" onSubmit={send}>
         <label>
-          Subject
-          <input value={subject} onChange={(e) => setSubject(e.target.value)} required />
-        </label>
-        <RichTextEditor
-          key={formKey}
-          label="Message"
-          value={bodyHtml}
-          onChange={setBodyHtml}
-          onImageUpload={uploadEmailImage}
-        />
-
-        <label>
-          Attach a file (optional, e.g. a flyer PDF — shows as a downloadable attachment, not inline)
-          <input
-            type="file"
-            onChange={attachFile}
-            disabled={attaching || fileAttachments.length >= MAX_FILE_ATTACHMENTS}
+          Message
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            maxLength={1600}
+            rows={5}
+            required
           />
         </label>
-        {attachError && <p className="admin-error">{attachError}</p>}
-        {fileAttachments.length > 0 && (
-          <ul className="admin-note">
-            {fileAttachments.map((a) => (
-              <li key={a.r2Key}>
-                {a.fileName}{" "}
-                <button type="button" onClick={() => removeAttachment(a.r2Key)}>
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
+        <p className="admin-note">{body.length} / 1600 characters</p>
+
+        <label>
+          Attach a picture (optional — sends as a picture message/MMS)
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            onChange={attachMedia}
+            disabled={attachingMedia}
+          />
+        </label>
+        {mediaError && <p className="admin-error">{mediaError}</p>}
+        {mediaUrl && (
+          <p className="admin-note">
+            {mediaFileName}{" "}
+            <button type="button" onClick={removeMedia}>
+              Remove
+            </button>
+          </p>
         )}
 
         <fieldset className="status-group-picker">
@@ -208,6 +186,12 @@ export default function EmailAdmin() {
             </label>
           ))}
         </fieldset>
+        {noPhoneCount > 0 && (
+          <p className="admin-note">
+            {noPhoneCount} contact{noPhoneCount === 1 ? "" : "s"} in the selected groups have no
+            phone number on file and are excluded.
+          </p>
+        )}
 
         <RecipientPicker members={activeMembers} selectedIds={selectedIds} onChange={setSelectedIds} />
 
@@ -216,8 +200,8 @@ export default function EmailAdmin() {
           {sending
             ? "Sending…"
             : allSelected
-              ? `Send to all members (${activeMembers.length})`
-              : `Send to ${selectedIds.size} selected member${selectedIds.size === 1 ? "" : "s"}`}
+              ? `Send to all contacts (${activeMembers.length})`
+              : `Send to ${selectedIds.size} selected contact${selectedIds.size === 1 ? "" : "s"}`}
         </button>
       </form>
 
@@ -225,7 +209,7 @@ export default function EmailAdmin() {
       <table className="admin-table">
         <thead>
           <tr>
-            <th>Subject</th>
+            <th>Message</th>
             <th>To</th>
             <th>Sent at</th>
             <th>Sent / Failed</th>
@@ -235,8 +219,18 @@ export default function EmailAdmin() {
         <tbody>
           {history.map((c) => (
             <tr key={c.id}>
-              <td>{c.subject}</td>
-              <td>{c.recipientEmail ?? "All contacts"}</td>
+              <td>
+                {c.body}
+                {c.mediaUrl && (
+                  <>
+                    {" "}
+                    <a href={c.mediaUrl} target="_blank" rel="noopener">
+                      (picture)
+                    </a>
+                  </>
+                )}
+              </td>
+              <td>{c.recipientPhone ?? "All contacts"}</td>
               <td>{c.sentAt}</td>
               <td>
                 {c.sentCount} / {c.failedCount}

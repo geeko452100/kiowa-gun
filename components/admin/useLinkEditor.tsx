@@ -16,6 +16,14 @@ type PopoverState =
 
 const ZWSP = "​";
 
+// Inline styles (not a class + <style> block) because most mail clients
+// strip <style> tags and classes; this renders as a solid button in Gmail,
+// Apple Mail, and Outlook.com. Not using a bulletproof VML/table fallback
+// for legacy desktop Outlook -- out of scope for this club's newsletter use.
+const BUTTON_STYLE =
+  "display:inline-block;padding:10px 22px;background-color:#2c3e1f;color:#ffffff;" +
+  "text-decoration:none;border-radius:4px;font-family:Arial,Helvetica,sans-serif;font-weight:bold;";
+
 function cleanText(link: HTMLAnchorElement) {
   return (link.textContent ?? "").split(ZWSP).join("");
 }
@@ -80,48 +88,68 @@ export function useLinkEditor(
     [draftUrl, notifyChange],
   );
 
-  // Start a new link: wrap the current selection, or drop an empty one at
-  // the caret so its text can be typed directly into the document.
-  const startLink = useCallback(() => {
-    const container = contentRef.current;
-    if (!container) return;
-    const range = rangeInContainer(container);
-    if (!range) return;
-    container.focus();
+  // Start a new link (or button): wrap the current selection, or drop an
+  // empty one at the caret so its text can be typed directly into the
+  // document. A button is just a link with inline button styling and
+  // placeholder text -- it reuses this same insert/edit/hover mechanism.
+  const insertLink = useCallback(
+    (styleAsButton: boolean) => {
+      const container = contentRef.current;
+      if (!container) return;
+      const range = rangeInContainer(container);
+      if (!range) return;
+      container.focus();
 
-    const link = document.createElement("a");
-    let autofocusUrl = false;
+      const link = document.createElement("a");
+      if (styleAsButton) link.setAttribute("style", BUTTON_STYLE);
+      let autofocusUrl = false;
 
-    if (range.collapsed) {
-      const zwsp = document.createTextNode(ZWSP);
-      link.appendChild(zwsp);
-      range.deleteContents();
-      range.insertNode(link);
-      const caret = document.createRange();
-      caret.setStart(zwsp, 1);
-      caret.collapse(true);
-      const sel = window.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(caret);
-    } else {
-      link.appendChild(range.extractContents());
-      range.insertNode(link);
-      const after = document.createRange();
-      after.selectNodeContents(link);
-      after.collapse(false);
-      const sel = window.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(after);
-      autofocusUrl = true;
-    }
+      if (range.collapsed) {
+        if (styleAsButton) {
+          link.textContent = "Button text";
+        } else {
+          link.appendChild(document.createTextNode(ZWSP));
+        }
+        range.deleteContents();
+        range.insertNode(link);
+        const sel = window.getSelection();
+        if (styleAsButton) {
+          const after = document.createRange();
+          after.selectNodeContents(link);
+          sel?.removeAllRanges();
+          sel?.addRange(after);
+          autofocusUrl = true;
+        } else {
+          const caret = document.createRange();
+          caret.setStart(link.firstChild!, 1);
+          caret.collapse(true);
+          sel?.removeAllRanges();
+          sel?.addRange(caret);
+        }
+      } else {
+        link.appendChild(range.extractContents());
+        range.insertNode(link);
+        const after = document.createRange();
+        after.selectNodeContents(link);
+        after.collapse(false);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(after);
+        autofocusUrl = true;
+      }
 
-    setDraftUrl("");
-    setPopover({ mode: "edit-url", link, isNew: true });
-    reposition(link);
-    if (autofocusUrl) {
-      requestAnimationFrame(() => urlInputRef.current?.focus());
-    }
-  }, [contentRef, reposition]);
+      setDraftUrl("");
+      setPopover({ mode: "edit-url", link, isNew: true });
+      reposition(link);
+      if (autofocusUrl) {
+        requestAnimationFrame(() => urlInputRef.current?.focus());
+      }
+    },
+    [contentRef, reposition]
+  );
+
+  const startLink = useCallback(() => insertLink(false), [insertLink]);
+  const startButton = useCallback(() => insertLink(true), [insertLink]);
 
   const switchToEditUrl = useCallback(
     (link: HTMLAnchorElement) => {
@@ -296,5 +324,5 @@ export function useLinkEditor(
         )
       : null;
 
-  return { startLink, dialog };
+  return { startLink, startButton, dialog };
 }

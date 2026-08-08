@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { desc, eq, inArray } from "drizzle-orm";
-import { Resend } from "resend";
+import { desc, inArray } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { members, emailCampaigns } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
+import { sendPostmarkEmail } from "@/lib/email";
+import { buildEmailAttachments } from "@/lib/emailAttachments";
 
-const FROM = "Kiowa Gun Club <newsletter@kiowa.prairiewebstudio.com>";
-const BATCH_SIZE = 100; // Resend's batch send endpoint caps out per request; chunk to stay under it.
+const FROM = { name: "Kiowa Gun Club", email: "newsletter@prairiewebstudio.com" };
+const BATCH_SIZE = 20; // send concurrently in small batches to stay within Postmark's rate limits
 
 export async function GET() {
   const db = await getDb();
@@ -16,10 +17,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { subject, bodyHtml, memberIds } = (await request.json()) as {
+  const { subject, bodyHtml, memberIds, attachments: fileAttachmentRefs } = (await request.json()) as {
     subject: string;
     bodyHtml: string;
     memberIds?: number[];
+    attachments?: { r2Key: string; fileName: string }[];
   };
   if (!subject || !bodyHtml) {
     return NextResponse.json({ error: "Subject and body are required" }, { status: 400 });
@@ -35,33 +37,46 @@ export async function POST(request: Request) {
   }
 
   const { env } = await getCloudflareContext({ async: true });
-  const resend = new Resend(env.RESEND_API_KEY);
   const admin = await getCurrentAdmin();
+
+  // Rewrite composer images from public-URL references into inline (CID)
+  // attachments, and resolve any true file attachments -- both done once, up
+  // front (validated against a combined size budget), so the transform and
+  // R2 reads aren't repeated per recipient.
+  const built = await buildEmailAttachments(bodyHtml, fileAttachmentRefs ?? [], env.DOCS);
+  if (!built.ok) {
+    return NextResponse.json({ error: built.error }, { status: 400 });
+  }
+  const { html: sendHtml, attachments } = built;
 
   let sentCount = 0;
   let failedCount = 0;
 
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const chunk = recipients.slice(i, i + BATCH_SIZE);
-    const { error } = await resend.batch.send(
-      chunk.map((m) => ({
-        from: FROM,
-        to: m.email,
-        subject,
-        html: bodyHtml,
-      }))
+    const results = await Promise.all(
+      chunk.map((m) =>
+        sendPostmarkEmail(env.POSTMARK_SERVER_TOKEN, {
+          from: FROM,
+          to: m.email,
+          subject,
+          html: sendHtml,
+          attachments,
+        })
+      )
     );
-    if (error) {
-      failedCount += chunk.length;
-    } else {
-      sentCount += chunk.length;
+    for (const { error } of results) {
+      if (error) {
+        failedCount += 1;
+      } else {
+        sentCount += 1;
+      }
     }
   }
 
-  const activeMembers = await db.select({ id: members.id }).from(members).where(eq(members.status, "active"));
-  const isAllActive =
-    recipients.length === activeMembers.length &&
-    activeMembers.every((a) => memberIds.includes(a.id));
+  const allContacts = await db.select({ id: members.id }).from(members);
+  const isAllEligible =
+    recipients.length === allContacts.length && allContacts.every((a) => memberIds.includes(a.id));
 
   await db.insert(emailCampaigns).values({
     subject,
@@ -69,8 +84,15 @@ export async function POST(request: Request) {
     sentCount,
     failedCount,
     createdBy: admin?.email ?? null,
-    recipientEmail: isAllActive ? null : recipients.map((r) => r.email).join(", "),
+    recipientEmail: isAllEligible ? null : recipients.map((r) => r.email).join(", "),
   });
+
+  // One-shot uploads, only ever referenced by this send -- nothing else in
+  // the app reads them back, so clean them up now rather than let them pile
+  // up in R2.
+  if (fileAttachmentRefs && fileAttachmentRefs.length > 0) {
+    await Promise.all(fileAttachmentRefs.map((ref) => env.DOCS.delete(ref.r2Key)));
+  }
 
   return NextResponse.json({ ok: true, sentCount, failedCount });
 }

@@ -561,6 +561,34 @@ button.danger {
   font-size: 1rem;
 }
 
+.status-group-picker {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  border: 1px solid var(--color-border, #3a3d33);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.status-group-picker legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.status-group-picker label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+}
+
+.status-group-picker input {
+  min-height: auto;
+  width: 18px;
+  height: 18px;
+}
+
 .recipient-picker {
   display: flex;
   flex-direction: column;

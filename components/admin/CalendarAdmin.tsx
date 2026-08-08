@@ -225,7 +225,7 @@ export default function CalendarAdmin() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
             onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
           />
         </label>

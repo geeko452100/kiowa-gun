@@ -17,6 +17,7 @@ const LINKS = [
   { href: "/admin/members", label: "Members" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/email", label: "Send Email" },
+  { href: "/admin/sms", label: "Send Text" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
