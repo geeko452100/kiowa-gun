@@ -1,15 +1,30 @@
 import { NextResponse } from "next/server";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
-import { documents } from "@/lib/schema";
+import { documents, members } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
 
 export async function GET() {
   const admin = await getCurrentAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = await getDb();
-  const rows = await db.select().from(documents).orderBy(desc(documents.uploadedAt));
+  const rows = await db
+    .select({
+      id: documents.id,
+      title: documents.title,
+      description: documents.description,
+      category: documents.category,
+      fileName: documents.fileName,
+      uploadedAt: documents.uploadedAt,
+      memberId: documents.memberId,
+      reviewed: documents.reviewed,
+      memberName: members.name,
+      memberEmail: members.email,
+    })
+    .from(documents)
+    .leftJoin(members, eq(documents.memberId, members.id))
+    .orderBy(desc(documents.uploadedAt));
   return NextResponse.json(rows);
 }
 

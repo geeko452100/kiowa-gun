@@ -11,6 +11,10 @@ type Doc = {
   category: string;
   fileName: string;
   uploadedAt: string;
+  memberId: number | null;
+  reviewed: number;
+  memberName: string | null;
+  memberEmail: string | null;
 };
 
 export default function DocumentsAdmin() {
@@ -51,6 +55,20 @@ export default function DocumentsAdmin() {
     setTitle("");
     setDescription("");
     setFile(null);
+    void load();
+  }
+
+  async function toggleReviewed(doc: Doc) {
+    setError("");
+    const result = await adminFetch(`/api/admin/documents/${doc.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reviewed: doc.reviewed === 0 }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
     void load();
   }
 
@@ -117,6 +135,8 @@ export default function DocumentsAdmin() {
             <th>Title</th>
             <th>Category</th>
             <th>File</th>
+            <th>Submitted By</th>
+            <th>Review</th>
             <th></th>
           </tr>
         </thead>
@@ -129,6 +149,28 @@ export default function DocumentsAdmin() {
                 <a href={`/api/documents/${d.id}`} target="_blank" rel="noopener">
                   {d.fileName}
                 </a>
+              </td>
+              <td>
+                {d.memberId ? (
+                  <span>
+                    {d.memberName} ({d.memberEmail})
+                  </span>
+                ) : (
+                  <span className="admin-note">Board-managed</span>
+                )}
+              </td>
+              <td>
+                {d.memberId ? (
+                  <button
+                    type="button"
+                    className={d.reviewed === 0 ? "danger" : ""}
+                    onClick={() => toggleReviewed(d)}
+                  >
+                    {d.reviewed === 0 ? "Needs review" : "Reviewed"}
+                  </button>
+                ) : (
+                  "—"
+                )}
               </td>
               <td>
                 <button type="button" className="danger" onClick={() => remove(d)}>

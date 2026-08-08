@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db";
 import { pageSections, documents } from "@/lib/schema";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MembershipForm from "@/components/MembershipForm";
 import "../styles/membership.css";
 
 export const metadata = { title: "Membership Info - Kiowa Gun Club" };
@@ -43,6 +44,14 @@ export default async function MembershipPage() {
             ))}
             <div dangerouslySetInnerHTML={{ __html: terms?.bodyHtml ?? "" }} />
           </div>
+        </section>
+        <section id="membership-apply" className="content-section">
+          <h2>Apply / Renew</h2>
+          <p>
+            Ready to join or renew? Fill out the form below to submit your information, upload the
+            required documents, and pay your dues.
+          </p>
+          <MembershipForm />
         </section>
       </main>
       <Footer />

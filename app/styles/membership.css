@@ -61,3 +61,53 @@ a:hover{
     word-break: break-word;
     text-align: center;
 }
+
+#membership-apply .membership-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 480px;
+    margin-top: 24px;
+}
+
+#membership-apply .membership-form fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 16px;
+}
+
+#membership-apply .membership-form legend {
+    font-weight: 600;
+    padding: 0 6px;
+}
+
+#membership-apply .membership-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#membership-apply .membership-form-checkbox {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px !important;
+}
+
+#membership-apply .membership-form input[type="text"],
+#membership-apply .membership-form input[type="email"],
+#membership-apply .membership-form input {
+    padding: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+}
+
+#membership-apply .membership-form-note {
+    font-size: 0.9rem;
+}
+
+#membership-apply .membership-form-error {
+    color: #b3261e;
+}
