@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   // page and receive newsletters, without clobbering an existing member entry.
   await db
     .insert(members)
-    .values({ name, email: normalizedEmail, phone: phone?.trim() || null, status: "active" })
+    .values({ name, email: normalizedEmail, phone: phone?.trim() || null, status: "Member" })
     .onConflictDoNothing();
 
   const [created] = await db

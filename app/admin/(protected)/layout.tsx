@@ -15,6 +15,7 @@ const LINKS = [
   { href: "/admin/matches", label: "Matches" },
   { href: "/admin/documents", label: "Documents" },
   { href: "/admin/members", label: "Members" },
+  { href: "/admin/payments", label: "Payments" },
   { href: "/admin/email", label: "Send Email" },
 ];
 

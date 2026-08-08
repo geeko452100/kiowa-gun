@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       name: cols[nameIdx],
       email: (cols[emailIdx] ?? "").toLowerCase(),
       phone: phoneIdx >= 0 ? cols[phoneIdx] || null : null,
+      status: "Member" as const,
     };
   }).filter((r) => r.name && r.email);
 

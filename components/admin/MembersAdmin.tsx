@@ -4,12 +4,16 @@ import { useEffect, useState } from "react";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
 
+const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
+
 type Member = {
   id: number;
   name: string;
   email: string;
   phone: string | null;
   status: string;
+  renewalDate: string | null;
+  pendingDocs: number;
 };
 
 export default function MembersAdmin() {
@@ -69,15 +73,26 @@ export default function MembersAdmin() {
     void load();
   }
 
-  async function toggleStatus(m: Member) {
+  async function changeStatus(m: Member, status: string) {
     setError("");
     const result = await adminFetch(`/api/admin/members/${m.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...m,
-        status: m.status === "active" ? "inactive" : "active",
-      }),
+      body: JSON.stringify({ ...m, status }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    void load();
+  }
+
+  async function changeRenewalDate(m: Member, renewalDate: string) {
+    setError("");
+    const result = await adminFetch(`/api/admin/members/${m.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...m, renewalDate: renewalDate || null }),
     });
     if (!result.ok) {
       setError(result.error);
@@ -102,19 +117,25 @@ export default function MembersAdmin() {
     void load();
   }
 
-  const activeCount = members.filter((m) => m.status === "active").length;
+  const memberCount = members.filter((m) => m.status === "Member").length;
 
   return (
     <div>
       {dialog}
       <h1>Members</h1>
       <p className="admin-note">
-        {activeCount} active members will receive newsletters.
+        {memberCount} members will receive newsletters.
       </p>
       <p className="admin-note">
-        Board members are included in this list. Deactivating or deleting a
-        board member here only affects newsletters — it does not remove their
-        CMS login (manage that from Board Members).
+        Board members are included in this list. Changing a board member&apos;s
+        status here only affects newsletters — it does not remove their CMS
+        login (manage that from Board Members).
+      </p>
+      <p>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page nav */}
+        <a className="admin-link" href="/api/admin/members/export">
+          Export contact list as CSV
+        </a>
       </p>
 
       <form className="admin-form" onSubmit={addMember}>
@@ -180,6 +201,7 @@ export default function MembersAdmin() {
               <th>Email</th>
               <th>Phone</th>
               <th>Status</th>
+              <th>Renewal Date</th>
               <th></th>
             </tr>
           </thead>
@@ -189,11 +211,31 @@ export default function MembersAdmin() {
                 <td data-label="Name">{m.name}</td>
                 <td data-label="Email">{m.email}</td>
                 <td data-label="Phone">{m.phone}</td>
-                <td data-label="Status">{m.status}</td>
+                <td data-label="Status">
+                  <select
+                    value={m.status}
+                    onChange={(e) => changeStatus(m, e.target.value)}
+                  >
+                    {MEMBER_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  {m.pendingDocs > 0 && (
+                    <span className="admin-badge">
+                      {m.pendingDocs} doc{m.pendingDocs === 1 ? "" : "s"} to review
+                    </span>
+                  )}
+                </td>
+                <td data-label="Renewal Date">
+                  <input
+                    type="date"
+                    value={m.renewalDate ?? ""}
+                    onChange={(e) => changeRenewalDate(m, e.target.value)}
+                  />
+                </td>
                 <td className="admin-row-actions">
-                  <button type="button" onClick={() => toggleStatus(m)}>
-                    {m.status === "active" ? "Deactivate" : "Activate"}
-                  </button>
                   <button
                     type="button"
                     className="danger"

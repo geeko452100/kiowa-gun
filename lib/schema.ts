@@ -79,11 +79,25 @@ export const newsPosts = sqliteTable("news_posts", {
 
 export const matches = sqliteTable("matches", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  // Free text rather than an enum -- board members occasionally add a new
+  // discipline and shouldn't need a code change to do it.
+  discipline: text("discipline").notNull().default("Defensive Pistol"),
   eventDate: text("event_date").notNull(),
   eventTime: text("event_time").notNull(),
   notes: text("notes"),
   resultsUrl: text("results_url"),
   sortOrder: integer("sort_order").notNull().default(0),
+});
+
+// Photos scoped to a single match date, shown in that match's public gallery.
+// Replaces the old 4 hardcoded images shared across the whole matches page.
+export const matchPhotos = sqliteTable("match_photos", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  matchId: integer("match_id").notNull(),
+  r2Key: text("r2_key").notNull(),
+  fileName: text("file_name").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  uploadedAt: text("uploaded_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
 export const documents = sqliteTable("documents", {
@@ -94,15 +108,52 @@ export const documents = sqliteTable("documents", {
   r2Key: text("r2_key").notNull(),
   fileName: text("file_name").notNull(),
   uploadedAt: text("uploaded_at").notNull().default("CURRENT_TIMESTAMP"),
+  // Set when a member uploads this themselves (e.g. a cleanup-day discount
+  // card) via the Phase 3 membership form; null for board-managed documents
+  // like the range rules PDF.
+  memberId: integer("member_id"),
+  // Whether a board member has reviewed this upload. Defaults to 1 (already
+  // reviewed) since board-managed uploads don't need review; the public
+  // membership form explicitly inserts 0 for self-service uploads.
+  reviewed: integer("reviewed").notNull().default(1),
 });
+
+export const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
 
 export const members = sqliteTable("members", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   phone: text("phone"),
-  status: text("status").notNull().default("active"),
+  address: text("address"),
+  status: text("status").notNull().default("Member"), // one of MEMBER_STATUSES
   createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  // Digital signature on the Range Rules acknowledgement, from the Phase 3
+  // membership form: the typed name and when they submitted it.
+  rulesAcknowledgedName: text("rules_acknowledged_name"),
+  rulesAcknowledgedAt: text("rules_acknowledged_at"),
+  // Set manually by a board admin (no Stripe payment history to derive it
+  // from yet). Drives the automated 45- and 15-day-out renewal reminder texts.
+  renewalDate: text("renewal_date"), // "YYYY-MM-DD"
+  // The renewalDate value each reminder threshold has already been sent for,
+  // so the daily cron job doesn't re-text the same renewal cycle.
+  renewal45ReminderSentFor: text("renewal_45_reminder_sent_for"),
+  renewal15ReminderSentFor: text("renewal_15_reminder_sent_for"),
+});
+
+// One row per completed Stripe Checkout Session for member dues. Rows are
+// written by the Stripe webhook (checkout.session.completed), not by the
+// checkout-creation route, so a payment only shows up here once Stripe has
+// actually confirmed it.
+export const payments = sqliteTable("payments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  memberId: integer("member_id").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  currency: text("currency").notNull().default("usd"),
+  paymentMethodType: text("payment_method_type"), // e.g. "card", "us_bank_account", "cashapp" -- from the Stripe payment intent
+  stripeCheckoutSessionId: text("stripe_checkout_session_id").notNull().unique(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  paidAt: text("paid_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
 export const emailCampaigns = sqliteTable("email_campaigns", {
@@ -114,4 +165,18 @@ export const emailCampaigns = sqliteTable("email_campaigns", {
   failedCount: integer("failed_count").notNull().default(0),
   createdBy: text("created_by"),
   recipientEmail: text("recipient_email"), // set only for single-member sends; null means "all active members"
+});
+
+export const smsCampaigns = sqliteTable("sms_campaigns", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  body: text("body").notNull(),
+  sentAt: text("sent_at").notNull().default("CURRENT_TIMESTAMP"),
+  sentCount: integer("sent_count").notNull().default(0),
+  failedCount: integer("failed_count").notNull().default(0),
+  createdBy: text("created_by"),
+  recipientPhone: text("recipient_phone"), // set only for single-member sends; null means "all contacts"
+  // Public R2-backed URL of an attached picture, if any -- turns the send into
+  // an MMS. Left in place (not deleted after sending) since carriers fetch it
+  // asynchronously and the URL doubles as a record in send history.
+  mediaUrl: text("media_url"),
 });

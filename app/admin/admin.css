@@ -543,6 +543,18 @@ button.danger {
   font-size: 0.95rem;
 }
 
+.admin-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #5c3a1e;
+  color: #ffd9a3;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .admin-link {
   color: #9fd3ff;
   text-decoration: underline;
