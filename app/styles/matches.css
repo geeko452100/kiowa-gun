@@ -31,17 +31,26 @@
     font-size: 0.9rem;
 }
 
+.discipline-group {
+    margin-top: 32px;
+}
+
+.discipline-group h4 {
+    margin-bottom: 4px;
+}
+
 .match-gallery {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-top: 24px;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 4px;
 }
 
 .match-gallery img {
     display: block;
-    width: 100%;
-    height: auto;
+    width: 140px;
+    height: 100px;
+    object-fit: cover;
     border-radius: 6px;
 }
 

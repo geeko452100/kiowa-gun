@@ -15,7 +15,8 @@ export async function GET() {
 export async function POST(request: Request) {
   const admin = await getCurrentAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { eventDate, eventTime, notes, resultsUrl } = (await request.json()) as {
+  const { discipline, eventDate, eventTime, notes, resultsUrl } = (await request.json()) as {
+    discipline?: string;
     eventDate: string;
     eventTime: string;
     notes?: string;
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
     .select({ maxSortOrder: sql<number>`coalesce(max(${matches.sortOrder}), -1)` })
     .from(matches);
   await db.insert(matches).values({
+    discipline: discipline || "Defensive Pistol",
     eventDate,
     eventTime,
     notes: notes || null,
