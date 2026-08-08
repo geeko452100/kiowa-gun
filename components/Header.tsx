@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/about", label: "About Us / Map", slug: "about" },
   { href: "/rules", label: "Range Rules", slug: "rules" },
   { href: "/membership", label: "Membership Info", slug: "membership" },
+  { href: "/dues", label: "Pay Dues", slug: "dues" },
   { href: "/matches", label: "Matches", slug: "matches" },
   { href: "/contact", label: "Contact Us", slug: "contact" },
   { href: "/news", label: "News", slug: "news" },
