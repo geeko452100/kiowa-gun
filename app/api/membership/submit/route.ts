@@ -3,25 +3,14 @@ import { eq } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { members, documents } from "@/lib/schema";
-import { MEMBERSHIP_DOC_CATEGORIES } from "@/lib/constants";
+import { MEMBERSHIP_ALLOWED_FILE_TYPES, MEMBERSHIP_FILE_FIELDS } from "@/lib/constants";
 
-const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/avif"];
+const ALLOWED_FILE_TYPES = MEMBERSHIP_ALLOWED_FILE_TYPES;
 
-const FILE_FIELDS: { field: string; category: string; label: string; required: boolean }[] = [
-  { field: "nraProof", category: MEMBERSHIP_DOC_CATEGORIES.nraProof, label: "NRA Proof", required: true },
-  {
-    field: "backgroundCheck",
-    category: MEMBERSHIP_DOC_CATEGORIES.backgroundCheck,
-    label: "Background Check",
-    required: true,
-  },
-  {
-    field: "discountCard",
-    category: MEMBERSHIP_DOC_CATEGORIES.discountCard,
-    label: "Discount Card",
-    required: false,
-  },
-];
+const FILE_FIELDS = MEMBERSHIP_FILE_FIELDS.map((f) => ({
+  ...f,
+  required: f.field === "nraProof" || f.field === "backgroundCheck",
+}));
 
 export async function POST(request: Request) {
   const formData = await request.formData();

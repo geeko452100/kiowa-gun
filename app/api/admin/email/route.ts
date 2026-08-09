@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { desc, inArray } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
-import { members, emailCampaigns } from "@/lib/schema";
+import { members, emailCampaigns, emailCampaignRecipients } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
 import { sendPostmarkEmail } from "@/lib/email";
 import { buildEmailAttachments } from "@/lib/emailAttachments";
@@ -12,7 +12,24 @@ const BATCH_SIZE = 20; // send concurrently in small batches to stay within Post
 
 export async function GET() {
   const db = await getDb();
-  const rows = await db.select().from(emailCampaigns).orderBy(desc(emailCampaigns.sentAt));
+  const rows = await db
+    .select({
+      id: emailCampaigns.id,
+      subject: emailCampaigns.subject,
+      sentAt: emailCampaigns.sentAt,
+      sentCount: emailCampaigns.sentCount,
+      failedCount: emailCampaigns.failedCount,
+      createdBy: emailCampaigns.createdBy,
+      recipientEmail: emailCampaigns.recipientEmail,
+      openedCount: sql<number>`count(distinct case when ${emailCampaignRecipients.openedAt} is not null then ${emailCampaignRecipients.id} end)`,
+      clickedCount: sql<number>`count(distinct case when ${emailCampaignRecipients.clickedAt} is not null then ${emailCampaignRecipients.id} end)`,
+      bouncedCount: sql<number>`count(distinct case when ${emailCampaignRecipients.bouncedAt} is not null then ${emailCampaignRecipients.id} end)`,
+      spamCount: sql<number>`count(distinct case when ${emailCampaignRecipients.spamComplaintAt} is not null then ${emailCampaignRecipients.id} end)`,
+    })
+    .from(emailCampaigns)
+    .leftJoin(emailCampaignRecipients, eq(emailCampaignRecipients.campaignId, emailCampaigns.id))
+    .groupBy(emailCampaigns.id)
+    .orderBy(desc(emailCampaigns.sentAt));
   return NextResponse.json(rows);
 }
 
@@ -51,6 +68,7 @@ export async function POST(request: Request) {
 
   let sentCount = 0;
   let failedCount = 0;
+  const sendResults: { member: (typeof recipients)[number]; error: string | null; messageId: string | null }[] = [];
 
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const chunk = recipients.slice(i, i + BATCH_SIZE);
@@ -65,6 +83,7 @@ export async function POST(request: Request) {
         })
       )
     );
+    chunk.forEach((m, idx) => sendResults.push({ member: m, ...results[idx] }));
     for (const { error } of results) {
       if (error) {
         failedCount += 1;
@@ -78,14 +97,27 @@ export async function POST(request: Request) {
   const isAllEligible =
     recipients.length === allContacts.length && allContacts.every((a) => memberIds.includes(a.id));
 
-  await db.insert(emailCampaigns).values({
-    subject,
-    bodyHtml,
-    sentCount,
-    failedCount,
-    createdBy: admin?.email ?? null,
-    recipientEmail: isAllEligible ? null : recipients.map((r) => r.email).join(", "),
-  });
+  const [campaign] = await db
+    .insert(emailCampaigns)
+    .values({
+      subject,
+      bodyHtml,
+      sentCount,
+      failedCount,
+      createdBy: admin?.email ?? null,
+      recipientEmail: isAllEligible ? null : recipients.map((r) => r.email).join(", "),
+    })
+    .returning({ id: emailCampaigns.id });
+
+  await db.insert(emailCampaignRecipients).values(
+    sendResults.map(({ member, error, messageId }) => ({
+      campaignId: campaign.id,
+      memberId: member.id,
+      email: member.email,
+      postmarkMessageId: messageId,
+      sendError: error,
+    }))
+  );
 
   // One-shot uploads, only ever referenced by this send -- nothing else in
   // the app reads them back, so clean them up now rather than let them pile

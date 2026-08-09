@@ -12,6 +12,7 @@ type Payment = {
   paymentMethodType: string | null;
   paidAt: string;
   hasDiscountCard: boolean;
+  subscriptionStatus: string | null;
 };
 
 function formatAmount(cents: number, currency: string) {
@@ -52,6 +53,7 @@ export default function PaymentsAdmin() {
               <th>Amount</th>
               <th>Date</th>
               <th>Method</th>
+              <th>Subscription</th>
               <th>Discount card on file</th>
             </tr>
           </thead>
@@ -66,6 +68,7 @@ export default function PaymentsAdmin() {
                 <td data-label="Amount">{formatAmount(p.amountCents, p.currency)}</td>
                 <td data-label="Date">{new Date(p.paidAt).toLocaleDateString()}</td>
                 <td data-label="Method">{p.paymentMethodType ?? "—"}</td>
+                <td data-label="Subscription">{p.subscriptionStatus ?? "—"}</td>
                 <td data-label="Discount card on file">{p.hasDiscountCard ? "Yes" : "No"}</td>
               </tr>
             ))}

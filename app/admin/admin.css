@@ -359,6 +359,14 @@ button.danger {
   vertical-align: top;
 }
 
+.admin-table-row-clickable {
+  cursor: pointer;
+}
+
+.admin-table-row-clickable:hover {
+  background: var(--color-hover, rgba(255, 255, 255, 0.04));
+}
+
 @media (max-width: 720px) {
   .admin-table-wrap {
     overflow-x: visible;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import RichTextEditor from "./RichTextEditor";
 import RecipientPicker from "./RecipientPicker";
 import { useConfirm } from "./useConfirm";
@@ -8,6 +8,15 @@ import { adminFetch } from "./adminFetch";
 import { MAX_FILE_ATTACHMENTS } from "@/lib/emailAttachments";
 
 const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
+const SHOOTING_COMMITTEE = "Shooting Committee";
+// Shooting Committee is a subset of Member (like board members), not a
+// mutually-exclusive status, so it's offered as its own checkbox alongside
+// the status groups rather than folded into MEMBER_STATUSES.
+const RECIPIENT_GROUPS = [...MEMBER_STATUSES, SHOOTING_COMMITTEE] as const;
+
+function memberInGroup(m: Member, group: string) {
+  return group === SHOOTING_COMMITTEE ? !!m.onShootingCommittee : m.status === group;
+}
 
 type Campaign = {
   id: number;
@@ -17,6 +26,22 @@ type Campaign = {
   failedCount: number;
   createdBy: string | null;
   recipientEmail: string | null;
+  openedCount: number;
+  clickedCount: number;
+  bouncedCount: number;
+  spamCount: number;
+};
+
+type CampaignRecipient = {
+  id: number;
+  email: string;
+  sendError: string | null;
+  deliveredAt: string | null;
+  openedAt: string | null;
+  clickedAt: string | null;
+  bouncedAt: string | null;
+  bounceType: string | null;
+  spamComplaintAt: string | null;
 };
 
 type Member = {
@@ -24,6 +49,7 @@ type Member = {
   name: string;
   email: string;
   status: string;
+  onShootingCommittee: number;
 };
 
 type FileAttachment = { r2Key: string; fileName: string };
@@ -37,11 +63,14 @@ export default function EmailAdmin() {
   const [history, setHistory] = useState<Campaign[]>([]);
   const [formKey, setFormKey] = useState(0);
   const [allMembers, setAllMembers] = useState<Member[]>([]);
-  const [statusGroups, setStatusGroups] = useState<Set<string>>(new Set(["Member"]));
+  const [recipientGroups, setRecipientGroups] = useState<Set<string>>(new Set(["Member"]));
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [fileAttachments, setFileAttachments] = useState<FileAttachment[]>([]);
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState("");
+  const [expandedCampaignId, setExpandedCampaignId] = useState<number | null>(null);
+  const [recipientDetail, setRecipientDetail] = useState<CampaignRecipient[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   async function loadHistory() {
     const res = await fetch("/api/admin/email");
@@ -53,7 +82,9 @@ export default function EmailAdmin() {
     const rows = (await res.json()) as Member[];
     setAllMembers(rows);
     if (resetSelection) {
-      setSelectedIds(new Set(rows.filter((m) => statusGroups.has(m.status)).map((m) => m.id)));
+      setSelectedIds(
+        new Set(rows.filter((m) => [...recipientGroups].some((g) => memberInGroup(m, g))).map((m) => m.id))
+      );
     }
   }
 
@@ -61,6 +92,18 @@ export default function EmailAdmin() {
     void loadHistory();
     void loadMembers(true);
   }, []);
+
+  async function toggleCampaignDetail(id: number) {
+    if (expandedCampaignId === id) {
+      setExpandedCampaignId(null);
+      return;
+    }
+    setExpandedCampaignId(id);
+    setLoadingDetail(true);
+    const res = await fetch(`/api/admin/email/${id}/recipients`);
+    setRecipientDetail((await res.json()) as CampaignRecipient[]);
+    setLoadingDetail(false);
+  }
 
   async function uploadEmailImage(file: File): Promise<string> {
     const formData = new FormData();
@@ -101,14 +144,14 @@ export default function EmailAdmin() {
     setFileAttachments((prev) => prev.filter((a) => a.r2Key !== r2Key));
   }
 
-  const activeMembers = allMembers.filter((m) => statusGroups.has(m.status));
+  const activeMembers = allMembers.filter((m) => [...recipientGroups].some((g) => memberInGroup(m, g)));
 
-  function toggleStatusGroup(status: string) {
-    const next = new Set(statusGroups);
-    if (next.has(status)) next.delete(status);
-    else next.add(status);
-    setStatusGroups(next);
-    setSelectedIds(new Set(allMembers.filter((m) => next.has(m.status)).map((m) => m.id)));
+  function toggleRecipientGroup(group: string) {
+    const next = new Set(recipientGroups);
+    if (next.has(group)) next.delete(group);
+    else next.add(group);
+    setRecipientGroups(next);
+    setSelectedIds(new Set(allMembers.filter((m) => [...next].some((g) => memberInGroup(m, g))).map((m) => m.id)));
   }
 
   async function send(e: React.FormEvent) {
@@ -197,14 +240,14 @@ export default function EmailAdmin() {
 
         <fieldset className="status-group-picker">
           <legend>Contact groups</legend>
-          {MEMBER_STATUSES.map((status) => (
-            <label key={status}>
+          {RECIPIENT_GROUPS.map((group) => (
+            <label key={group}>
               <input
                 type="checkbox"
-                checked={statusGroups.has(status)}
-                onChange={() => toggleStatusGroup(status)}
+                checked={recipientGroups.has(group)}
+                onChange={() => toggleRecipientGroup(group)}
               />
-              {status}
+              {group}
             </label>
           ))}
         </fieldset>
@@ -229,20 +272,66 @@ export default function EmailAdmin() {
             <th>To</th>
             <th>Sent at</th>
             <th>Sent / Failed</th>
+            <th>Opens</th>
+            <th>Clicks</th>
+            <th>Bounces</th>
+            <th>Spam</th>
             <th>By</th>
           </tr>
         </thead>
         <tbody>
           {history.map((c) => (
-            <tr key={c.id}>
-              <td>{c.subject}</td>
-              <td>{c.recipientEmail ?? "All contacts"}</td>
-              <td>{c.sentAt}</td>
-              <td>
-                {c.sentCount} / {c.failedCount}
-              </td>
-              <td>{c.createdBy}</td>
-            </tr>
+            <Fragment key={c.id}>
+              <tr className="admin-table-row-clickable" onClick={() => void toggleCampaignDetail(c.id)}>
+                <td>{c.subject}</td>
+                <td>{c.recipientEmail ?? "All contacts"}</td>
+                <td>{c.sentAt}</td>
+                <td>
+                  {c.sentCount} / {c.failedCount}
+                </td>
+                <td>{c.openedCount}</td>
+                <td>{c.clickedCount}</td>
+                <td>{c.bouncedCount}</td>
+                <td>{c.spamCount}</td>
+                <td>{c.createdBy}</td>
+              </tr>
+              {expandedCampaignId === c.id && (
+                <tr>
+                  <td colSpan={9}>
+                    {loadingDetail ? (
+                      <p className="admin-note">Loading…</p>
+                    ) : (
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Recipient</th>
+                            <th>Delivered</th>
+                            <th>Opened</th>
+                            <th>Clicked</th>
+                            <th>Bounced</th>
+                            <th>Spam complaint</th>
+                            <th>Send error</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {recipientDetail.map((r) => (
+                            <tr key={r.id}>
+                              <td>{r.email}</td>
+                              <td>{r.deliveredAt ?? "—"}</td>
+                              <td>{r.openedAt ?? "—"}</td>
+                              <td>{r.clickedAt ?? "—"}</td>
+                              <td>{r.bouncedAt ? `${r.bouncedAt} (${r.bounceType ?? "unknown"})` : "—"}</td>
+                              <td>{r.spamComplaintAt ?? "—"}</td>
+                              <td>{r.sendError ?? "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </td>
+                </tr>
+              )}
+            </Fragment>
           ))}
         </tbody>
       </table>

@@ -6,6 +6,15 @@ import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
 
 const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
+const SHOOTING_COMMITTEE = "Shooting Committee";
+// Shooting Committee is a subset of Member (like board members), not a
+// mutually-exclusive status, so it's offered as its own checkbox alongside
+// the status groups rather than folded into MEMBER_STATUSES.
+const RECIPIENT_GROUPS = [...MEMBER_STATUSES, SHOOTING_COMMITTEE] as const;
+
+function memberInGroup(m: Member, group: string) {
+  return group === SHOOTING_COMMITTEE ? !!m.onShootingCommittee : m.status === group;
+}
 
 type Campaign = {
   id: number;
@@ -24,6 +33,7 @@ type Member = {
   email: string;
   phone: string | null;
   status: string;
+  onShootingCommittee: number;
 };
 
 export default function SmsAdmin() {
@@ -33,7 +43,7 @@ export default function SmsAdmin() {
   const [result, setResult] = useState("");
   const [history, setHistory] = useState<Campaign[]>([]);
   const [allMembers, setAllMembers] = useState<Member[]>([]);
-  const [statusGroups, setStatusGroups] = useState<Set<string>>(new Set(["Member"]));
+  const [recipientGroups, setRecipientGroups] = useState<Set<string>>(new Set(["Member"]));
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [mediaUrl, setMediaUrl] = useState("");
   const [mediaFileName, setMediaFileName] = useState("");
@@ -51,7 +61,9 @@ export default function SmsAdmin() {
     setAllMembers(rows);
     if (resetSelection) {
       setSelectedIds(
-        new Set(rows.filter((m) => statusGroups.has(m.status) && m.phone).map((m) => m.id))
+        new Set(
+          rows.filter((m) => [...recipientGroups].some((g) => memberInGroup(m, g)) && m.phone).map((m) => m.id)
+        )
       );
     }
   }
@@ -88,15 +100,19 @@ export default function SmsAdmin() {
   }
 
   const withPhone = allMembers.filter((m) => m.phone);
-  const activeMembers = withPhone.filter((m) => statusGroups.has(m.status));
-  const noPhoneCount = allMembers.filter((m) => statusGroups.has(m.status) && !m.phone).length;
+  const activeMembers = withPhone.filter((m) => [...recipientGroups].some((g) => memberInGroup(m, g)));
+  const noPhoneCount = allMembers.filter(
+    (m) => [...recipientGroups].some((g) => memberInGroup(m, g)) && !m.phone
+  ).length;
 
-  function toggleStatusGroup(status: string) {
-    const next = new Set(statusGroups);
-    if (next.has(status)) next.delete(status);
-    else next.add(status);
-    setStatusGroups(next);
-    setSelectedIds(new Set(withPhone.filter((m) => next.has(m.status)).map((m) => m.id)));
+  function toggleRecipientGroup(group: string) {
+    const next = new Set(recipientGroups);
+    if (next.has(group)) next.delete(group);
+    else next.add(group);
+    setRecipientGroups(next);
+    setSelectedIds(
+      new Set(withPhone.filter((m) => [...next].some((g) => memberInGroup(m, g))).map((m) => m.id))
+    );
   }
 
   async function send(e: React.FormEvent) {
@@ -175,14 +191,14 @@ export default function SmsAdmin() {
 
         <fieldset className="status-group-picker">
           <legend>Contact groups</legend>
-          {MEMBER_STATUSES.map((status) => (
-            <label key={status}>
+          {RECIPIENT_GROUPS.map((group) => (
+            <label key={group}>
               <input
                 type="checkbox"
-                checked={statusGroups.has(status)}
-                onChange={() => toggleStatusGroup(status)}
+                checked={recipientGroups.has(group)}
+                onChange={() => toggleRecipientGroup(group)}
               />
-              {status}
+              {group}
             </label>
           ))}
         </fieldset>

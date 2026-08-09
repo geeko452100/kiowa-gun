@@ -50,11 +50,14 @@ export async function sendPostmarkEmail(
       To: to,
       Subject: subject,
       HtmlBody: html,
+      TrackOpens: true,
+      TrackLinks: "HtmlAndText",
       ...(attachments && attachments.length > 0 ? { Attachments: attachments } : {}),
     }),
   });
   if (!res.ok) {
-    return { error: await res.text() };
+    return { error: await res.text(), messageId: null };
   }
-  return { error: null };
+  const body = (await res.json()) as { MessageID: string };
+  return { error: null, messageId: body.MessageID };
 }

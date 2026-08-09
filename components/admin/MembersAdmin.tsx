@@ -11,7 +11,9 @@ type Member = {
   name: string;
   email: string;
   phone: string | null;
+  address: string | null;
   status: string;
+  onShootingCommittee: number;
   renewalDate: string | null;
   pendingDocs: number;
 };
@@ -93,6 +95,34 @@ export default function MembersAdmin() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...m, renewalDate: renewalDate || null }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    void load();
+  }
+
+  async function toggleShootingCommittee(m: Member, onShootingCommittee: boolean) {
+    setError("");
+    const result = await adminFetch(`/api/admin/members/${m.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...m, onShootingCommittee }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    void load();
+  }
+
+  async function changeAddress(m: Member, address: string) {
+    setError("");
+    const result = await adminFetch(`/api/admin/members/${m.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...m, address: address || null }),
     });
     if (!result.ok) {
       setError(result.error);
@@ -200,7 +230,9 @@ export default function MembersAdmin() {
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
+              <th>Address</th>
               <th>Status</th>
+              <th>Shooting Committee</th>
               <th>Renewal Date</th>
               <th></th>
             </tr>
@@ -211,6 +243,18 @@ export default function MembersAdmin() {
                 <td data-label="Name">{m.name}</td>
                 <td data-label="Email">{m.email}</td>
                 <td data-label="Phone">{m.phone}</td>
+                <td data-label="Address">
+                  <input
+                    key={m.id}
+                    defaultValue={m.address ?? ""}
+                    placeholder="Mailing address"
+                    onBlur={(e) => {
+                      if (e.target.value !== (m.address ?? "")) {
+                        changeAddress(m, e.target.value);
+                      }
+                    }}
+                  />
+                </td>
                 <td data-label="Status">
                   <select
                     value={m.status}
@@ -227,6 +271,13 @@ export default function MembersAdmin() {
                       {m.pendingDocs} doc{m.pendingDocs === 1 ? "" : "s"} to review
                     </span>
                   )}
+                </td>
+                <td data-label="Shooting Committee">
+                  <input
+                    type="checkbox"
+                    checked={!!m.onShootingCommittee}
+                    onChange={(e) => toggleShootingCommittee(m, e.target.checked)}
+                  />
                 </td>
                 <td data-label="Renewal Date">
                   <input

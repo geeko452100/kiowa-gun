@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { pageSections, documents } from "@/lib/schema";
 import Header from "@/components/Header";
@@ -10,6 +11,7 @@ export const metadata = { title: "Membership Info - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";
 
 export default async function MembershipPage() {
+  const { env } = await getCloudflareContext({ async: true });
   const db = await getDb();
   const sections = await db
     .select()
@@ -51,7 +53,7 @@ export default async function MembershipPage() {
             Ready to join or renew? Fill out the form below to submit your information, upload the
             required documents, and pay your dues.
           </p>
-          <MembershipForm />
+          <MembershipForm tokenizationKey={env.NMI_TOKENIZATION_KEY} />
         </section>
       </main>
       <Footer />

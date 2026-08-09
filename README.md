@@ -59,6 +59,10 @@ Visit `http://localhost:3000` for the public site and `/admin/login` for the CMS
 npm run db:migrate:remote
 INITIAL_ADMIN_EMAIL=... INITIAL_ADMIN_PASSWORD=... node scripts/seed-admin.mjs   # no --local = remote
 npx wrangler secret put POSTMARK_SERVER_TOKEN
+npx wrangler secret put NMI_ENVIRONMENT      # "sandbox" or "production"
+npx wrangler secret put NMI_API_KEY
+npx wrangler secret put NMI_TOKENIZATION_KEY
+npx wrangler secret put NMI_WEBHOOK_SECRET   # from NMI Merchant Portal > Settings > Webhooks
 npx wrangler secret put SIGNALWIRE_SPACE_URL
 npx wrangler secret put SIGNALWIRE_PROJECT_ID
 npx wrangler secret put SIGNALWIRE_API_TOKEN

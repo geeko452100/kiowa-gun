@@ -19,6 +19,7 @@ export async function GET() {
       currency: payments.currency,
       paymentMethodType: payments.paymentMethodType,
       paidAt: payments.paidAt,
+      subscriptionStatus: members.subscriptionStatus,
     })
     .from(payments)
     .innerJoin(members, eq(payments.memberId, members.id))

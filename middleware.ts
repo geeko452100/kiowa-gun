@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE } from "./lib/constants";
+import { SESSION_COOKIE, MEMBER_SESSION_COOKIE } from "./lib/constants";
 
 // Pages/APIs reachable without a session — the login form itself, and the
 // public self-service password flows (each secured its own way: a one-time
@@ -11,6 +11,18 @@ const PUBLIC_ADMIN_PATHS = new Set([
   "/api/admin/login",
   "/api/admin/reset-password",
   "/api/admin/forgot-password",
+]);
+
+// Same idea as PUBLIC_ADMIN_PATHS, for the member portal's own auth surface.
+const PUBLIC_PORTAL_PATHS = new Set([
+  "/portal/login",
+  "/portal/signup",
+  "/portal/reset-password",
+  "/portal/forgot-password",
+  "/api/portal/login",
+  "/api/portal/signup",
+  "/api/portal/reset-password",
+  "/api/portal/forgot-password",
 ]);
 
 export function middleware(request: NextRequest) {
@@ -28,6 +40,19 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  const isPortalRoute = pathname.startsWith("/portal") && !PUBLIC_PORTAL_PATHS.has(pathname);
+  const isPortalApi = pathname.startsWith("/api/portal") && !PUBLIC_PORTAL_PATHS.has(pathname);
+
+  if (isPortalRoute || isPortalApi) {
+    const hasCookie = request.cookies.has(MEMBER_SESSION_COOKIE);
+    if (!hasCookie) {
+      if (isPortalApi) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL("/portal/login", request.url));
+    }
+  }
+
   // Keep the whole admin surface out of search results — it should never be
   // discoverable by anyone who isn't already told the URL directly.
   const response = NextResponse.next();
@@ -38,5 +63,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/admin/:path*", "/api/admin/:path*", "/portal/:path*", "/api/portal/:path*"],
 };

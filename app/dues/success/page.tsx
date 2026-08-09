@@ -11,7 +11,7 @@ export default function DuesSuccessPage() {
       <main className="container" id="main">
         <section className="content-section">
           <h1>Thank You</h1>
-          <p>Your payment was received. A receipt was sent to your email from Stripe.</p>
+          <p>Your payment was received and your dues are now set to renew automatically each year.</p>
           <p>
             <Link href="/">Return home</Link>
           </p>

@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/matches", label: "Matches", slug: "matches" },
   { href: "/contact", label: "Contact Us", slug: "contact" },
   { href: "/news", label: "News", slug: "news" },
+  { href: "/portal", label: "Member Portal", slug: "portal" },
 ];
 
 export default function Header({ active }: { active: string }) {

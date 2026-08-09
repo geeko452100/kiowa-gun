@@ -19,11 +19,11 @@ export async function GET() {
   const db = await getDb();
   const rows = await db.select().from(members).orderBy(desc(members.createdAt));
 
-  const header = ["Name", "Email", "Phone", "Status"];
+  const header = ["Name", "Email", "Phone", "Address", "Status"];
   const lines = [header.join(",")];
   for (const m of rows) {
     lines.push(
-      [m.name, m.email, m.phone ?? "", m.status].map((v) => csvField(v)).join(",")
+      [m.name, m.email, m.phone ?? "", m.address ?? "", m.status].map((v) => csvField(v)).join(",")
     );
   }
 

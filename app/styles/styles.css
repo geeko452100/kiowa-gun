@@ -423,3 +423,25 @@ button:focus-visible {
         font-size: 1.8rem;
     }
 }
+
+/* NMI Collect.js card fields -- the divs below are where Collect.js injects
+   its own iframes, so the height/border here is what gives the card number,
+   expiry, and CVV inputs a visible box before the iframe content loads. */
+.nmi-card-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 320px;
+    margin: 12px 0;
+}
+
+.nmi-card-field {
+    height: 42px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: #fff;
+}
+
+.nmi-card-fields button {
+    align-self: flex-start;
+}

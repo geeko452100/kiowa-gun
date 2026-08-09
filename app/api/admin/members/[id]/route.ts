@@ -8,12 +8,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const admin = await getCurrentAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
-  const { name, email, phone, status, renewalDate } = (await request.json()) as {
+  const { name, email, phone, address, status, renewalDate, onShootingCommittee } = (await request.json()) as {
     name: string;
     email: string;
     phone?: string;
+    address?: string;
     status: string;
     renewalDate?: string | null;
+    onShootingCommittee?: boolean;
   };
   if (!MEMBER_STATUSES.includes(status as (typeof MEMBER_STATUSES)[number])) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
@@ -25,8 +27,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       name,
       email: String(email).toLowerCase().trim(),
       phone: phone || null,
+      address: address || null,
       status,
       renewalDate: renewalDate || null,
+      onShootingCommittee: onShootingCommittee ? 1 : 0,
     })
     .where(eq(members.id, Number(id)));
   return NextResponse.json({ ok: true });
