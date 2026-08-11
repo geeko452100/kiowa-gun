@@ -19,7 +19,10 @@ next-env.d.ts
 .DS_Store
 *.pem
 npm-debug.log*
-cloudflare-env.d.ts
+# cloudflare-env.d.ts is intentionally committed (not ignored): it's pure type
+# declarations (binding/var names -> types, no secret values), and Cloudflare's
+# remote build does a fresh clone with no way to run `wrangler types` itself,
+# so without this checked in, the build fails on every CloudflareEnv property.
 DEVELOPER-NOTES.md
 TO-DO.md
 
