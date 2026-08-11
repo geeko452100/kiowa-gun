@@ -43,7 +43,9 @@ function ResetPasswordForm() {
     return (
       <div className="portal-card">
         <h1>Link missing</h1>
-        <p className="portal-error">This link is missing its reset code. Request a new one.</p>
+        <p className="portal-error">
+          This link is missing its reset code. Head back and request a new one.
+        </p>
       </div>
     );
   }

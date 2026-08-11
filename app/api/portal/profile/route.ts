@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { getDb } from "@/lib/db";
+import { getDb, isUniqueConstraintError } from "@/lib/db";
 import { members, documents } from "@/lib/schema";
 import { getCurrentMember } from "@/lib/memberAuth";
 import { MEMBERSHIP_ALLOWED_FILE_TYPES, MEMBERSHIP_FILE_FIELDS } from "@/lib/constants";
@@ -17,9 +17,17 @@ export async function PATCH(request: Request) {
   const formData = await request.formData();
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const smsOptIn = formData.get("smsOptIn") === "1";
   const address = String(formData.get("address") ?? "").trim();
+  const nraNumber = String(formData.get("nraNumber") ?? "").trim();
   if (!name || !address) {
     return NextResponse.json({ error: "Name and address are required" }, { status: 400 });
+  }
+  if (phone && !/^\d+$/.test(phone)) {
+    return NextResponse.json({ error: "Phone must contain only digits" }, { status: 400 });
+  }
+  if (nraNumber && !/^\d{5,12}$/.test(nraNumber)) {
+    return NextResponse.json({ error: "NRA Number must be 5 to 12 digits" }, { status: 400 });
   }
 
   for (const { field, label } of MEMBERSHIP_FILE_FIELDS) {
@@ -31,7 +39,27 @@ export async function PATCH(request: Request) {
   }
 
   const db = await getDb();
-  await db.update(members).set({ name, phone: phone || null, address }).where(eq(members.id, member.id));
+  try {
+    await db
+      .update(members)
+      .set({
+        name,
+        phone: phone || null,
+        smsOptIn: smsOptIn ? 1 : 0,
+        ...(smsOptIn && !member.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
+        address,
+        nraNumber: nraNumber || null,
+      })
+      .where(eq(members.id, member.id));
+  } catch (err) {
+    if (isUniqueConstraintError(err, "nra_number")) {
+      return NextResponse.json(
+        { error: "That NRA Number is already on file for another member. Double-check it and try again." },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 
   const { env } = await getCloudflareContext({ async: true });
   for (const { field, category, label } of MEMBERSHIP_FILE_FIELDS) {

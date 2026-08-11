@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { members } from "@/lib/schema";
 import { hashPassword } from "@/lib/auth";
 import { createMemberSession } from "@/lib/memberAuth";
+import { sendVerificationEmail } from "@/lib/portalVerification";
 import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 
 // Members pick their own email + password directly -- no emailed
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     memberId = existing.id;
     await db
       .update(members)
-      .set({ passwordHash: hash, salt, failedLoginCount: 0, lockedUntil: null })
+      .set({ passwordHash: hash, salt, failedLoginCount: 0, lockedUntil: null, emailVerified: 0 })
       .where(eq(members.id, memberId));
   } else {
     const [inserted] = await db
@@ -53,5 +54,8 @@ export async function POST(request: Request) {
   }
 
   await createMemberSession(memberId);
+  // Best-effort: a delivery hiccup shouldn't block account creation --
+  // the portal dashboard's "resend" button covers a failed/missed send.
+  await sendVerificationEmail(new URL(request.url).origin, memberId, normalizedEmail).catch(() => {});
   return NextResponse.json({ ok: true });
 }

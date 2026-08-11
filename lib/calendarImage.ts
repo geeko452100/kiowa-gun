@@ -12,3 +12,17 @@ export function validateCalendarImage(file: File): string | null {
   }
   return null;
 }
+
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+
+// Attached document for a calendar event (flyer, sign-up sheet, etc.) --
+// PDF-only, same convention as the general admin document library.
+export function validateCalendarDocument(file: File): string | null {
+  if (file.type !== "application/pdf") {
+    return "Document must be a PDF file.";
+  }
+  if (file.size > MAX_DOCUMENT_BYTES) {
+    return "Document must be smaller than 10MB.";
+  }
+  return null;
+}

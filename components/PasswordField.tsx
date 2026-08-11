@@ -1,10 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 // Shared show/hide password input used by the portal's signup, reset, and
 // change-password forms (mirrors the show/hide toggle already duplicated
 // between app/admin/login/LoginForm.tsx and app/admin/reset-password).
+//
+// The toggle button must NOT be a descendant of the <label> associated with
+// the password input: clicking a labelable descendant (like this input)
+// makes the browser redirect the label's click to that input instead of the
+// button that was actually clicked, so the toggle silently misfires. Instead
+// the label only wraps the text and points at whichever input is currently
+// active via htmlFor/id.
+//
+// This also renders two inputs -- a real type="password" one and a
+// type="text" twin -- and toggles which is visible, instead of mutating a
+// single input's `type`. Chrome/Edge ties its "Suggest strong password"
+// popup to a type="password" node's own attribute changes; flipping `type`
+// on the same node makes Chrome forget the field already has a value and
+// re-show the suggestion. Never touching that node's `type` avoids the
+// retrigger, since the text twin was never a password field at all.
 export default function PasswordField({
   label,
   value,
@@ -19,17 +34,43 @@ export default function PasswordField({
   autoComplete?: string;
 }) {
   const [show, setShow] = useState(false);
+  const baseId = useId();
+  const passwordId = `${baseId}-pw`;
+  const textId = `${baseId}-txt`;
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    (show ? textRef.current : passwordRef.current)?.focus();
+  }, [show]);
+
   return (
-    <label>
-      {label}
+    <div className="portal-field">
+      <label htmlFor={show ? textId : passwordId}>{label}</label>
       <div className="portal-password-field">
         <input
-          type={show ? "text" : "password"}
+          id={passwordId}
+          ref={passwordRef}
+          type="password"
           required
           minLength={minLength}
           autoComplete={autoComplete}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          hidden={show}
+          tabIndex={show ? -1 : undefined}
+        />
+        <input
+          id={textId}
+          ref={textRef}
+          type="text"
+          required
+          minLength={minLength}
+          autoComplete="off"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          hidden={!show}
+          tabIndex={show ? undefined : -1}
         />
         <button
           type="button"
@@ -48,6 +89,6 @@ export default function PasswordField({
           )}
         </button>
       </div>
-    </label>
+    </div>
   );
 }

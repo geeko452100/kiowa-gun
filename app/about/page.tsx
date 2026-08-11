@@ -1,8 +1,12 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { pageSections } from "@/lib/schema";
+import { getCurrentAdmin } from "@/lib/auth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import EditableSection from "@/components/EditableSection";
+import AdditionalSections from "@/components/AdditionalSections";
+import EditModeBanner from "@/components/EditModeBanner";
 import "../styles/about.css";
 
 const LOCATION_QUERY = "369 SW 50 Ave, Great Bend, KS 67530";
@@ -12,7 +16,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AboutPage() {
   const db = await getDb();
-  const sections = await db.select().from(pageSections).where(eq(pageSections.pageSlug, "about"));
+  const [sections, admin] = await Promise.all([
+    db.select().from(pageSections).where(eq(pageSections.pageSlug, "about")),
+    getCurrentAdmin(),
+  ]);
   const officers = sections.find((s) => s.sectionKey === "officers");
   const encodedQuery = encodeURIComponent(LOCATION_QUERY);
 
@@ -20,9 +27,12 @@ export default async function AboutPage() {
     <>
       <Header active="about" />
       <main className="container" id="main">
+        {admin && <EditModeBanner name={admin.name} />}
         <section id="about" className="content-section">
           <h2>About Us / Map</h2>
-          <div dangerouslySetInnerHTML={{ __html: officers?.bodyHtml ?? "" }} />
+          {officers && (
+            <EditableSection id={officers.id} bodyHtml={officers.bodyHtml} isAdmin={!!admin} />
+          )}
           <p>
             <a
               href={`https://www.google.com/maps/dir/?api=1&destination=${encodedQuery}`}
@@ -44,6 +54,8 @@ export default async function AboutPage() {
             />
           </div>
         </section>
+
+        <AdditionalSections pageSlug="about" sections={sections} isAdmin={!!admin} />
       </main>
       <Footer />
     </>

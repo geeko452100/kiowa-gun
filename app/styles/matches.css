@@ -35,6 +35,57 @@
     margin-top: 32px;
 }
 
+/* Admin-only inline edit form for a match row (see MatchScheduleTable). */
+.match-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    margin: 6px 0;
+    border-radius: 8px;
+    border: 1px solid var(--color-accent);
+    background: rgba(76, 94, 58, 0.08);
+}
+
+.match-edit-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.match-edit-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.match-edit-actions button {
+    padding: 8px 18px;
+    min-height: 40px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid var(--color-accent);
+    background: var(--color-primary);
+    color: var(--color-text);
+}
+
+.match-edit-actions button:hover {
+    background: var(--color-accent);
+}
+
+.match-edit-actions .match-edit-cancel {
+    background: transparent;
+}
+
+.match-edit-error {
+    color: #ffb4a8;
+    font-size: 0.9rem;
+}
+
 .discipline-group h4 {
     margin-bottom: 4px;
 }
@@ -60,11 +111,15 @@
     gap: 32px;
 }
 
-.flyer-trigger {
-    display: block;
+.flyer-wrap {
     flex-shrink: 0;
     width: 280px;
     max-width: 40%;
+}
+
+.flyer-trigger {
+    display: block;
+    width: 100%;
     background: none;
     border: 1px solid var(--color-border);
     border-radius: 6px;
@@ -79,7 +134,7 @@
         align-items: stretch;
     }
 
-    .flyer-trigger {
+    .flyer-wrap {
         width: 100%;
         max-width: 100%;
     }

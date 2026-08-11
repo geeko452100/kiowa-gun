@@ -12,6 +12,10 @@ type EventRow = {
   description: string | null;
   imageR2Key: string | null;
   imageFileName: string | null;
+  documentR2Key: string | null;
+  documentFileName: string | null;
+  linkUrl: string | null;
+  linkLabel: string | null;
 };
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -27,6 +31,7 @@ export default function CalendarAdmin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
@@ -36,6 +41,11 @@ export default function CalendarAdmin() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [existingImage, setExistingImage] = useState<{ id: number; fileName: string } | null>(null);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [removeDocument, setRemoveDocument] = useState(false);
+  const [existingDocument, setExistingDocument] = useState<{ id: number; fileName: string } | null>(null);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkLabel, setLinkLabel] = useState("");
 
   const [seriesTitle, setSeriesTitle] = useState("");
   const [weekday, setWeekday] = useState(6);
@@ -78,7 +88,13 @@ export default function CalendarAdmin() {
     setImageFile(null);
     setRemoveImage(false);
     setExistingImage(null);
+    setDocumentFile(null);
+    setRemoveDocument(false);
+    setExistingDocument(null);
+    setLinkUrl("");
+    setLinkLabel("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (documentInputRef.current) documentInputRef.current.value = "";
   }
 
   function startEdit(ev: EventRow) {
@@ -90,7 +106,15 @@ export default function CalendarAdmin() {
     setImageFile(null);
     setRemoveImage(false);
     setExistingImage(ev.imageR2Key ? { id: ev.id, fileName: ev.imageFileName ?? "image" } : null);
+    setDocumentFile(null);
+    setRemoveDocument(false);
+    setExistingDocument(
+      ev.documentR2Key ? { id: ev.id, fileName: ev.documentFileName ?? "document.pdf" } : null
+    );
+    setLinkUrl(ev.linkUrl ?? "");
+    setLinkLabel(ev.linkLabel ?? "");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (documentInputRef.current) documentInputRef.current.value = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -102,8 +126,14 @@ export default function CalendarAdmin() {
     formData.set("start", start);
     formData.set("color", color);
     formData.set("description", description);
+    formData.set("linkUrl", linkUrl.trim());
+    formData.set("linkLabel", linkLabel.trim());
     if (imageFile) formData.set("image", imageFile);
-    if (editingId !== null) formData.set("removeImage", removeImage ? "true" : "false");
+    if (documentFile) formData.set("document", documentFile);
+    if (editingId !== null) {
+      formData.set("removeImage", removeImage ? "true" : "false");
+      formData.set("removeDocument", removeDocument ? "true" : "false");
+    }
 
     const result = editingId !== null
       ? await adminFetch(`/api/admin/calendar/${editingId}`, { method: "PATCH", body: formData })
@@ -239,6 +269,42 @@ export default function CalendarAdmin() {
             Remove current picture ({existingImage.fileName})
           </label>
         )}
+        <label>
+          Document (optional, PDF)
+          <input
+            ref={documentInputRef}
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
+          />
+        </label>
+        {existingDocument && !documentFile && (
+          <label className="admin-inline-check">
+            <input
+              type="checkbox"
+              checked={removeDocument}
+              onChange={(e) => setRemoveDocument(e.target.checked)}
+            />
+            Remove current document ({existingDocument.fileName})
+          </label>
+        )}
+        <label>
+          Link URL (optional)
+          <input
+            type="url"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            placeholder="https://..."
+          />
+        </label>
+        <label>
+          Link label (optional)
+          <input
+            value={linkLabel}
+            onChange={(e) => setLinkLabel(e.target.value)}
+            placeholder="Text shown for the link"
+          />
+        </label>
         <div style={{ display: "flex", gap: 8 }}>
           <button type="submit">{editingId !== null ? "Save changes" : "Add event"}</button>
           {editingId !== null && (
@@ -367,6 +433,8 @@ export default function CalendarAdmin() {
                         hour: "numeric",
                         minute: "2-digit",
                       })}
+                      {ev.documentR2Key && " · document"}
+                      {ev.linkUrl && " · link"}
                     </span>
                     <button type="button" onClick={() => startEdit(ev)}>
                       Edit

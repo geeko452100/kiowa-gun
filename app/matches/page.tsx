@@ -1,9 +1,15 @@
 import { eq, asc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { pageSections, matches, matchPhotos } from "@/lib/schema";
+import { getCurrentAdmin } from "@/lib/auth";
+import { resolveSiteImages } from "@/lib/siteImages";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FlyerModal from "@/components/FlyerModal";
+import MatchScheduleTable from "@/components/MatchScheduleTable";
+import EditableSection from "@/components/EditableSection";
+import AdditionalSections from "@/components/AdditionalSections";
+import EditModeBanner from "@/components/EditModeBanner";
 import "../styles/rules-body.css";
 import "../styles/matches.css";
 
@@ -12,10 +18,11 @@ export const dynamic = "force-dynamic";
 
 export default async function MatchesPage() {
   const db = await getDb();
-  const sections = await db
-    .select()
-    .from(pageSections)
-    .where(eq(pageSections.pageSlug, "matches"));
+  const [sections, admin, images] = await Promise.all([
+    db.select().from(pageSections).where(eq(pageSections.pageSlug, "matches")),
+    getCurrentAdmin(),
+    resolveSiteImages(["matches-flyer"]),
+  ]);
   const intro = sections.find((s) => s.sectionKey === "intro");
   const schedule = await db.select().from(matches).orderBy(asc(matches.sortOrder));
   const photos = await db.select().from(matchPhotos).orderBy(asc(matchPhotos.sortOrder));
@@ -42,9 +49,16 @@ export default async function MatchesPage() {
     <>
       <Header active="matches" />
       <main className="container" id="main">
+        {admin && <EditModeBanner name={admin.name} />}
         <section id="matches" className="content-section">
-          <h2>{intro?.heading}</h2>
-          <div dangerouslySetInnerHTML={{ __html: intro?.bodyHtml ?? "" }} />
+          {intro && (
+            <EditableSection
+              id={intro.id}
+              heading={intro.heading}
+              bodyHtml={intro.bodyHtml}
+              isAdmin={!!admin}
+            />
+          )}
 
           {disciplineOrder.map((discipline) => {
             const rows = scheduleByDiscipline.get(discipline)!;
@@ -81,30 +95,18 @@ export default async function MatchesPage() {
               <div key={discipline} className="discipline-group">
                 <h3>{discipline}</h3>
                 <div className="match-schedule-wrap">
-                  <table className="match-schedule">
-                    <caption className="sr-only">{discipline} match schedule</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Date</th>
-                        <th scope="col">Time</th>
-                        <th scope="col">Notes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row) => (
-                        <tr key={row.id}>
-                          <td>{row.eventDate}</td>
-                          <td>{row.eventTime}</td>
-                          <td>{row.notes ?? ""}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <MatchScheduleTable discipline={discipline} rows={rows} isAdmin={!!admin} />
                 </div>
 
                 {discipline === "Defensive Pistol" ? (
                   <div className="results-body">
-                    <FlyerModal src="/assets/pistol-flyer.avif" alt="Defensive pistol match flyer" />
+                    <FlyerModal
+                      src={images["matches-flyer"] ?? "/assets/pistol-flyer.avif"}
+                      alt="Defensive pistol match flyer"
+                      imageKey="matches-flyer"
+                      hasOverride={!!images["matches-flyer"]}
+                      isAdmin={!!admin}
+                    />
                     <div>
                       <h4>Results</h4>
                       {resultsList}
@@ -120,6 +122,8 @@ export default async function MatchesPage() {
             );
           })}
         </section>
+
+        <AdditionalSections pageSlug="matches" sections={sections} isAdmin={!!admin} />
       </main>
       <Footer />
     </>

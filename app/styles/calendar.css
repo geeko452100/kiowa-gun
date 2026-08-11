@@ -176,8 +176,12 @@
     position: absolute;
     top: 12px;
     right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 44px;
     height: 44px;
+    padding: 0;
     font-size: 1.75rem;
     line-height: 1;
     border-radius: 50%;
@@ -253,10 +257,145 @@
     display: block;
 }
 
+.event-detail-links {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.event-detail-links a {
+    color: #d8c894;
+}
+
 @media (max-width: 599px) {
     .event-detail-dialog {
         width: 100vw;
         max-width: 100vw;
         padding: 24px 18px;
     }
+}
+
+/* Admin-only affordances in the event-detail drawer: recurrence line,
+   edit/delete buttons, and the inline edit form (mirrors CalendarAdmin's
+   form, scoped here since admin.css isn't loaded on public pages). */
+.event-detail-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 10px 20px;
+    min-height: 44px;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 2px solid var(--color-accent);
+    background: var(--color-accent);
+    color: #ffffff;
+}
+
+.event-detail-add-btn:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.event-detail-add {
+    margin-top: 4px;
+}
+
+.event-detail-recurrence {
+    margin: 8px 0 0;
+    font-size: 0.9rem;
+    color: #9fd3ff;
+}
+
+.event-detail-admin-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.event-detail-admin-actions button {
+    padding: 8px 18px;
+    min-height: 40px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid var(--color-accent);
+    background: var(--color-primary);
+    color: var(--color-text);
+}
+
+.event-detail-admin-actions button:hover {
+    background: var(--color-accent);
+}
+
+.event-detail-admin-actions button.danger {
+    background: #a8291a;
+    border-color: #a8291a;
+}
+
+.event-detail-admin-actions button.danger:hover {
+    background: #c7392a;
+}
+
+.event-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.event-edit-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.event-edit-form .admin-inline-check {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.event-edit-form .admin-inline-check input {
+    min-height: auto;
+    width: 18px;
+    height: 18px;
+}
+
+.event-edit-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.event-edit-actions button {
+    padding: 8px 18px;
+    min-height: 40px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid var(--color-accent);
+    background: var(--color-primary);
+    color: var(--color-text);
+}
+
+.event-edit-actions button:hover {
+    background: var(--color-accent);
+}
+
+.event-edit-actions .event-edit-cancel {
+    background: transparent;
+}
+
+.event-edit-error {
+    color: #ffb4a8;
+    font-size: 0.9rem;
 }

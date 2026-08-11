@@ -14,7 +14,11 @@ import {
 const INVALID_CREDENTIALS = NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
 
 export async function POST(request: Request) {
-  const { email, password } = (await request.json()) as { email: string; password: string };
+  const { email, password, remember } = (await request.json()) as {
+    email: string;
+    password: string;
+    remember?: boolean;
+  };
   if (!email || !password) {
     return NextResponse.json({ error: "Email and password required" }, { status: 400 });
   }
@@ -61,6 +65,6 @@ export async function POST(request: Request) {
       .where(eq(adminUsers.id, admin.id));
   }
 
-  await createSession(admin.id);
+  await createSession(admin.id, Boolean(remember));
   return NextResponse.json({ ok: true });
 }

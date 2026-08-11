@@ -1,9 +1,27 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import "../admin.css";
+
+// Rendering two inputs and toggling which is visible -- rather than mutating
+// a single input's `type` -- avoids a Chrome/Edge quirk where flipping
+// type="password"/"text" on the same node makes it re-pop the "Suggest
+// strong password" popup even though the field already has a value, since
+// Chrome re-runs its "empty new field" heuristic on that mutation. The
+// type="text" twin was never a password field, so it's never eligible for
+// that suggestion.
+function usePasswordToggle(show: boolean) {
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    (show ? textRef.current : passwordRef.current)?.focus();
+  }, [show]);
+
+  return { passwordRef, textRef };
+}
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -15,6 +33,8 @@ function ResetPasswordForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const password1 = usePasswordToggle(showPassword);
+  const password2 = usePasswordToggle(showConfirmPassword);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +52,7 @@ function ResetPasswordForm() {
     setLoading(false);
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(body.error ?? "Could not set password");
+      setError(body.error ?? "We couldn't set your password. Please try again.");
       return;
     }
     setDone(true);
@@ -68,11 +88,25 @@ function ResetPasswordForm() {
         New password
         <div className="admin-password-field">
           <input
-            type={showPassword ? "text" : "password"}
+            ref={password1.passwordRef}
+            type="password"
             required
             minLength={10}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            hidden={showPassword}
+            tabIndex={showPassword ? -1 : undefined}
+          />
+          <input
+            ref={password1.textRef}
+            type="text"
+            required
+            minLength={10}
+            autoComplete="off"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            hidden={!showPassword}
+            tabIndex={showPassword ? undefined : -1}
           />
           <button
             type="button"
@@ -108,11 +142,25 @@ function ResetPasswordForm() {
         Confirm password
         <div className="admin-password-field">
           <input
-            type={showConfirmPassword ? "text" : "password"}
+            ref={password2.passwordRef}
+            type="password"
             required
             minLength={10}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            hidden={showConfirmPassword}
+            tabIndex={showConfirmPassword ? -1 : undefined}
+          />
+          <input
+            ref={password2.textRef}
+            type="text"
+            required
+            minLength={10}
+            autoComplete="off"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            hidden={!showConfirmPassword}
+            tabIndex={showConfirmPassword ? undefined : -1}
           />
           <button
             type="button"

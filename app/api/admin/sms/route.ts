@@ -38,9 +38,18 @@ export async function POST(request: Request) {
   }
 
   const db = await getDb();
-  const recipients = await db.select().from(members).where(inArray(members.id, memberIds));
-  if (recipients.length === 0) {
+  const selected = await db.select().from(members).where(inArray(members.id, memberIds));
+  if (selected.length === 0) {
     return NextResponse.json({ error: "None of the selected members could be found" }, { status: 400 });
+  }
+  // Enforced here too, not just in the recipient picker's own filtering, so a
+  // stale client-side list can't text someone who hasn't opted in.
+  const recipients = selected.filter((m) => m.smsOptIn);
+  if (recipients.length === 0) {
+    return NextResponse.json(
+      { error: "None of the selected contacts have opted in to receive texts" },
+      { status: 400 }
+    );
   }
 
   const { env } = await getCloudflareContext({ async: true });

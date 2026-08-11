@@ -23,6 +23,9 @@ const PUBLIC_PORTAL_PATHS = new Set([
   "/api/portal/signup",
   "/api/portal/reset-password",
   "/api/portal/forgot-password",
+  // Opened from an emailed link, possibly in a different browser/device than
+  // whichever one is logged in -- verification itself isn't cookie-gated.
+  "/api/portal/verify-email",
 ]);
 
 export function middleware(request: NextRequest) {

@@ -19,17 +19,22 @@ export default function RichTextEditor({
   onChange,
   label,
   onImageUpload,
+  onDocumentUpload,
 }: {
   value: string;
   onChange: (html: string) => void;
   label?: string;
   onImageUpload?: (file: File) => Promise<string>;
+  onDocumentUpload?: (file: File) => Promise<string>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
   const [imageError, setImageError] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [documentError, setDocumentError] = useState("");
+  const [uploadingDocument, setUploadingDocument] = useState(false);
   const [activeFormats, setActiveFormats] = useState<
     Record<TrackedCommand, boolean>
   >({
@@ -125,6 +130,40 @@ export default function RichTextEditor({
     }
   }
 
+  function openDocumentPicker() {
+    const container = ref.current;
+    const range = rangeInContainer(container);
+    savedRangeRef.current = range ? range.cloneRange() : null;
+    documentInputRef.current?.click();
+  }
+
+  async function handleDocumentSelected(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !onDocumentUpload) return;
+    setDocumentError("");
+    setUploadingDocument(true);
+    try {
+      const url = await onDocumentUpload(file);
+      ref.current?.focus();
+      const sel = window.getSelection();
+      if (sel && savedRangeRef.current) {
+        sel.removeAllRanges();
+        sel.addRange(savedRangeRef.current);
+      }
+      document.execCommand(
+        "insertHTML",
+        false,
+        `<a href="${url}" target="_blank" rel="noopener">${file.name}</a>`
+      );
+      handleInput();
+    } catch (err) {
+      setDocumentError(err instanceof Error ? err.message : "Document upload failed");
+    } finally {
+      setUploadingDocument(false);
+    }
+  }
+
   return (
     <div className="rte">
       {dialog}
@@ -201,6 +240,18 @@ export default function RichTextEditor({
             {uploadingImage ? "Uploading…" : "Image"}
           </button>
         )}
+
+        {onDocumentUpload && (
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={openDocumentPicker}
+            disabled={uploadingDocument}
+            title="Attach a document"
+          >
+            {uploadingDocument ? "Uploading…" : "Document"}
+          </button>
+        )}
       </div>
       {onImageUpload && (
         <input
@@ -211,7 +262,17 @@ export default function RichTextEditor({
           style={{ display: "none" }}
         />
       )}
+      {onDocumentUpload && (
+        <input
+          ref={documentInputRef}
+          type="file"
+          accept="application/pdf"
+          onChange={handleDocumentSelected}
+          style={{ display: "none" }}
+        />
+      )}
       {imageError && <p className="admin-error">{imageError}</p>}
+      {documentError && <p className="admin-error">{documentError}</p>}
       <div
         ref={ref}
         className="rte-content"

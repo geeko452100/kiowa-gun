@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -10,9 +10,23 @@ export default function LoginForm() {
   const expired = searchParams.get("expired") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const passwordTextRef = useRef<HTMLInputElement>(null);
+
+  // Rendering two inputs and toggling which is visible -- rather than
+  // mutating a single input's `type` -- avoids a Chrome/Edge quirk where
+  // flipping type="password"/"text" on the same node makes it re-pop the
+  // "Suggest strong password" popup even though the field already has a
+  // value, since Chrome re-runs its "empty new field" heuristic on that
+  // mutation. The type="text" twin was never a password field, so it's
+  // never eligible for that suggestion.
+  useEffect(() => {
+    (showPassword ? passwordTextRef.current : passwordRef.current)?.focus();
+  }, [showPassword]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,12 +35,12 @@ export default function LoginForm() {
     const res = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, remember }),
     });
     setLoading(false);
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(body.error ?? "Login failed");
+      setError(body.error ?? "We couldn't sign you in. Check your email and password and try again.");
       return;
     }
     router.push("/admin/dashboard");
@@ -38,8 +52,8 @@ export default function LoginForm() {
       <h1>Kiowa Gun Club Admin</h1>
       {expired && (
         <p className="admin-note">
-          You were signed out after being idle for a while, for security. Please sign in again —
-          if you were in the middle of editing something, you may need to redo that last change.
+          You were signed out after a period of inactivity. Please sign back in — if you had
+          unsaved edits, you may need to redo them.
         </p>
       )}
       <label>
@@ -55,10 +69,23 @@ export default function LoginForm() {
         Password
         <div className="admin-password-field">
           <input
-            type={showPassword ? "text" : "password"}
+            ref={passwordRef}
+            type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            hidden={showPassword}
+            tabIndex={showPassword ? -1 : undefined}
+          />
+          <input
+            ref={passwordTextRef}
+            type="text"
+            required
+            autoComplete="off"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            hidden={!showPassword}
+            tabIndex={showPassword ? undefined : -1}
           />
           <button
             type="button"
@@ -89,6 +116,14 @@ export default function LoginForm() {
             )}
           </button>
         </div>
+      </label>
+      <label className="admin-remember">
+        <input
+          type="checkbox"
+          checked={remember}
+          onChange={(e) => setRemember(e.target.checked)}
+        />
+        Remember me
       </label>
       {error && <p className="admin-error">{error}</p>}
       <button type="submit" disabled={loading}>

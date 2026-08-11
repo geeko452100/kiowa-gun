@@ -1,32 +1,55 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { getDb } from "@/lib/db";
+import { getDb, isUniqueConstraintError } from "@/lib/db";
 import { members, documents } from "@/lib/schema";
 import { MEMBERSHIP_ALLOWED_FILE_TYPES, MEMBERSHIP_FILE_FIELDS } from "@/lib/constants";
 
 const ALLOWED_FILE_TYPES = MEMBERSHIP_ALLOWED_FILE_TYPES;
 
-const FILE_FIELDS = MEMBERSHIP_FILE_FIELDS.map((f) => ({
-  ...f,
-  required: f.field === "nraProof" || f.field === "backgroundCheck",
-}));
-
+// Renewing members prove current NRA membership; waiting-list applicants
+// (not yet members) prove they've passed a background check instead -- see
+// requirement 5.c.i vs 5.c.iii. Neither is universally required.
 export async function POST(request: Request) {
   const formData = await request.formData();
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const smsOptIn = formData.get("smsOptIn") === "1";
   const address = String(formData.get("address") ?? "").trim();
-  const rulesAcknowledgedName = String(formData.get("rulesAcknowledgedName") ?? "").trim();
-  const agree = formData.get("agree") === "true";
+  const nraNumber = String(formData.get("nraNumber") ?? "").trim();
+  const applicantType = String(formData.get("applicantType") ?? "");
 
   if (!name || !email || !address) {
     return NextResponse.json({ error: "Name, email, and address are required" }, { status: 400 });
   }
-  if (!agree || !rulesAcknowledgedName) {
+  if (applicantType !== "member" && applicantType !== "waitlist") {
+    return NextResponse.json({ error: "Please choose whether you're a renewing member or a new applicant" }, { status: 400 });
+  }
+  if (phone && !/^\d+$/.test(phone)) {
+    return NextResponse.json({ error: "Phone must contain only digits" }, { status: 400 });
+  }
+  if (nraNumber && !/^\d{5,12}$/.test(nraNumber)) {
+    return NextResponse.json({ error: "NRA Number must be 5 to 12 digits" }, { status: 400 });
+  }
+
+  const FILE_FIELDS = MEMBERSHIP_FILE_FIELDS.map((f) => ({
+    ...f,
+    required:
+      (f.field === "nraProof" && applicantType === "member") ||
+      (f.field === "backgroundCheck" && applicantType === "waitlist"),
+  }));
+
+  const db = await getDb();
+  const normalizedEmail = email.toLowerCase().trim();
+  const [existing] = await db.select().from(members).where(eq(members.email, normalizedEmail));
+
+  if (!existing || !existing.rulesAcknowledgedName || !existing.rulesAcknowledgedAt) {
     return NextResponse.json(
-      { error: "You must type your name and agree to the Range Rules to continue" },
+      {
+        error:
+          "Please sign the Range Rules Acknowledgement on this page using this same email address before applying.",
+      },
       { status: 400 }
     );
   }
@@ -44,38 +67,27 @@ export async function POST(request: Request) {
     }
   }
 
-  const db = await getDb();
-  const normalizedEmail = email.toLowerCase().trim();
-  const [existing] = await db.select().from(members).where(eq(members.email, normalizedEmail));
-
-  const now = new Date().toISOString();
-  let memberId: number;
-  if (existing) {
-    memberId = existing.id;
+  const memberId = existing.id;
+  try {
     await db
       .update(members)
       .set({
         name,
         phone: phone || null,
+        smsOptIn: smsOptIn ? 1 : 0,
+        ...(smsOptIn && !existing.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
         address,
-        rulesAcknowledgedName,
-        rulesAcknowledgedAt: now,
+        nraNumber: nraNumber || null,
       })
       .where(eq(members.id, memberId));
-  } else {
-    const [inserted] = await db
-      .insert(members)
-      .values({
-        name,
-        email: normalizedEmail,
-        phone: phone || null,
-        address,
-        status: "Waiting List",
-        rulesAcknowledgedName,
-        rulesAcknowledgedAt: now,
-      })
-      .returning({ id: members.id });
-    memberId = inserted.id;
+  } catch (err) {
+    if (isUniqueConstraintError(err, "nra_number")) {
+      return NextResponse.json(
+        { error: "That NRA Number is already on file for another member. Double-check it and try again." },
+        { status: 409 }
+      );
+    }
+    throw err;
   }
 
   const { env } = await getCloudflareContext({ async: true });

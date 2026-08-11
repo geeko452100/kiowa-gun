@@ -14,6 +14,7 @@ type Member = {
   address: string | null;
   status: string;
   onShootingCommittee: number;
+  smsOptIn: number;
   renewalDate: string | null;
   pendingDocs: number;
 };
@@ -117,6 +118,20 @@ export default function MembersAdmin() {
     void load();
   }
 
+  async function toggleSmsOptIn(m: Member, smsOptIn: boolean) {
+    setError("");
+    const result = await adminFetch(`/api/admin/members/${m.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...m, smsOptIn }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    void load();
+  }
+
   async function changeAddress(m: Member, address: string) {
     setError("");
     const result = await adminFetch(`/api/admin/members/${m.id}`, {
@@ -160,6 +175,11 @@ export default function MembersAdmin() {
         Board members are included in this list. Changing a board member&apos;s
         status here only affects newsletters — it does not remove their CMS
         login (manage that from Board Members).
+      </p>
+      <p className="admin-note">
+        The &quot;Texts OK&quot; column reflects whether a member has agreed to receive texts —
+        only check it here if you have their actual consent (e.g. they asked you directly), since
+        this drives who receives text messages sent from this site.
       </p>
       <p>
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page nav */}
@@ -233,6 +253,7 @@ export default function MembersAdmin() {
               <th>Address</th>
               <th>Status</th>
               <th>Shooting Committee</th>
+              <th>Texts OK</th>
               <th>Renewal Date</th>
               <th></th>
             </tr>
@@ -277,6 +298,13 @@ export default function MembersAdmin() {
                     type="checkbox"
                     checked={!!m.onShootingCommittee}
                     onChange={(e) => toggleShootingCommittee(m, e.target.checked)}
+                  />
+                </td>
+                <td data-label="Texts OK">
+                  <input
+                    type="checkbox"
+                    checked={!!m.smsOptIn}
+                    onChange={(e) => toggleSmsOptIn(m, e.target.checked)}
                   />
                 </td>
                 <td data-label="Renewal Date">

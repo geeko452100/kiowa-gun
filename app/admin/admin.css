@@ -44,6 +44,23 @@
   margin: 0;
 }
 
+.admin-remember {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.admin-remember input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
 .admin-layout {
   display: flex;
   min-height: 100vh;
@@ -73,6 +90,13 @@
 
 .admin-sidebar nav a:hover {
   background: var(--color-accent, #4c5e3a);
+}
+
+.admin-edit-site-link {
+  margin-bottom: 6px;
+  font-weight: 700;
+  border: 1px dashed var(--color-accent, #4c5e3a);
+  border-radius: 6px;
 }
 
 .admin-sidebar form {
@@ -178,6 +202,14 @@ select:focus-visible {
 
 .admin-password-toggle:hover {
   filter: grayscale(0.5);
+}
+
+/* This button is vertically centered via transform: translateY(-50%), which
+   the global button:active rule's own translateY(1px) (app/styles/styles.css)
+   would otherwise clobber entirely (transform doesn't compose across
+   cascaded rules) -- causing the button to jump ~16px on every press. */
+.admin-password-toggle:active:not(:disabled) {
+  transform: translateY(calc(-50% + 1px));
 }
 
 .admin-password-toggle:focus-visible {
@@ -694,4 +726,69 @@ button.danger {
 
 .recipient-picker-selected {
   margin: 0;
+}
+
+.dashboard-section-heading {
+  margin: 32px 0 12px;
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--color-border, #3a3d33);
+  padding-bottom: 8px;
+}
+
+.dashboard-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.dashboard-stat-card {
+  background: #0d0f0a;
+  border: 1px solid var(--color-border, #3a3d33);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.dashboard-stat-card-warn {
+  border-color: #a8291a;
+  background: #2a1410;
+}
+
+.dashboard-stat-number {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dashboard-stat-label {
+  margin-top: 6px;
+  font-size: 1rem;
+  color: #cbc6b8;
+}
+
+.dashboard-message-card {
+  background: #0d0f0a;
+  border: 1px solid var(--color-border, #3a3d33);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.dashboard-message-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.dashboard-message-card .admin-note {
+  margin: 0;
+}
+
+.dashboard-unlock {
+  margin-top: 12px;
+}
+
+.dashboard-unlock button {
+  padding: 8px 14px;
+  min-height: 36px;
+  font-size: 0.9rem;
 }

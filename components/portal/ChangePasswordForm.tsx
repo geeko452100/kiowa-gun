@@ -23,7 +23,7 @@ export default function ChangePasswordForm() {
     setLoading(false);
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(body.error ?? "Could not change password");
+      setError(body.error ?? "We couldn't change your password. Please try again.");
       return;
     }
     setCurrentPassword("");
@@ -47,7 +47,7 @@ export default function ChangePasswordForm() {
         autoComplete="new-password"
       />
       {error && <p className="portal-error">{error}</p>}
-      {saved && !error && <p className="portal-saved">Password changed.</p>}
+      {saved && !error && <p className="portal-saved">Your password has been changed.</p>}
       <button type="submit" disabled={loading}>
         {loading ? "Saving…" : "Change Password"}
       </button>

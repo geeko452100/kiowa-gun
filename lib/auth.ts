@@ -6,6 +6,7 @@ import { adminUsers, sessions } from "./schema";
 import { SESSION_COOKIE } from "./constants";
 
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
+const REMEMBER_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function toHex(buffer: ArrayBuffer | Uint8Array) {
   return Array.from(new Uint8Array(buffer))
@@ -75,10 +76,10 @@ export const DUMMY_HASH = "00".repeat(32);
 export const MAX_FAILED_LOGIN_ATTEMPTS = 8;
 export const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
 
-export async function createSession(adminUserId: number) {
+export async function createSession(adminUserId: number, remember = false) {
   const db = await getDb();
   const id = toHex(crypto.getRandomValues(new Uint8Array(32)));
-  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const expiresAt = Date.now() + (remember ? REMEMBER_SESSION_TTL_MS : SESSION_TTL_MS);
   await db.insert(sessions).values({ id, adminUserId, expiresAt });
   const store = await cookies();
   store.set(SESSION_COOKIE, id, {
@@ -86,7 +87,11 @@ export async function createSession(adminUserId: number) {
     secure: true,
     sameSite: "lax",
     path: "/",
-    expires: new Date(expiresAt),
+    // Omitting `expires` for a non-"remember me" login makes it a session
+    // cookie that the browser clears on close, even though the underlying
+    // DB session still lives for SESSION_TTL_MS -- so a closed browser
+    // forces re-login but a left-open tab doesn't get logged out early.
+    ...(remember ? { expires: new Date(expiresAt) } : {}),
   });
   return id;
 }

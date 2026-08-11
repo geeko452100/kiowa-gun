@@ -9,9 +9,7 @@ export const dynamic = "force-dynamic";
 
 const LINKS = [
   { href: "/admin/dashboard", label: "Dashboard" },
-  { href: "/admin/pages", label: "Page Text" },
   { href: "/admin/calendar", label: "Calendar" },
-  { href: "/admin/news", label: "News" },
   { href: "/admin/matches", label: "Matches" },
   { href: "/admin/documents", label: "Documents" },
   { href: "/admin/members", label: "Members" },
@@ -34,6 +32,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <aside className="admin-sidebar">
           <h2>Kiowa Gun Club</h2>
           <nav>
+            <Link href="/" className="admin-edit-site-link">
+              Edit Site Layout
+            </Link>
             {links.map((link) => (
               <Link key={link.href} href={link.href}>
                 {link.label}

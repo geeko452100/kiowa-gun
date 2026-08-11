@@ -34,10 +34,10 @@ export default function SignupForm() {
 
   return (
     <form className="portal-card" onSubmit={onSubmit}>
-      <h1>Create Your Member Portal Login</h1>
+      <h1>Set Up Your Portal Account</h1>
       <p className="portal-note">
-        Choose your own email and password. Once you&apos;re in, you can fill out or update your
-        member info, documents, and dues payment.
+        Pick an email and password you&apos;ll remember. Once you&apos;re in, you can enter your
+        member info, upload your documents, and take care of your dues.
       </p>
       <label>
         Name

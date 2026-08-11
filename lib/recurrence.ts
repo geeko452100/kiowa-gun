@@ -11,6 +11,18 @@ function fmt(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const ORDINALS = ["1st", "2nd", "3rd", "4th"];
+
+// Plain-language description of a recurrence rule, stored on every event row
+// generated from it (calendar_events.recurrence_label) so the public
+// calendar can show "Recurring — Every 2nd Saturday of the month" without
+// re-deriving it from weekday/nth every time.
+export function describeRecurrence(nth: number, weekday: number) {
+  const ordinal = ORDINALS[nth - 1] ?? `${nth}th`;
+  return `Every ${ordinal} ${WEEKDAY_NAMES[weekday]} of the month`;
+}
+
 export function buildRecurringSeries(options: {
   title: string;
   weekday: number;
@@ -22,13 +34,27 @@ export function buildRecurringSeries(options: {
   monthCount: number;
 }) {
   const { title, weekday, nth, time, color, startYear, startMonth, monthCount } = options;
-  const events: { title: string; start: string; color: string }[] = [];
+  const seriesId = crypto.randomUUID();
+  const recurrenceLabel = describeRecurrence(nth, weekday);
+  const events: {
+    title: string;
+    start: string;
+    color: string;
+    seriesId: string;
+    recurrenceLabel: string;
+  }[] = [];
 
   let year = startYear;
   let month = startMonth;
   for (let i = 0; i < monthCount; i++) {
     const day = nthWeekdayOfMonth(year, month, weekday, nth);
-    events.push({ title, start: `${fmt(year, month, day)}T${time}:00`, color });
+    events.push({
+      title,
+      start: `${fmt(year, month, day)}T${time}:00`,
+      color,
+      seriesId,
+      recurrenceLabel,
+    });
     month += 1;
     if (month > 11) {
       month = 0;

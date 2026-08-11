@@ -8,7 +8,7 @@ import { sendAdminEmail } from "@/lib/email";
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 const RESEND_COOLDOWN_MS = 2 * 60 * 1000; // don't re-email the same inbox more than once every 2 minutes
 
-const GENERIC_MESSAGE = "If that email has a portal login, we've sent a link to reset the password.";
+const GENERIC_MESSAGE = "If that email is linked to a portal account, we've sent a link to reset your password.";
 
 // Public and unauthenticated by design, so the response must be identical
 // whether or not the email belongs to a member with a portal login -- never
@@ -50,9 +50,9 @@ export async function POST(request: Request) {
       await sendAdminEmail(
         member.email,
         "Reset your Kiowa Gun Club member portal password",
-        `<p>Someone requested a password reset for this Kiowa Gun Club member portal login.</p>
-         <p><a href="${link}">Click here to set a new password</a>.</p>
-         <p>This link expires in 1 hour. If you didn't request this, you can ignore it — your current password still works.</p>`
+        `<p>We received a request to reset the password on your Kiowa Gun Club member portal account.</p>
+         <p><a href="${link}">Set a new password</a></p>
+         <p>This link expires in 1 hour. If you didn't request this, feel free to ignore it — your password won't change.</p>`
       );
     }
   }

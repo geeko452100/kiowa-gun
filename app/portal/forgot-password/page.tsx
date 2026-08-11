@@ -22,7 +22,7 @@ export default function PortalForgotPasswordPage() {
     setLoading(false);
     const body = (await res.json().catch(() => ({}))) as { message?: string; error?: string };
     setMessage(
-      body.message ?? body.error ?? "If that email has a portal login, we've sent a link to reset the password."
+      body.message ?? body.error ?? "If that email is linked to a portal account, we've sent a link to reset your password."
     );
   }
 

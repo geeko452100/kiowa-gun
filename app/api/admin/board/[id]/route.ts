@@ -87,6 +87,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: true });
   }
 
+  if (body.action === "unlock") {
+    await db
+      .update(adminUsers)
+      .set({ failedLoginCount: 0, lockedUntil: null })
+      .where(eq(adminUsers.id, targetId));
+    return NextResponse.json({ ok: true });
+  }
+
   if (body.action === "set_position") {
     const position = body.position?.trim() || null;
     await db.update(adminUsers).set({ position }).where(eq(adminUsers.id, targetId));

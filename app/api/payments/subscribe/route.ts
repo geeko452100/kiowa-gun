@@ -36,7 +36,8 @@ export async function POST(request: Request) {
   }
 
   const { firstName, lastName } = splitName(member.name);
-  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   let result;
   try {
@@ -45,8 +46,8 @@ export async function POST(request: Request) {
       // 0 = renews indefinitely until canceled, not a fixed number of payments.
       plan_payments: 0,
       month_frequency: 12,
-      day_of_month: today.getDate(),
-      start_date: toNmiDate(today),
+      day_of_month: tomorrow.getDate(),
+      start_date: toNmiDate(tomorrow),
       payment_details: { payment_token: paymentToken },
       billing_address: { first_name: firstName, last_name: lastName, email: member.email },
     });

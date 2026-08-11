@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
     setLoading(false);
     const body = (await res.json().catch(() => ({}))) as { message?: string; error?: string };
     setMessage(
-      body.message ?? body.error ?? "If that email has an admin login, we've sent a link to reset the password."
+      body.message ?? body.error ?? "If that email is linked to an admin account, we've sent a link to reset your password."
     );
   }
 

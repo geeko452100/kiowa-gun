@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { members, smsCampaigns } from "@/lib/schema";
@@ -43,7 +43,10 @@ export async function POST(request: Request) {
   }
 
   const db = await getDb();
-  const rows = await db.select().from(members).where(eq(members.status, "Member"));
+  const rows = await db
+    .select()
+    .from(members)
+    .where(and(eq(members.status, "Member"), eq(members.smsOptIn, 1)));
   const today = new Date();
 
   let sentCount = 0;

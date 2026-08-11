@@ -10,7 +10,8 @@ export const MIN_PASSWORD_LENGTH = 10;
 export const DUES_AMOUNT_CENTS = 15000; // $150.00
 
 // `documents.category` values used by the public membership form uploader
-// (app/api/membership/submit). "discountCard" is also read by
+// (app/api/membership/submit) and the portal profile update
+// (app/api/portal/profile). "discountCard" is also read by
 // app/api/admin/payments/route.ts to cross-check reduced payments.
 export const MEMBERSHIP_DOC_CATEGORIES = {
   nraProof: "nra_membership",

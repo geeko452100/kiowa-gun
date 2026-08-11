@@ -42,6 +42,89 @@ button:focus-visible {
     outline-offset: 2px;
 }
 
+/* Base form control styling so pages without their own form CSS (membership,
+   about, rules, news) still get a readable, accessible input/button instead
+   of raw browser defaults. */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+    font: inherit;
+    font-size: 1rem;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    background: var(--color-header-bg);
+    color: var(--color-text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):hover,
+textarea:hover,
+select:hover {
+    border-color: var(--color-accent);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(76, 94, 58, 0.4);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: var(--color-accent);
+}
+
+button {
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 10px 18px;
+    border-radius: 4px;
+    border: 1px solid var(--color-accent);
+    background: var(--color-primary);
+    color: var(--color-text);
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+button:hover:not(:disabled) {
+    background: var(--color-accent);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.register-cta {
+    text-align: center;
+    margin: -24px 0 16px;
+}
+
+/* Home / Membership Info "Register for Membership" call-to-action button */
+.register-button {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 4px;
+    border: 1px solid var(--color-accent);
+    background: var(--color-primary);
+    color: var(--color-text) !important;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.register-button:hover {
+    background: var(--color-accent);
+    color: #fff !important;
+}
+
 .skip-link {
     position: absolute;
     left: -9999px;
@@ -179,6 +262,18 @@ button:focus-visible {
     opacity: 0.85;
 }
 
+.site-title-compact {
+    font-size: 0.95rem;
+}
+
+.site-title-large {
+    font-size: 1.6rem;
+}
+
+.site-title-large small {
+    font-size: 0.9rem;
+}
+
 .hero-image {
     flex: 1 1 240px;
     width: auto;
@@ -187,6 +282,7 @@ button:focus-visible {
 
 .main-nav {
     padding-top: 4px;
+    margin-left: auto;
 }
 
 .main-nav ul {
@@ -344,14 +440,21 @@ button:focus-visible {
 }
 
 .board-login-link {
-    color: var(--color-text);
-    opacity: 0.6;
-    text-decoration: underline;
-    font-size: 0.8rem;
+    display: inline-block;
+    margin-top: 8px;
+    color: #fff;
+    opacity: 0.75;
+    text-decoration: none;
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 .board-login-link:hover {
     opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Home page (index.html) */
@@ -428,6 +531,7 @@ button:focus-visible {
    its own iframes, so the height/border here is what gives the card number,
    expiry, and CVV inputs a visible box before the iframe content loads. */
 .nmi-card-fields {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -435,13 +539,81 @@ button:focus-visible {
     margin: 12px 0;
 }
 
+.nmi-card-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: opacity 0.15s ease;
+}
+
+/* Collect.js's iframes take a moment (network round trip + postMessage
+   handshake) to load and render their own placeholder text -- dimming the
+   boxes in the meantime makes that gap read as "loading" instead of
+   "broken/frozen". Cleared by fieldsAvailableCallback, which only fires once
+   every field has actually finished loading.
+   No pointer-events: none here, even though the fields aren't interactive
+   yet anyway -- Collect.js's style sniffer runs at configure() time (before
+   fieldsAvailableCallback has ever fired, so this class is still present)
+   and copies the *computed* style of a bare input dropped inside each field
+   div, including inherited properties. pointer-events: none on this
+   ancestor gets inherited by that sniffed snapshot and baked permanently
+   into the field's style inside the iframe -- confirmed live: it left every
+   field completely unclickable forever, even after this class was removed. */
+.nmi-card-field-group.loading {
+    opacity: 0.5;
+}
+
+/* Both the Card and ACH field groups stay mounted at all times (see
+   CardFields.tsx for why); only one is shown at once. Not display: none --
+   same style-sniffer issue as the .loading rule above, but for height
+   instead of pointer-events. Whichever group isn't the default active tab
+   is display: none at configure() time, and elements inside a display: none
+   subtree always report offsetHeight: 0; the sniffer bakes that 0 in as the
+   field's permanent height (confirmed live: it left the ACH fields with no
+   visible placeholder and no clickable area, while Card -- the active tab
+   at configure() time -- worked fine). visibility: hidden still lays out
+   normally (real offsetHeight) while staying non-painted and non-
+   interactive; position: absolute keeps it from leaving a visible gap in
+   the page while inactive (paired with position: relative on
+   .nmi-card-fields above). */
+.nmi-card-field-group.nmi-hidden {
+    position: absolute;
+    visibility: hidden;
+}
+
 .nmi-card-field {
     height: 42px;
     border: 1px solid var(--color-border);
     border-radius: 4px;
-    background: #fff;
+    /* Collect.js's style sniffer picks up --color-header-bg from the
+       site-wide dark `input {}` rule once its iframe loads -- matching it
+       here avoids a flash of a white box before that happens. */
+    background: var(--color-header-bg);
 }
 
-.nmi-card-fields button {
+.nmi-card-fields > button {
     align-self: flex-start;
+}
+
+.nmi-method-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.nmi-method-tab {
+    padding: 6px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.nmi-method-tab.active {
+    /* --color-primary is nearly indistinguishable from --color-bg on this
+       dark theme, so the "active" tab would otherwise blend into the page --
+       --color-accent is the lighter tone used for hover/focus states
+       elsewhere on the site. */
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
 }

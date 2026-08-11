@@ -96,8 +96,8 @@ export async function POST(request: Request) {
   await sendAdminEmail(
     normalizedEmail,
     "Set up your Kiowa Gun Club admin login",
-    `<p>${admin.name} added you as a board member on the Kiowa Gun Club admin site.</p>
-     <p><a href="${link}">Click here to set your password</a> and finish setting up your login.</p>
+    `<p>${admin.name} has added you as a board member on the Kiowa Gun Club admin site.</p>
+     <p><a href="${link}">Set your password</a> to finish setting up your account.</p>
      <p>This link expires in 7 days.</p>`
   );
 

@@ -34,6 +34,7 @@ type Member = {
   phone: string | null;
   status: string;
   onShootingCommittee: number;
+  smsOptIn: number;
 };
 
 export default function SmsAdmin() {
@@ -62,7 +63,9 @@ export default function SmsAdmin() {
     if (resetSelection) {
       setSelectedIds(
         new Set(
-          rows.filter((m) => [...recipientGroups].some((g) => memberInGroup(m, g)) && m.phone).map((m) => m.id)
+          rows
+            .filter((m) => [...recipientGroups].some((g) => memberInGroup(m, g)) && m.phone && m.smsOptIn)
+            .map((m) => m.id)
         )
       );
     }
@@ -99,10 +102,13 @@ export default function SmsAdmin() {
     setMediaFileName("");
   }
 
-  const withPhone = allMembers.filter((m) => m.phone);
+  const withPhone = allMembers.filter((m) => m.phone && m.smsOptIn);
   const activeMembers = withPhone.filter((m) => [...recipientGroups].some((g) => memberInGroup(m, g)));
   const noPhoneCount = allMembers.filter(
     (m) => [...recipientGroups].some((g) => memberInGroup(m, g)) && !m.phone
+  ).length;
+  const noOptInCount = allMembers.filter(
+    (m) => [...recipientGroups].some((g) => memberInGroup(m, g)) && m.phone && !m.smsOptIn
   ).length;
 
   function toggleRecipientGroup(group: string) {
@@ -206,6 +212,12 @@ export default function SmsAdmin() {
           <p className="admin-note">
             {noPhoneCount} contact{noPhoneCount === 1 ? "" : "s"} in the selected groups have no
             phone number on file and are excluded.
+          </p>
+        )}
+        {noOptInCount > 0 && (
+          <p className="admin-note">
+            {noOptInCount} contact{noOptInCount === 1 ? "" : "s"} in the selected groups haven&apos;t
+            opted in to texts and are excluded.
           </p>
         )}
 

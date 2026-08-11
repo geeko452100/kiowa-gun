@@ -8,6 +8,7 @@ import { MEMBER_SESSION_COOKIE } from "./constants";
 // Same TTL as the admin session (lib/auth.ts) -- no reason for portal
 // sessions to behave differently.
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
+const REMEMBER_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function toHex(buffer: ArrayBuffer | Uint8Array) {
   return Array.from(new Uint8Array(buffer))
@@ -15,10 +16,10 @@ function toHex(buffer: ArrayBuffer | Uint8Array) {
     .join("");
 }
 
-export async function createMemberSession(memberId: number) {
+export async function createMemberSession(memberId: number, remember = false) {
   const db = await getDb();
   const id = toHex(crypto.getRandomValues(new Uint8Array(32)));
-  const expiresAt = Date.now() + SESSION_TTL_MS;
+  const expiresAt = Date.now() + (remember ? REMEMBER_SESSION_TTL_MS : SESSION_TTL_MS);
   await db.insert(memberSessions).values({ id, memberId, expiresAt });
   const store = await cookies();
   store.set(MEMBER_SESSION_COOKIE, id, {
@@ -26,7 +27,9 @@ export async function createMemberSession(memberId: number) {
     secure: true,
     sameSite: "lax",
     path: "/",
-    expires: new Date(expiresAt),
+    // See lib/auth.ts createSession for why `expires` is only set when
+    // remember is true.
+    ...(remember ? { expires: new Date(expiresAt) } : {}),
   });
   return id;
 }

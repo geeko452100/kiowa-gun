@@ -1,27 +1,45 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { pageSections } from "@/lib/schema";
+import { getCurrentAdmin } from "@/lib/auth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import "./styles/news.css";
+import EditableSection from "@/components/EditableSection";
+import AdditionalSections from "@/components/AdditionalSections";
+import EditModeBanner from "@/components/EditModeBanner";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const db = await getDb();
-  const sections = await db.select().from(pageSections).where(eq(pageSections.pageSlug, "home"));
+  const [sections, admin] = await Promise.all([
+    db.select().from(pageSections).where(eq(pageSections.pageSlug, "home")),
+    getCurrentAdmin(),
+  ]);
   const welcome = sections.find((s) => s.sectionKey === "welcome");
   const matchesTeaser = sections.find((s) => s.sectionKey === "matches_teaser");
-  const notice = sections.find((s) => s.sectionKey === "notice");
 
   return (
     <>
       <Header active="home" />
       <main className="container" id="main">
+        {admin && <EditModeBanner name={admin.name} />}
         <section id="welcome" className="content-section">
-          <h2>{welcome?.heading}</h2>
-          <div dangerouslySetInnerHTML={{ __html: welcome?.bodyHtml ?? "" }} />
+          {welcome && (
+            <EditableSection
+              id={welcome.id}
+              heading={welcome.heading}
+              bodyHtml={welcome.bodyHtml}
+              isAdmin={!!admin}
+            />
+          )}
         </section>
+
+        <p className="register-cta">
+          <a href="/membership/apply" target="_blank" rel="noopener noreferrer" className="register-button">
+            Register for Membership
+          </a>
+        </p>
 
         <section id="rules" className="content-section rules-summary">
           <h2>Jeff Cooper&apos;s Rules of Gun Safety</h2>
@@ -37,20 +55,20 @@ export default async function HomePage() {
         </section>
 
         <section id="matches" className="content-section">
-          <h2>{matchesTeaser?.heading}</h2>
-          <div dangerouslySetInnerHTML={{ __html: matchesTeaser?.bodyHtml ?? "" }} />
+          {matchesTeaser && (
+            <EditableSection
+              id={matchesTeaser.id}
+              heading={matchesTeaser.heading}
+              bodyHtml={matchesTeaser.bodyHtml}
+              isAdmin={!!admin}
+            />
+          )}
           <p>
             <a href="/matches">View full match schedule &rarr;</a>
           </p>
         </section>
 
-        <div id="notice" className="content-section notice">
-          <h2>{notice?.heading}</h2>
-          <div dangerouslySetInnerHTML={{ __html: notice?.bodyHtml ?? "" }} />
-          <p>
-            <a href="/news">View full notice &rarr;</a>
-          </p>
-        </div>
+        <AdditionalSections pageSlug="home" sections={sections} isAdmin={!!admin} />
       </main>
       <Footer />
     </>

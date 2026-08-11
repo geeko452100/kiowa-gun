@@ -4,6 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CardFields from "@/components/nmi/CardFields";
 
+const STATUS_LABELS: Record<string, string> = {
+  active: "Active",
+  past_due: "Payment past due",
+};
+
 export default function PaymentSection({
   email,
   tokenizationKey,
@@ -33,7 +38,7 @@ export default function PaymentSection({
     const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
     setSubmitting(false);
     if (!res.ok || !data.ok) {
-      setError(data.error ?? "Could not start payment. Contact the club.");
+      setError(data.error ?? "We couldn't process your payment. Please reach out to the club for help.");
       return;
     }
     setSaved(true);
@@ -55,7 +60,7 @@ export default function PaymentSection({
     const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
     setSubmitting(false);
     if (!res.ok || !data.ok) {
-      setError(data.error ?? "Could not update payment method. Contact the club.");
+      setError(data.error ?? "We couldn't update your payment method. Please reach out to the club for help.");
       return;
     }
     setSaved(true);
@@ -67,14 +72,17 @@ export default function PaymentSection({
       {hasSubscription ? (
         <>
           <p>
-            Dues subscription status: <span className="portal-badge">{subscriptionStatus ?? "unknown"}</span>
+            Dues status:{" "}
+            <span className="portal-badge">
+              {(subscriptionStatus && STATUS_LABELS[subscriptionStatus]) ?? "Status unavailable"}
+            </span>
           </p>
           {showUpdateForm ? (
             <CardFields
               tokenizationKey={tokenizationKey}
               onToken={updateMethod}
               onError={setError}
-              submitLabel={submitting ? "Saving…" : "Save New Card"}
+              submitLabel={submitting ? "Saving…" : "Save Payment Method"}
               disabled={submitting}
             />
           ) : (
@@ -85,7 +93,10 @@ export default function PaymentSection({
         </>
       ) : (
         <>
-          <p>No dues subscription on file yet. Enter your card info to pay and set up automatic annual renewal.</p>
+          <p>
+            You don&apos;t have a dues payment on file yet. Pay with a card or bank account below
+            to set up automatic renewal each year.
+          </p>
           <CardFields
             tokenizationKey={tokenizationKey}
             onToken={subscribe}
@@ -96,7 +107,7 @@ export default function PaymentSection({
         </>
       )}
       {error && <p className="portal-error">{error}</p>}
-      {saved && !error && <p className="portal-saved">Saved.</p>}
+      {saved && !error && <p className="portal-saved">Your payment info has been saved.</p>}
     </div>
   );
 }

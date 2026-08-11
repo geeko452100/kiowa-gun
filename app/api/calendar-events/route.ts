@@ -12,6 +12,12 @@ export async function GET() {
     color: row.color,
     description: row.description,
     imageUrl: row.imageR2Key ? `/api/calendar-events/${row.id}/image` : null,
+    documentUrl: row.documentR2Key ? `/api/calendar-events/${row.id}/document` : null,
+    documentFileName: row.documentFileName,
+    linkUrl: row.linkUrl,
+    linkLabel: row.linkLabel,
+    seriesId: row.seriesId,
+    recurrenceLabel: row.recurrenceLabel,
   }));
   return NextResponse.json(events);
 }
