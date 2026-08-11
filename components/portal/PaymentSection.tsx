@@ -14,11 +14,13 @@ export default function PaymentSection({
   tokenizationKey,
   hasSubscription,
   subscriptionStatus,
+  canPay,
 }: {
   email: string;
   tokenizationKey: string;
   hasSubscription: boolean;
   subscriptionStatus: string | null;
+  canPay: boolean;
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -65,6 +67,15 @@ export default function PaymentSection({
     }
     setSaved(true);
     setShowUpdateForm(false);
+  }
+
+  if (!canPay) {
+    return (
+      <p className="portal-error">
+        Dues payment is currently unavailable on your account. Contact the club if you believe
+        this is a mistake.
+      </p>
+    );
   }
 
   return (

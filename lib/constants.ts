@@ -9,6 +9,11 @@ export const MIN_PASSWORD_LENGTH = 10;
 // from this at request time.
 export const DUES_AMOUNT_CENTS = 15000; // $150.00
 
+// Recurring club policy: members who haven't paid dues by this date each
+// year are soft-terminated by app/api/cron/renewal-termination. Month is
+// 1-indexed (9 = September).
+export const RENEWAL_TERMINATION_CUTOFF = { month: 9, day: 10 };
+
 // `documents.category` values used by the public membership form uploader
 // (app/api/membership/submit) and the portal profile update
 // (app/api/portal/profile). "discountCard" is also read by

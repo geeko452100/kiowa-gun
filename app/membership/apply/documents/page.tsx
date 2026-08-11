@@ -66,7 +66,7 @@ export default function DocumentsStep() {
         return;
       }
       update({ applicationSubmitted: true });
-      router.push("/membership/apply/payment");
+      router.push("/membership/apply/pending");
     } catch {
       setError("Couldn't reach the server. Check your internet connection and try again.");
       setSubmitting(false);

@@ -7,15 +7,11 @@ import ApplyProgressBar from "@/components/apply/ApplyProgressBar";
 
 export default function ApplyInfoStep() {
   const router = useRouter();
-  const { applicantType, name, email, phone, smsOptIn, address, update } = useApplyWizard();
+  const { name, email, phone, smsOptIn, address, update } = useApplyWizard();
   const [error, setError] = useState("");
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!applicantType) {
-      setError("Please choose whether you're renewing your membership or applying for the waiting list.");
-      return;
-    }
     router.push("/membership/apply/rules-1");
   }
 
@@ -26,28 +22,11 @@ export default function ApplyInfoStep() {
       <p className="apply-step-intro">
         Let&apos;s start with your contact info. You&apos;ll read and sign the Range Rules next.
       </p>
+      <p className="apply-step-intro">
+        Already a member renewing your dues?{" "}
+        <a href="/portal/login">Use the member portal instead</a>.
+      </p>
       <form className="apply-form" onSubmit={onSubmit}>
-        <fieldset className="apply-applicant-type">
-          <legend>I&apos;m applying as a...</legend>
-          <label className="apply-radio">
-            <input
-              type="radio"
-              name="applicantType"
-              checked={applicantType === "member"}
-              onChange={() => update({ applicantType: "member" })}
-            />
-            Renewing / current member
-          </label>
-          <label className="apply-radio">
-            <input
-              type="radio"
-              name="applicantType"
-              checked={applicantType === "waitlist"}
-              onChange={() => update({ applicantType: "waitlist" })}
-            />
-            New applicant for the waiting list
-          </label>
-        </fieldset>
         <label>
           Name
           <input value={name} onChange={(e) => update({ name: e.target.value })} required />

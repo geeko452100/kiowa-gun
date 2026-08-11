@@ -601,6 +601,15 @@ button.danger {
   font-size: 1rem;
 }
 
+.admin-inline-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
 .status-group-picker {
   display: flex;
   align-items: center;

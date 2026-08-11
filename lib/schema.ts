@@ -109,6 +109,10 @@ export const siteSettings = sqliteTable("site_settings", {
   navSubtitle: text("nav_subtitle").notNull().default("Great Bend, Kansas"),
   navTitleSize: text("nav_title_size").notNull().default("comfortable"), // "compact" | "comfortable" | "large"
   updatedAt: text("updated_at").notNull().default(now),
+  // Idempotency guard for the annual Sept 10 termination sweep
+  // (app/api/cron/renewal-termination) -- set to the year the sweep last
+  // ran so the daily cron doesn't re-run it every day after the cutoff.
+  lastTerminationSweepYear: integer("last_termination_sweep_year"),
 });
 
 export const matches = sqliteTable("matches", {
@@ -152,7 +156,13 @@ export const documents = sqliteTable("documents", {
   reviewed: integer("reviewed").notNull().default(1),
 });
 
-export const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
+export const MEMBER_STATUSES = [
+  "Waiting List",
+  "Non-Member",
+  "Member",
+  "Pending Review",
+  "Terminated",
+] as const;
 
 export const members = sqliteTable("members", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -207,6 +217,26 @@ export const members = sqliteTable("members", {
   nmiCustomerVaultId: text("nmi_customer_vault_id").unique(),
   nmiSubscriptionId: text("nmi_subscription_id").unique(),
   subscriptionStatus: text("subscription_status"), // e.g. "active", "past_due" -- set from NMI webhook events
+  // Admin-toggled once a new applicant's (status "Pending Review") background
+  // check has been manually verified. Only meaningful pre-membership -- see
+  // recomputeCanPay in lib/members.ts.
+  backgroundCheckCleared: integer("background_check_cleared").notNull().default(0),
+  // Whether this member's NRA proof is currently considered valid. Starts
+  // true; flipped to false by the nightly NRA-expiration cron once
+  // nraExpirationDate has passed, and only flipped back by admin review of
+  // re-submitted proof (see app/portal/nra-expired) -- never auto-restored.
+  nraActive: integer("nra_active").notNull().default(1),
+  // "YYYY-MM-DD", entered on the public application and kept current via the
+  // member portal profile form.
+  nraExpirationDate: text("nra_expiration_date"),
+  // Single derived flag every payment entry point checks (see
+  // lib/members.ts recomputeCanPay) instead of re-deriving eligibility from
+  // status/backgroundCheckCleared/nraActive at each checkpoint.
+  canPay: integer("can_pay").notNull().default(0),
+  // Set by the annual Sept 10 termination sweep (app/api/cron/renewal-termination)
+  // when it soft-deletes a member for non-payment -- audit trail for the PII
+  // scrub, since the row itself is kept (not hard-deleted) for payment history.
+  terminatedAt: text("terminated_at"),
 });
 
 // One-time links for a member to set up their portal login or reset their
@@ -280,6 +310,19 @@ export const emailCampaignRecipients = sqliteTable("email_campaign_recipients", 
   bouncedAt: text("bounced_at"),
   bounceType: text("bounce_type"), // Postmark's bounce Type, e.g. "HardBounce", "SpamNotification"
   spamComplaintAt: text("spam_complaint_at"),
+});
+
+// One row per invoice link emailed to a newly background-check-cleared
+// applicant (app/api/admin/members/[id]) -- resolved by token on the public
+// /membership/pay/[token] page so paying doesn't require a portal login.
+// Same one-time-token-link pattern as memberPasswordResetTokens.
+export const membershipInvoices = sqliteTable("membership_invoices", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  memberId: integer("member_id").notNull(),
+  token: text("token").notNull().unique(),
+  amountCents: integer("amount_cents").notNull().default(15000),
+  createdAt: text("created_at").notNull().default(now),
+  paidAt: text("paid_at"),
 });
 
 export const smsCampaigns = sqliteTable("sms_campaigns", {

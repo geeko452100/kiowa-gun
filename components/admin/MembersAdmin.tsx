@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
 
-const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
+// Mirrors lib/schema.ts MEMBER_STATUSES -- duplicated (like the same const in
+// EmailAdmin.tsx/SmsAdmin.tsx) rather than imported, so this client component
+// doesn't pull the Drizzle schema module into the browser bundle.
+const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member", "Pending Review", "Terminated"] as const;
 
 type Member = {
   id: number;
@@ -17,6 +20,9 @@ type Member = {
   smsOptIn: number;
   renewalDate: string | null;
   pendingDocs: number;
+  backgroundCheckCleared: number;
+  nraActive: number;
+  canPay: number;
 };
 
 export default function MembersAdmin() {
@@ -124,6 +130,34 @@ export default function MembersAdmin() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...m, smsOptIn }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    void load();
+  }
+
+  async function toggleBackgroundCheckCleared(m: Member, backgroundCheckCleared: boolean) {
+    setError("");
+    const result = await adminFetch(`/api/admin/members/${m.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...m, backgroundCheckCleared }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    void load();
+  }
+
+  async function toggleNraActive(m: Member, nraActive: boolean) {
+    setError("");
+    const result = await adminFetch(`/api/admin/members/${m.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...m, nraActive }),
     });
     if (!result.ok) {
       setError(result.error);
@@ -252,6 +286,7 @@ export default function MembersAdmin() {
               <th>Phone</th>
               <th>Address</th>
               <th>Status</th>
+              <th>Payment Eligibility</th>
               <th>Shooting Committee</th>
               <th>Texts OK</th>
               <th>Renewal Date</th>
@@ -292,6 +327,29 @@ export default function MembersAdmin() {
                       {m.pendingDocs} doc{m.pendingDocs === 1 ? "" : "s"} to review
                     </span>
                   )}
+                </td>
+                <td data-label="Payment Eligibility">
+                  {m.status === "Pending Review" && (
+                    <label className="admin-inline-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={!!m.backgroundCheckCleared}
+                        onChange={(e) => toggleBackgroundCheckCleared(m, e.target.checked)}
+                      />
+                      Background check cleared
+                    </label>
+                  )}
+                  {m.status === "Member" && (
+                    <label className="admin-inline-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={!!m.nraActive}
+                        onChange={(e) => toggleNraActive(m, e.target.checked)}
+                      />
+                      NRA active
+                    </label>
+                  )}
+                  <span className="admin-note">{m.canPay ? "Can pay" : "Cannot pay"}</span>
                 </td>
                 <td data-label="Shooting Committee">
                   <input

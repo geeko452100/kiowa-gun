@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { members, MEMBER_STATUSES } from "@/lib/schema";
+import { members, MEMBER_STATUSES, membershipInvoices, pageSections } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
+import { recomputeCanPay } from "@/lib/members";
+import { sendAdminEmail } from "@/lib/email";
+import { DUES_AMOUNT_CENTS } from "@/lib/constants";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await getCurrentAdmin();
@@ -17,6 +20,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     renewalDate,
     onShootingCommittee,
     smsOptIn,
+    backgroundCheckCleared,
+    nraActive,
   } = (await request.json()) as {
     name: string;
     email: string;
@@ -26,13 +31,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     renewalDate?: string | null;
     onShootingCommittee?: boolean;
     smsOptIn?: boolean;
+    backgroundCheckCleared?: boolean;
+    nraActive?: boolean;
   };
   if (!MEMBER_STATUSES.includes(status as (typeof MEMBER_STATUSES)[number])) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
   const db = await getDb();
   const targetId = Number(id);
-  const [existing] = await db.select({ smsOptIn: members.smsOptIn }).from(members).where(eq(members.id, targetId));
+  const [existing] = await db.select().from(members).where(eq(members.id, targetId));
+  if (!existing) return NextResponse.json({ error: "Member not found" }, { status: 404 });
+
   await db
     .update(members)
     .set({
@@ -44,9 +53,37 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       renewalDate: renewalDate || null,
       onShootingCommittee: onShootingCommittee ? 1 : 0,
       smsOptIn: smsOptIn ? 1 : 0,
-      ...(smsOptIn && !existing?.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
+      ...(smsOptIn && !existing.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
+      ...(backgroundCheckCleared !== undefined ? { backgroundCheckCleared: backgroundCheckCleared ? 1 : 0 } : {}),
+      ...(nraActive !== undefined ? { nraActive: nraActive ? 1 : 0 } : {}),
     })
     .where(eq(members.id, targetId));
+
+  await recomputeCanPay(db, targetId);
+
+  // A new applicant's background check just got cleared for the first time --
+  // send them their dues invoice + orientation info. Guarded on the 0 -> 1
+  // transition so re-saving the member row afterward doesn't re-send it.
+  if (backgroundCheckCleared && !existing.backgroundCheckCleared) {
+    const token = crypto.randomUUID();
+    await db.insert(membershipInvoices).values({ memberId: targetId, token, amountCents: DUES_AMOUNT_CENTS });
+
+    const [orientation] = await db
+      .select()
+      .from(pageSections)
+      .where(and(eq(pageSections.pageSlug, "membership"), eq(pageSections.sectionKey, "orientation-schedule")));
+
+    const origin = new URL(request.url).origin;
+    const payLink = `${origin}/membership/pay/${token}`;
+    await sendAdminEmail(
+      String(email).toLowerCase().trim(),
+      "Your Kiowa Gun Club Application Was Approved",
+      `<p>Good news — your background check has been cleared.</p>
+       <p><a href="${payLink}">Pay your $${(DUES_AMOUNT_CENTS / 100).toFixed(2)} dues</a> to complete your membership.</p>
+       ${orientation?.bodyHtml ?? ""}`
+    );
+  }
+
   return NextResponse.json({ ok: true });
 }
 

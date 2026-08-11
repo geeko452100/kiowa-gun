@@ -1,5 +1,6 @@
 import "server-only";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { DUES_AMOUNT_CENTS } from "./constants";
 
 // NMI's v5 REST API is split across sandbox.nmi.com and secure.nmi.com --
 // same API key format, different base URL. Defaults to sandbox so this
@@ -62,6 +63,33 @@ export async function nmiRequest(
     throw new NmiApiError(message, refId);
   }
   return data as NmiSubscription;
+}
+
+function splitName(name: string) {
+  const parts = name.trim().split(/\s+/);
+  return { firstName: parts[0] ?? name, lastName: parts.slice(1).join(" ") || parts[0] || name };
+}
+
+// Starts a member's recurring annual dues subscription from an NMI
+// Collect.js payment_token. Shared by app/api/payments/subscribe (renewals,
+// via the member portal) and app/api/payments/invoice (a new applicant's
+// first payment, via their emailed invoice link) so the subscription-shape
+// logic only lives in one place.
+export async function createDuesSubscription(member: { name: string; email: string }, paymentToken: string) {
+  const { firstName, lastName } = splitName(member.name);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return nmiRequest("/subscriptions", "POST", {
+    plan_amount: (DUES_AMOUNT_CENTS / 100).toFixed(2),
+    // 0 = renews indefinitely until canceled, not a fixed number of payments.
+    plan_payments: 0,
+    month_frequency: 12,
+    day_of_month: tomorrow.getDate(),
+    start_date: toNmiDate(tomorrow),
+    payment_details: { payment_token: paymentToken },
+    billing_address: { first_name: firstName, last_name: lastName, email: member.email },
+  });
 }
 
 // NMI wants dates as YYYYMMDD (no separators) for subscription start_date --

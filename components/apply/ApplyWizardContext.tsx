@@ -9,7 +9,7 @@ export const APPLY_STEP_PATHS = [
   "/membership/apply/rules-3",
   "/membership/apply/rules-4",
   "/membership/apply/documents",
-  "/membership/apply/payment",
+  "/membership/apply/pending",
 ] as const;
 
 export const APPLY_TOTAL_STEPS = APPLY_STEP_PATHS.length;
@@ -35,7 +35,6 @@ type ApplyWizardState = {
   discountCardFile: File | null;
   signed: boolean;
   applicationSubmitted: boolean;
-  paid: boolean;
 };
 
 type ApplyWizardContextValue = ApplyWizardState & {
@@ -43,7 +42,12 @@ type ApplyWizardContextValue = ApplyWizardState & {
 };
 
 const initialState: ApplyWizardState = {
-  applicantType: "",
+  // This wizard is new-applicant-only now -- renewing members use the
+  // member portal (app/portal/(protected)) instead. Kept as a field (rather
+  // than removed) since submit/documents still key required-doc logic off
+  // it and the value is threaded straight through to the same
+  // app/api/membership/submit endpoint the portal-adjacent legacy form uses.
+  applicantType: "waitlist",
   name: "",
   email: "",
   phone: "",
@@ -58,7 +62,6 @@ const initialState: ApplyWizardState = {
   discountCardFile: null,
   signed: false,
   applicationSubmitted: false,
-  paid: false,
 };
 
 const ApplyWizardContext = createContext<ApplyWizardContextValue | null>(null);

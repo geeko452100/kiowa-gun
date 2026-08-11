@@ -13,6 +13,10 @@ export default async function PortalLayout({ children }: { children: React.React
   // Next.js from rendering/including the page segment -- only a real
   // redirect() short-circuits before that happens. See app/portal/verify-pending.
   if (!member.emailVerified) redirect("/portal/verify-pending");
+  // Suspended for a lapsed NRA membership (see app/api/cron/nra-check) --
+  // blocked from the rest of the portal (including dues payment) until an
+  // admin reviews their re-submitted proof and restores access.
+  if (member.status === "Member" && !member.nraActive) redirect("/portal/nra-expired");
 
   return (
     <>

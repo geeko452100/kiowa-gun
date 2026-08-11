@@ -43,6 +43,7 @@ export default async function PortalDashboardPage({
     smsOptIn: !!member.smsOptIn,
     address: member.address ?? "",
     nraNumber: member.nraNumber ?? "",
+    nraExpirationDate: member.nraExpirationDate ?? "",
     rulesAcknowledgedPrintedName: member.rulesAcknowledgedPrintedName,
     rulesAcknowledgedName: member.rulesAcknowledgedName,
     rulesAcknowledgedAt: member.rulesAcknowledgedAt,
@@ -81,6 +82,7 @@ export default async function PortalDashboardPage({
           tokenizationKey={env.NMI_TOKENIZATION_KEY}
           hasSubscription={!!member.nmiCustomerVaultId}
           subscriptionStatus={member.subscriptionStatus}
+          canPay={!!member.canPay}
         />
       </section>
 

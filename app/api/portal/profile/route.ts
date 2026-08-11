@@ -20,6 +20,7 @@ export async function PATCH(request: Request) {
   const smsOptIn = formData.get("smsOptIn") === "1";
   const address = String(formData.get("address") ?? "").trim();
   const nraNumber = String(formData.get("nraNumber") ?? "").trim();
+  const nraExpirationDate = String(formData.get("nraExpirationDate") ?? "").trim();
   if (!name || !address) {
     return NextResponse.json({ error: "Name and address are required" }, { status: 400 });
   }
@@ -28,6 +29,9 @@ export async function PATCH(request: Request) {
   }
   if (nraNumber && !/^\d{5,12}$/.test(nraNumber)) {
     return NextResponse.json({ error: "NRA Number must be 5 to 12 digits" }, { status: 400 });
+  }
+  if (nraExpirationDate && !/^\d{4}-\d{2}-\d{2}$/.test(nraExpirationDate)) {
+    return NextResponse.json({ error: "NRA Expiration Date must be a valid date" }, { status: 400 });
   }
 
   for (const { field, label } of MEMBERSHIP_FILE_FIELDS) {
@@ -49,6 +53,7 @@ export async function PATCH(request: Request) {
         ...(smsOptIn && !member.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
         address,
         nraNumber: nraNumber || null,
+        ...(nraExpirationDate ? { nraExpirationDate } : {}),
       })
       .where(eq(members.id, member.id));
   } catch (err) {

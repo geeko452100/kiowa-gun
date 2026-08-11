@@ -20,6 +20,7 @@ type PortalInitialValues = {
   smsOptIn: boolean;
   address: string;
   nraNumber: string;
+  nraExpirationDate: string;
   rulesAcknowledgedPrintedName: string | null;
   rulesAcknowledgedName: string | null;
   rulesAcknowledgedAt: string | null;
@@ -56,6 +57,7 @@ export default function MembershipForm({
   const [smsOptIn, setSmsOptIn] = useState(initialValues?.smsOptIn ?? false);
   const [address, setAddress] = useState(initialValues?.address ?? "");
   const [nraNumber, setNraNumber] = useState(initialValues?.nraNumber ?? "");
+  const [nraExpirationDate, setNraExpirationDate] = useState(initialValues?.nraExpirationDate ?? "");
   const [nraProof, setNraProof] = useState<File | null>(null);
   const [discountCard, setDiscountCard] = useState<File | null>(null);
   const [backgroundCheck, setBackgroundCheck] = useState<File | null>(null);
@@ -145,6 +147,7 @@ export default function MembershipForm({
     formData.append("smsOptIn", smsOptIn ? "1" : "0");
     formData.append("address", address);
     formData.append("nraNumber", nraNumber);
+    if (mode === "portal") formData.append("nraExpirationDate", nraExpirationDate);
     if (nraProof) formData.append("nraProof", nraProof);
     if (discountCard) formData.append("discountCard", discountCard);
     if (backgroundCheck) formData.append("backgroundCheck", backgroundCheck);
@@ -287,6 +290,16 @@ export default function MembershipForm({
             title="5 to 12 digits"
           />
         </label>
+        {mode === "portal" && (
+          <label>
+            NRA Expiration Date
+            <input
+              type="date"
+              value={nraExpirationDate}
+              onChange={(e) => setNraExpirationDate(e.target.value)}
+            />
+          </label>
+        )}
       </fieldset>
 
       <fieldset>

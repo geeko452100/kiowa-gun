@@ -2,13 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { members } from "@/lib/schema";
-import { nmiRequest, NmiApiError, toNmiDate } from "@/lib/nmi";
-import { DUES_AMOUNT_CENTS } from "@/lib/constants";
-
-function splitName(name: string) {
-  const parts = name.trim().split(/\s+/);
-  return { firstName: parts[0] ?? name, lastName: parts.slice(1).join(" ") || parts[0] || name };
-}
+import { createDuesSubscription, NmiApiError } from "@/lib/nmi";
 
 // Starts a member's recurring annual dues subscription from an NMI Collect.js
 // payment_token (see components/nmi/CardFields.tsx) -- the NMI equivalent of
@@ -34,23 +28,16 @@ export async function POST(request: Request) {
       { status: 404 }
     );
   }
-
-  const { firstName, lastName } = splitName(member.name);
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (!member.canPay) {
+    return NextResponse.json(
+      { error: "Your account isn't currently eligible to pay dues. Contact the club if you believe this is a mistake." },
+      { status: 403 }
+    );
+  }
 
   let result;
   try {
-    result = await nmiRequest("/subscriptions", "POST", {
-      plan_amount: (DUES_AMOUNT_CENTS / 100).toFixed(2),
-      // 0 = renews indefinitely until canceled, not a fixed number of payments.
-      plan_payments: 0,
-      month_frequency: 12,
-      day_of_month: tomorrow.getDate(),
-      start_date: toNmiDate(tomorrow),
-      payment_details: { payment_token: paymentToken },
-      billing_address: { first_name: firstName, last_name: lastName, email: member.email },
-    });
+    result = await createDuesSubscription(member, paymentToken);
   } catch (err) {
     if (err instanceof NmiApiError) {
       return NextResponse.json({ error: err.message }, { status: 402 });

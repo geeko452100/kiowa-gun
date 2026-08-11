@@ -4,6 +4,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb, isUniqueConstraintError } from "@/lib/db";
 import { members, documents } from "@/lib/schema";
 import { MEMBERSHIP_ALLOWED_FILE_TYPES, MEMBERSHIP_FILE_FIELDS } from "@/lib/constants";
+import { recomputeCanPay } from "@/lib/members";
 
 const ALLOWED_FILE_TYPES = MEMBERSHIP_ALLOWED_FILE_TYPES;
 
@@ -68,6 +69,11 @@ export async function POST(request: Request) {
   }
 
   const memberId = existing.id;
+  // Waitlist applicants move into the background-check queue here; guarded
+  // so re-submitting the form can't downgrade someone who's already a
+  // Member (or otherwise past this stage).
+  const advanceToPendingReview =
+    applicantType === "waitlist" && (existing.status === "Waiting List" || existing.status === "Pending Review");
   try {
     await db
       .update(members)
@@ -78,6 +84,7 @@ export async function POST(request: Request) {
         ...(smsOptIn && !existing.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
         address,
         nraNumber: nraNumber || null,
+        ...(advanceToPendingReview ? { status: "Pending Review" } : {}),
       })
       .where(eq(members.id, memberId));
   } catch (err) {
@@ -108,6 +115,8 @@ export async function POST(request: Request) {
       reviewed: 0,
     });
   }
+
+  await recomputeCanPay(db, memberId);
 
   return NextResponse.json({ ok: true, email: normalizedEmail });
 }

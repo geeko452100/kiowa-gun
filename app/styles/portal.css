@@ -60,6 +60,15 @@
     font-size: 0.9rem;
 }
 
+.portal-banner {
+    background: #5c3a1e;
+    color: #ffd9a3;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
 .portal-card label.portal-remember {
     flex-direction: row;
     align-items: center;
