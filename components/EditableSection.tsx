@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { adminFetch } from "@/components/admin/adminFetch";
 import { useConfirm } from "@/components/admin/useConfirm";
-import "@/app/styles/editable-section.css";
 
 // In-place editor for a page_sections row, rendered directly on the public
 // page it belongs to. Logged-in board members see an "Edit" button instead

@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminFetch } from "@/components/admin/adminFetch";
 import { useConfirm } from "@/components/admin/useConfirm";
-import "@/app/styles/editable-section.css";
 
 const SIZES: { value: string; label: string }[] = [
   { value: "compact", label: "Compact" },

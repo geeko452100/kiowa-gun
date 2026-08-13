@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import EditableSection from "@/components/EditableSection";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { adminFetch } from "@/components/admin/adminFetch";
-import "@/app/styles/editable-section.css";
 
 // Board members can append their own content blocks to any page on top of
 // its fixed, seeded sections. Those extra blocks live in the same

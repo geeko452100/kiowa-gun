@@ -1,5 +1,4 @@
 import Link from "next/link";
-import "@/app/styles/editable-section.css";
 
 // Shown at the top of every public page when a board member is logged in, so
 // the small in-place "Edit" buttons further down the page aren't the only
