@@ -25,4 +25,5 @@ npm-debug.log*
 # so without this checked in, the build fails on every CloudflareEnv property.
 DEVELOPER-NOTES.md
 TO-DO.md
+switchover-checklist.md
 

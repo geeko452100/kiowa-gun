@@ -13,7 +13,11 @@
 }
 
 html {
-    font-size: 100%;
+    /* 112.5% of the 16px browser default = 18px base. Bumped up site-wide
+       for the club's largely older membership -- everything else on the
+       site is sized in rem, so this one change scales all text and most
+       spacing/touch-targets consistently instead of raising each value by hand. */
+    font-size: 112.5%;
 }
 
 body {
@@ -161,7 +165,7 @@ button:disabled {
 }
 
 .site-header .container {
-    max-width: 1300px;
+    max-width: 1800px;
 }
 
 .header-inner {
@@ -274,10 +278,17 @@ button:disabled {
     font-size: 0.9rem;
 }
 
-.hero-image {
-    flex: 1 1 240px;
-    width: auto;
+.nav-column {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    flex: 1 1 auto;
     min-width: 0;
+}
+
+.hero-image {
+    width: 100%;
 }
 
 .main-nav {
@@ -324,7 +335,47 @@ button:disabled {
 }
 
 .nra-link:hover {
-    opacity: 0.5;
+    background: #fff;
+    color: var(--color-header-bg);
+}
+
+/* Persistent "my account" entry point, sitting next to the logo outside the
+   collapsible mobile menu -- similar to Amazon/eBay's account link, it stays
+   reachable without opening the hamburger first. */
+.account-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: var(--color-primary);
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.account-link:hover {
+    background: var(--color-accent);
+}
+
+.account-link[aria-current="page"] {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.account-badge {
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.account-badge-board {
+    background: var(--color-accent);
 }
 
 @media (max-width: 1100px) {
@@ -343,10 +394,6 @@ button:disabled {
         align-items: flex-start;
     }
 
-    .hero-image {
-        width: 100%;
-    }
-
     .hero-image img {
         height: 150px;
         border-radius: 6px;
@@ -362,9 +409,7 @@ button:disabled {
 
     .nav-toggle {
         display: inline-flex;
-        position: absolute;
-        top: 12px;
-        right: 20px;
+        align-self: flex-end;
     }
 
     .main-nav {
@@ -563,24 +608,6 @@ button:disabled {
     opacity: 0.5;
 }
 
-/* Both the Card and ACH field groups stay mounted at all times (see
-   CardFields.tsx for why); only one is shown at once. Not display: none --
-   same style-sniffer issue as the .loading rule above, but for height
-   instead of pointer-events. Whichever group isn't the default active tab
-   is display: none at configure() time, and elements inside a display: none
-   subtree always report offsetHeight: 0; the sniffer bakes that 0 in as the
-   field's permanent height (confirmed live: it left the ACH fields with no
-   visible placeholder and no clickable area, while Card -- the active tab
-   at configure() time -- worked fine). visibility: hidden still lays out
-   normally (real offsetHeight) while staying non-painted and non-
-   interactive; position: absolute keeps it from leaving a visible gap in
-   the page while inactive (paired with position: relative on
-   .nmi-card-fields above). */
-.nmi-card-field-group.nmi-hidden {
-    position: absolute;
-    visibility: hidden;
-}
-
 .nmi-card-field {
     height: 42px;
     border: 1px solid var(--color-border);
@@ -595,25 +622,3 @@ button:disabled {
     align-self: flex-start;
 }
 
-.nmi-method-tabs {
-    display: flex;
-    gap: 8px;
-}
-
-.nmi-method-tab {
-    padding: 6px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    background: transparent;
-    cursor: pointer;
-}
-
-.nmi-method-tab.active {
-    /* --color-primary is nearly indistinguishable from --color-bg on this
-       dark theme, so the "active" tab would otherwise blend into the page --
-       --color-accent is the lighter tone used for hover/focus states
-       elsewhere on the site. */
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: #fff;
-}

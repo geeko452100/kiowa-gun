@@ -98,8 +98,9 @@
     gap: 18px;
 }
 
-.apply-step h2 {
+.apply-step h1 {
     margin: 0;
+    font-size: 1.5rem;
 }
 
 .apply-step-intro {

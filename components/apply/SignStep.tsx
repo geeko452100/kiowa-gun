@@ -77,7 +77,7 @@ export default function SignStep({ rulesDocuments }: { rulesDocuments: RulesDocu
   return (
     <section className="apply-step">
       <ApplyProgressBar step={5} label="Print & Sign" />
-      <h2>Print & Sign</h2>
+      <h1>Print & Sign</h1>
       <p className="apply-rules-clause">{RULES_AGREEMENT_CLAUSE}</p>
       {rulesDocuments.length > 0 && (
         <p className="apply-step-note">

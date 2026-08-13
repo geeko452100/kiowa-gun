@@ -37,6 +37,7 @@ export default async function RulesPage() {
               heading={intro.heading}
               bodyHtml={intro.bodyHtml}
               isAdmin={!!admin}
+              headingTag="h1"
             />
           )}
           <div className="rules-body">

@@ -24,7 +24,7 @@ export default async function NraExpiredPage() {
             Your NRA membership has expired. Please update your details to restore club access.
           </p>
           <section className="portal-panel">
-            <h2>Update Your NRA Membership</h2>
+            <h1>Update Your NRA Membership</h1>
             <NraUpdateForm initialNraNumber={member.nraNumber ?? ""} initialNraExpirationDate={member.nraExpirationDate ?? ""} />
           </section>
         </div>

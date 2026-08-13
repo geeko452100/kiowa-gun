@@ -14,6 +14,10 @@ export async function resolveSiteImages(keys: string[]): Promise<Record<string, 
 
   const db = await getDb();
   const rows = await db.select().from(siteImages).where(inArray(siteImages.key, keys));
-  for (const row of rows) result[row.key] = `/api/site-images/${row.key}`;
+  // Cache-bust with the r2Key: the served URL is otherwise identical before
+  // and after a replacement, so browsers (esp. their in-memory cache for
+  // small, repeatedly-requested assets like the nav logo) can keep showing
+  // the old bitmap even after router.refresh() re-renders with a "new" src.
+  for (const row of rows) result[row.key] = `/api/site-images/${row.key}?v=${encodeURIComponent(row.r2Key)}`;
   return result;
 }

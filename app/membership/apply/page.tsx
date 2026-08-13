@@ -18,7 +18,7 @@ export default function ApplyInfoStep() {
   return (
     <section className="apply-step">
       <ApplyProgressBar step={1} label="Your Info" />
-      <h2>Your Info</h2>
+      <h1>Your Info</h1>
       <p className="apply-step-intro">
         Let&apos;s start with your contact info. You&apos;ll read and sign the Range Rules next.
       </p>

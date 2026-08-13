@@ -57,6 +57,7 @@ export default async function MatchesPage() {
               heading={intro.heading}
               bodyHtml={intro.bodyHtml}
               isAdmin={!!admin}
+              headingTag="h1"
             />
           )}
 
@@ -93,7 +94,7 @@ export default async function MatchesPage() {
 
             return (
               <div key={discipline} className="discipline-group">
-                <h3>{discipline}</h3>
+                <h2>{discipline}</h2>
                 <div className="match-schedule-wrap">
                   <MatchScheduleTable discipline={discipline} rows={rows} isAdmin={!!admin} />
                 </div>
@@ -108,7 +109,7 @@ export default async function MatchesPage() {
                       isAdmin={!!admin}
                     />
                     <div>
-                      <h4>Results</h4>
+                      <h3>Results</h3>
                       {resultsList}
                     </div>
                   </div>

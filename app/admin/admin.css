@@ -1,5 +1,4 @@
 .admin-shell {
-  min-height: 100vh;
   background: var(--color-bg, #17250f);
   color: var(--color-text, #f2f0ea);
   font-family:
@@ -13,11 +12,14 @@
   line-height: 1.5;
 }
 
+/* Horizontally centers the login/reset-password card within the site's
+   Header+Footer chrome, the same way .portal-card centers itself with
+   margin: auto -- no forced viewport height here since the surrounding
+   Header/Footer already bound the page. */
 .admin-shell-centered {
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 40px 20px;
 }
 
 .admin-card {
@@ -44,7 +46,12 @@
   margin: 0;
 }
 
-.admin-remember {
+/* Scoped as `.admin-shell .admin-remember` (specificity 0,2,0) rather than
+   the bare `.admin-remember` class it used to be -- this label also matches
+   the generic `.admin-shell label` rule (0,1,1, later in the cascade), whose
+   flex-direction: column beat this rule's row and stacked/centered the
+   checkbox above the text instead of laying them out side by side. */
+.admin-shell .admin-remember {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -63,7 +70,7 @@
 
 .admin-layout {
   display: flex;
-  min-height: 100vh;
+  min-height: 70vh;
 }
 
 .admin-sidebar {
@@ -147,16 +154,21 @@
   }
 }
 
-label {
+/* Scoped under .admin-shell (rather than bare tag selectors) so these don't
+   leak onto the site Header/Footer -- now rendered alongside admin.css on
+   every /admin page -- the way bare `button`/`input` rules would otherwise
+   override NavToggle, NavEditPanel, and other site-chrome controls that
+   happen to share a tag name. */
+.admin-shell label {
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 1rem;
 }
 
-input,
-textarea,
-select {
+.admin-shell input,
+.admin-shell textarea,
+.admin-shell select {
   font: inherit;
   font-size: 1rem;
   padding: 12px 14px;
@@ -167,9 +179,9 @@ select {
   color: var(--color-text, #f2f0ea);
 }
 
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
+.admin-shell input:focus-visible,
+.admin-shell textarea:focus-visible,
+.admin-shell select:focus-visible {
   outline: 2px solid var(--color-accent, #4c5e3a);
   outline-offset: 1px;
 }
@@ -184,40 +196,48 @@ select:focus-visible {
   padding-right: 60px;
 }
 
-.admin-password-toggle {
+/* Scoped as `.admin-shell .admin-password-toggle` (specificity 0,2,0) rather
+   than the bare `.admin-password-toggle` class it used to be -- that lost to
+   the generic `.admin-shell button` catch-all below (0,1,1, and later in the
+   cascade), which clobbered background/color/padding and made this render as
+   a solid block instead of a transparent icon button. */
+.admin-shell .admin-password-toggle {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: 2px;
   transform: translateY(-50%);
   min-height: auto;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
+  background: none;
   color: var(--color-text, #fff);
   cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
-.admin-password-toggle:hover {
-  filter: grayscale(0.5);
+.admin-shell .admin-password-toggle:hover {
+  background: var(--color-accent, #4c5e3a);
 }
 
 /* This button is vertically centered via transform: translateY(-50%), which
    the global button:active rule's own translateY(1px) (app/styles/styles.css)
    would otherwise clobber entirely (transform doesn't compose across
    cascaded rules) -- causing the button to jump ~16px on every press. */
-.admin-password-toggle:active:not(:disabled) {
+.admin-shell .admin-password-toggle:active:not(:disabled) {
   transform: translateY(calc(-50% + 1px));
 }
 
-.admin-password-toggle:focus-visible {
+.admin-shell .admin-password-toggle:focus-visible {
   outline: 2px solid var(--color-text, #f2f0ea);
   outline-offset: 2px;
 }
 
-textarea {
+.admin-shell textarea {
   min-height: 140px;
   resize: vertical;
 }
@@ -239,7 +259,7 @@ textarea {
 
 .rte-toolbar button {
   padding: 8px 14px;
-  min-height: 40px;
+  min-height: 44px;
   font-size: 1rem;
   background: #1c2415;
   border: 1px solid var(--color-border, #3a3d33);
@@ -340,7 +360,7 @@ textarea {
   color: #cbc6b8;
 }
 
-button {
+.admin-shell button {
   font: inherit;
   font-size: 1rem;
   font-weight: 600;
@@ -353,21 +373,21 @@ button {
   color: #fff;
 }
 
-button:hover {
+.admin-shell button:hover {
   background: var(--color-accent, #4c5e3a);
 }
 
-button:focus-visible {
+.admin-shell button:focus-visible {
   outline: 2px solid #f2f0ea;
   outline-offset: 2px;
 }
 
-button:disabled {
+.admin-shell button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-button.danger {
+.admin-shell button.danger {
   background: #a8291a;
 }
 
@@ -686,7 +706,7 @@ button.danger {
 
 .recipient-picker-sort button {
   padding: 6px 12px;
-  min-height: 36px;
+  min-height: 44px;
   font-size: 0.9rem;
   background: #1c2415;
   border: 1px solid var(--color-border, #3a3d33);
@@ -798,6 +818,6 @@ button.danger {
 
 .dashboard-unlock button {
   padding: 8px 14px;
-  min-height: 36px;
+  min-height: 44px;
   font-size: 0.9rem;
 }

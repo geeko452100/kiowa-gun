@@ -31,6 +31,7 @@ export default async function HomePage() {
               heading={welcome.heading}
               bodyHtml={welcome.bodyHtml}
               isAdmin={!!admin}
+              headingTag="h1"
             />
           )}
         </section>

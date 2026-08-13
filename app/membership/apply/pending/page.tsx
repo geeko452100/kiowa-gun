@@ -22,7 +22,7 @@ export default function PendingStep() {
       <div className="apply-complete-check" aria-hidden="true">
         ✓
       </div>
-      <h2>Your Application Is Being Processed</h2>
+      <h1>Your Application Is Being Processed</h1>
       <p>
         You will receive an email once your background check is approved. That email will include
         a link to pay your dues and a schedule for your mandatory in-person range orientation.

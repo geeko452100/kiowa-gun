@@ -16,6 +16,7 @@ interface __BaseEnv_CloudflareEnv {
 	SIGNALWIRE_API_TOKEN: string;
 	SIGNALWIRE_FROM_NUMBER: string;
 	SIGNALWIRE_TEST_NUMBER: string;
+	SIGNALWIRE_WEBHOOK_SECRET: string;
 	CRON_SECRET: string;
 	POSTMARK_WEBHOOK_SECRET: string;
 	ADMIN_PROD: string;
@@ -32,7 +33,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "POSTMARK_SERVER_TOKEN" | "POSTMARK_TEST_EMAIL" | "NMI_ENVIRONMENT" | "NMI_API_KEY" | "NMI_TOKENIZATION_KEY" | "NMI_WEBHOOK_SECRET" | "SIGNALWIRE_SPACE_URL" | "SIGNALWIRE_PROJECT_ID" | "SIGNALWIRE_API_TOKEN" | "SIGNALWIRE_FROM_NUMBER" | "SIGNALWIRE_TEST_NUMBER" | "CRON_SECRET" | "POSTMARK_WEBHOOK_SECRET" | "ADMIN_PROD" | "ADMIN_PASS">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "POSTMARK_SERVER_TOKEN" | "POSTMARK_TEST_EMAIL" | "NMI_ENVIRONMENT" | "NMI_API_KEY" | "NMI_TOKENIZATION_KEY" | "NMI_WEBHOOK_SECRET" | "SIGNALWIRE_SPACE_URL" | "SIGNALWIRE_PROJECT_ID" | "SIGNALWIRE_API_TOKEN" | "SIGNALWIRE_FROM_NUMBER" | "SIGNALWIRE_TEST_NUMBER" | "SIGNALWIRE_WEBHOOK_SECRET" | "CRON_SECRET" | "POSTMARK_WEBHOOK_SECRET" | "ADMIN_PROD" | "ADMIN_PASS">> {}
 }
 
 // Begin runtime types

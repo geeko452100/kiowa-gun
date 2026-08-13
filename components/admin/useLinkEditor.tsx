@@ -16,6 +16,23 @@ type PopoverState =
 
 const ZWSP = "​";
 
+const PROTOCOLS = ["https://", "http://"] as const;
+
+// True for URLs that already name their own scheme (or are relative/anchor
+// links) and so shouldn't have a protocol prefix forced onto them.
+function hasOwnScheme(url: string) {
+  return /^([a-z][a-z0-9+.-]*:)/i.test(url) || url.startsWith("/") || url.startsWith("#");
+}
+
+function splitProtocol(url: string): { protocol: (typeof PROTOCOLS)[number]; rest: string } {
+  for (const protocol of PROTOCOLS) {
+    if (url.toLowerCase().startsWith(protocol)) {
+      return { protocol, rest: url.slice(protocol.length) };
+    }
+  }
+  return { protocol: "https://", rest: url };
+}
+
 // Inline styles (not a class + <style> block) because most mail clients
 // strip <style> tags and classes; this renders as a solid button in Gmail,
 // Apple Mail, and Outlook.com. Not using a bulletproof VML/table fallback
@@ -46,6 +63,8 @@ export function useLinkEditor(
 ) {
   const [popover, setPopover] = useState<PopoverState>(null);
   const [draftUrl, setDraftUrl] = useState("");
+  const [draftProtocol, setDraftProtocol] =
+    useState<(typeof PROTOCOLS)[number]>("https://");
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [popoverWidth, setPopoverWidth] = useState(220);
   const urlInputRef = useRef<HTMLInputElement>(null);
@@ -68,7 +87,9 @@ export function useLinkEditor(
         if (!current || current.mode !== "edit-url") return current;
         const { link, isNew } = current;
         if (commit) {
-          const url = draftUrl.trim();
+          const rawUrl = draftUrl.trim();
+          const url =
+            rawUrl && !hasOwnScheme(rawUrl) ? draftProtocol + rawUrl : rawUrl;
           const text = cleanText(link);
           if (!text && !url) {
             link.remove();
@@ -85,7 +106,7 @@ export function useLinkEditor(
       });
       setDraftUrl("");
     },
-    [draftUrl, notifyChange],
+    [draftUrl, draftProtocol, notifyChange],
   );
 
   // Start a new link (or button): wrap the current selection, or drop an
@@ -139,6 +160,7 @@ export function useLinkEditor(
       }
 
       setDraftUrl("");
+      setDraftProtocol("https://");
       setPopover({ mode: "edit-url", link, isNew: true });
       reposition(link);
       if (autofocusUrl) {
@@ -153,7 +175,9 @@ export function useLinkEditor(
 
   const switchToEditUrl = useCallback(
     (link: HTMLAnchorElement) => {
-      setDraftUrl(link.getAttribute("href") ?? "");
+      const { protocol, rest } = splitProtocol(link.getAttribute("href") ?? "");
+      setDraftUrl(rest);
+      setDraftProtocol(protocol);
       setPopover({ mode: "edit-url", link, isNew: false });
       reposition(link);
       requestAnimationFrame(() => {
@@ -297,19 +321,38 @@ export function useLinkEditor(
               <div className="link-popover-edit">
                 <label>
                   {popover.isNew ? "Web address" : "Update web address"}
-                  <input
-                    ref={urlInputRef}
-                    type="url"
-                    value={draftUrl}
-                    placeholder="https://"
-                    onChange={(e) => setDraftUrl(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        finishEdit(true);
+                  <div className="link-popover-url-row">
+                    <select
+                      className="link-popover-protocol"
+                      value={draftProtocol}
+                      onChange={(e) =>
+                        setDraftProtocol(
+                          e.target.value as (typeof PROTOCOLS)[number],
+                        )
                       }
-                    }}
-                  />
+                      disabled={hasOwnScheme(draftUrl.trim())}
+                      aria-label="Protocol"
+                    >
+                      {PROTOCOLS.map((protocol) => (
+                        <option key={protocol} value={protocol}>
+                          {protocol}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      ref={urlInputRef}
+                      type="text"
+                      value={draftUrl}
+                      placeholder="example.com"
+                      onChange={(e) => setDraftUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          finishEdit(true);
+                        }
+                      }}
+                    />
+                  </div>
                 </label>
                 {popover.isNew && (
                   <p className="link-popover-hint">

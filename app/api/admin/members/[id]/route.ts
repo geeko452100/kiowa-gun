@@ -19,6 +19,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     status,
     renewalDate,
     onShootingCommittee,
+    onBoard,
     smsOptIn,
     backgroundCheckCleared,
     nraActive,
@@ -30,6 +31,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     status: string;
     renewalDate?: string | null;
     onShootingCommittee?: boolean;
+    onBoard?: boolean;
     smsOptIn?: boolean;
     backgroundCheckCleared?: boolean;
     nraActive?: boolean;
@@ -52,6 +54,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       status,
       renewalDate: renewalDate || null,
       onShootingCommittee: onShootingCommittee ? 1 : 0,
+      onBoard: onBoard ? 1 : 0,
       smsOptIn: smsOptIn ? 1 : 0,
       ...(smsOptIn && !existing.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
       ...(backgroundCheckCleared !== undefined ? { backgroundCheckCleared: backgroundCheckCleared ? 1 : 0 } : {}),

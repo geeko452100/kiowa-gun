@@ -8,9 +8,9 @@ import { recomputeCanPay } from "@/lib/members";
 
 const ALLOWED_FILE_TYPES = MEMBERSHIP_ALLOWED_FILE_TYPES;
 
-// Renewing members prove current NRA membership; waiting-list applicants
-// (not yet members) prove they've passed a background check instead -- see
-// requirement 5.c.i vs 5.c.iii. Neither is universally required.
+// NRA membership proof is required of every applicant. Waiting-list
+// applicants (not yet members) must additionally prove they've passed a
+// background check (or hold a CCL) -- see requirement 5.c.iii.
 export async function POST(request: Request) {
   const formData = await request.formData();
   const name = String(formData.get("name") ?? "").trim();
@@ -19,6 +19,7 @@ export async function POST(request: Request) {
   const smsOptIn = formData.get("smsOptIn") === "1";
   const address = String(formData.get("address") ?? "").trim();
   const nraNumber = String(formData.get("nraNumber") ?? "").trim();
+  const nraExpirationDate = String(formData.get("nraExpirationDate") ?? "").trim();
   const applicantType = String(formData.get("applicantType") ?? "");
 
   if (!name || !email || !address) {
@@ -33,12 +34,13 @@ export async function POST(request: Request) {
   if (nraNumber && !/^\d{5,12}$/.test(nraNumber)) {
     return NextResponse.json({ error: "NRA Number must be 5 to 12 digits" }, { status: 400 });
   }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(nraExpirationDate)) {
+    return NextResponse.json({ error: "NRA Expiration Date is required and must be a valid date" }, { status: 400 });
+  }
 
   const FILE_FIELDS = MEMBERSHIP_FILE_FIELDS.map((f) => ({
     ...f,
-    required:
-      (f.field === "nraProof" && applicantType === "member") ||
-      (f.field === "backgroundCheck" && applicantType === "waitlist"),
+    required: f.field === "nraProof" || (f.field === "backgroundCheck" && applicantType === "waitlist"),
   }));
 
   const db = await getDb();
@@ -84,6 +86,7 @@ export async function POST(request: Request) {
         ...(smsOptIn && !existing.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
         address,
         nraNumber: nraNumber || null,
+        nraExpirationDate,
         ...(advanceToPendingReview ? { status: "Pending Review" } : {}),
       })
       .where(eq(members.id, memberId));

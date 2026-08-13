@@ -15,6 +15,7 @@ export default function DocumentsStep() {
     smsOptIn,
     address,
     nraNumber,
+    nraExpirationDate,
     signed,
     nraProofFile,
     backgroundCheckFile,
@@ -24,7 +25,6 @@ export default function DocumentsStep() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const nraProofRequired = applicantType === "member";
   const backgroundCheckRequired = applicantType === "waitlist";
 
   useEffect(() => {
@@ -35,8 +35,12 @@ export default function DocumentsStep() {
     e.preventDefault();
     setError("");
 
-    if (nraProofRequired && !nraProofFile) {
+    if (!nraProofFile) {
       setError("Please upload proof of your current NRA membership to continue.");
+      return;
+    }
+    if (!nraExpirationDate) {
+      setError("Please enter your NRA membership expiration date to continue.");
       return;
     }
     if (backgroundCheckRequired && !backgroundCheckFile) {
@@ -53,6 +57,7 @@ export default function DocumentsStep() {
     formData.append("smsOptIn", smsOptIn ? "1" : "0");
     formData.append("address", address);
     formData.append("nraNumber", nraNumber);
+    formData.append("nraExpirationDate", nraExpirationDate);
     if (nraProofFile) formData.append("nraProof", nraProofFile);
     if (backgroundCheckFile) formData.append("backgroundCheck", backgroundCheckFile);
     if (discountCardFile) formData.append("discountCard", discountCardFile);
@@ -76,15 +81,24 @@ export default function DocumentsStep() {
   return (
     <section className="apply-step">
       <ApplyProgressBar step={6} label="Document Uploads" />
-      <h2>Document Uploads</h2>
+      <h1>Document Uploads</h1>
       <form className="apply-form" onSubmit={onSubmit}>
         <label>
-          NRA membership proof (card or magazine mailing label){nraProofRequired ? "" : " (optional)"}
+          NRA membership proof (card or magazine mailing label)
           <input
             type="file"
             accept="application/pdf,image/jpeg,image/png,image/avif"
             onChange={(e) => update({ nraProofFile: e.target.files?.[0] ?? null })}
-            required={nraProofRequired}
+            required
+          />
+        </label>
+        <label>
+          NRA membership expiration date
+          <input
+            type="date"
+            value={nraExpirationDate}
+            onChange={(e) => update({ nraExpirationDate: e.target.value })}
+            required
           />
         </label>
         <label>

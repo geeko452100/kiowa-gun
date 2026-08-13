@@ -318,6 +318,23 @@
   width: 100%;
 }
 
+.editable-section-editing .link-popover-url-row {
+  display: flex;
+  gap: 4px;
+}
+
+.editable-section-editing .link-popover-protocol {
+  flex: 0 0 auto;
+  min-height: auto;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+}
+
+.editable-section-editing .link-popover-url-row input {
+  flex: 1;
+  min-width: 0;
+}
+
 .editable-section-editing .link-popover-hint {
   margin: 6px 0 0;
   font-size: 0.8rem;

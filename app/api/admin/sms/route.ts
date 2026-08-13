@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { desc, inArray } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
-import { members, smsCampaigns } from "@/lib/schema";
+import { members, smsCampaigns, smsCampaignRecipients } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
 import { sendSignalWireSms, toE164 } from "@/lib/sms";
 
@@ -10,7 +10,23 @@ const BATCH_SIZE = 20; // send concurrently in small batches to stay within Sign
 
 export async function GET() {
   const db = await getDb();
-  const rows = await db.select().from(smsCampaigns).orderBy(desc(smsCampaigns.sentAt));
+  const rows = await db
+    .select({
+      id: smsCampaigns.id,
+      body: smsCampaigns.body,
+      sentAt: smsCampaigns.sentAt,
+      sentCount: smsCampaigns.sentCount,
+      failedCount: smsCampaigns.failedCount,
+      createdBy: smsCampaigns.createdBy,
+      recipientPhone: smsCampaigns.recipientPhone,
+      mediaUrl: smsCampaigns.mediaUrl,
+      deliveredCount: sql<number>`count(distinct case when ${smsCampaignRecipients.deliveredAt} is not null then ${smsCampaignRecipients.id} end)`,
+      undeliveredCount: sql<number>`count(distinct case when ${smsCampaignRecipients.failedAt} is not null then ${smsCampaignRecipients.id} end)`,
+    })
+    .from(smsCampaigns)
+    .leftJoin(smsCampaignRecipients, eq(smsCampaignRecipients.campaignId, smsCampaigns.id))
+    .groupBy(smsCampaigns.id)
+    .orderBy(desc(smsCampaigns.sentAt));
   return NextResponse.json(rows);
 }
 
@@ -54,25 +70,28 @@ export async function POST(request: Request) {
 
   const { env } = await getCloudflareContext({ async: true });
   const admin = await getCurrentAdmin();
+  const statusCallback = `${new URL(request.url).origin}/api/webhooks/sms-status?secret=${env.SIGNALWIRE_WEBHOOK_SECRET}`;
 
   let sentCount = 0;
   let failedCount = 0;
+  const sendResults: { member: (typeof recipients)[number]; error: string | null; sid: string | null }[] = [];
 
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const chunk = recipients.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(
       chunk.map((m) => {
         const to = m.phone ? toE164(m.phone) : null;
-        if (!to) return Promise.resolve({ error: "No valid phone number" });
+        if (!to) return Promise.resolve({ error: "No valid phone number", sid: null });
         return sendSignalWireSms(
           env.SIGNALWIRE_SPACE_URL,
           env.SIGNALWIRE_PROJECT_ID,
           env.SIGNALWIRE_API_TOKEN,
           env.SIGNALWIRE_FROM_NUMBER,
-          { to, text: body, mediaUrl }
+          { to, text: body, mediaUrl, statusCallback }
         );
       })
     );
+    chunk.forEach((m, idx) => sendResults.push({ member: m, ...results[idx] }));
     for (const { error } of results) {
       if (error) {
         failedCount += 1;
@@ -86,14 +105,27 @@ export async function POST(request: Request) {
   const isAllContacts =
     recipients.length === allContacts.length && allContacts.every((a) => memberIds.includes(a.id));
 
-  await db.insert(smsCampaigns).values({
-    body,
-    sentCount,
-    failedCount,
-    createdBy: admin?.email ?? null,
-    recipientPhone: isAllContacts ? null : recipients.map((r) => r.phone ?? r.name).join(", "),
-    mediaUrl: mediaUrl || null,
-  });
+  const [campaign] = await db
+    .insert(smsCampaigns)
+    .values({
+      body,
+      sentCount,
+      failedCount,
+      createdBy: admin?.email ?? null,
+      recipientPhone: isAllContacts ? null : recipients.map((r) => r.phone ?? r.name).join(", "),
+      mediaUrl: mediaUrl || null,
+    })
+    .returning({ id: smsCampaigns.id });
+
+  await db.insert(smsCampaignRecipients).values(
+    sendResults.map(({ member, error, sid }) => ({
+      campaignId: campaign.id,
+      memberId: member.id,
+      phone: member.phone ?? "",
+      signalwireSid: sid,
+      sendError: error,
+    }))
+  );
 
   return NextResponse.json({ ok: true, sentCount, failedCount });
 }

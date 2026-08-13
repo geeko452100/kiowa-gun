@@ -29,7 +29,7 @@ export default async function AboutPage() {
       <main className="container" id="main">
         {admin && <EditModeBanner name={admin.name} />}
         <section id="about" className="content-section">
-          <h2>About Us / Map</h2>
+          <h1>About Us / Map</h1>
           {officers && (
             <EditableSection id={officers.id} bodyHtml={officers.bodyHtml} isAdmin={!!admin} />
           )}

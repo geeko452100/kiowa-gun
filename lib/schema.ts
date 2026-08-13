@@ -176,6 +176,10 @@ export const members = sqliteTable("members", {
   // status so recipient grouping can target the committee on top of, not
   // instead of, the Member group.
   onShootingCommittee: integer("on_shooting_committee").notNull().default(0),
+  // Same idea as onShootingCommittee, but for the board -- board login
+  // accounts live in the separate `admins` table, so this flag is what lets
+  // a member's contact row be addressed as "Board" for recipient grouping.
+  onBoard: integer("on_board").notNull().default(0),
   createdAt: text("created_at").notNull().default(now),
   // Digital signature on the Range Rules acknowledgement, from the Phase 3
   // membership form: the typed name and when they submitted it. Mirrors the
@@ -337,4 +341,22 @@ export const smsCampaigns = sqliteTable("sms_campaigns", {
   // an MMS. Left in place (not deleted after sending) since carriers fetch it
   // asynchronously and the URL doubles as a record in send history.
   mediaUrl: text("media_url"),
+});
+
+// One row per member a text campaign was actually sent to, keyed to
+// SignalWire's per-message SID so the status-callback webhook
+// (app/api/webhooks/sms-status) can match a delivery/failure event back to
+// the right recipient. Mirrors emailCampaignRecipients, minus the
+// opens/clicks/spam-complaint fields SMS has no equivalent of.
+export const smsCampaignRecipients = sqliteTable("sms_campaign_recipients", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  campaignId: integer("campaign_id").notNull(),
+  memberId: integer("member_id"),
+  phone: text("phone").notNull(),
+  signalwireSid: text("signalwire_sid"),
+  sendError: text("send_error"),
+  status: text("status"), // SignalWire's MessageStatus: queued/sending/sent/delivered/undelivered/failed
+  deliveredAt: text("delivered_at"),
+  failedAt: text("failed_at"),
+  errorCode: text("error_code"),
 });

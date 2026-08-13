@@ -55,9 +55,6 @@ export default function LoginForm() {
       <Link className="portal-link" href="/portal/forgot-password">
         Forgot your password?
       </Link>
-      <Link className="portal-link" href="/portal/signup">
-        Need an account? Sign up
-      </Link>
     </form>
   );
 }

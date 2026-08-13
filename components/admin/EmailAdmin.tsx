@@ -9,13 +9,16 @@ import { MAX_FILE_ATTACHMENTS } from "@/lib/emailAttachments";
 
 const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
 const SHOOTING_COMMITTEE = "Shooting Committee";
-// Shooting Committee is a subset of Member (like board members), not a
-// mutually-exclusive status, so it's offered as its own checkbox alongside
-// the status groups rather than folded into MEMBER_STATUSES.
-const RECIPIENT_GROUPS = [...MEMBER_STATUSES, SHOOTING_COMMITTEE] as const;
+const BOARD = "Board";
+// Shooting Committee and Board are subsets of Member, not mutually-exclusive
+// statuses, so they're offered as their own checkboxes alongside the status
+// groups rather than folded into MEMBER_STATUSES.
+const RECIPIENT_GROUPS = [...MEMBER_STATUSES, SHOOTING_COMMITTEE, BOARD] as const;
 
 function memberInGroup(m: Member, group: string) {
-  return group === SHOOTING_COMMITTEE ? !!m.onShootingCommittee : m.status === group;
+  if (group === SHOOTING_COMMITTEE) return !!m.onShootingCommittee;
+  if (group === BOARD) return !!m.onBoard;
+  return m.status === group;
 }
 
 type Campaign = {
@@ -50,6 +53,7 @@ type Member = {
   email: string;
   status: string;
   onShootingCommittee: number;
+  onBoard: number;
 };
 
 type FileAttachment = { r2Key: string; fileName: string };

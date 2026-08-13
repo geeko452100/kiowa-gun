@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { members, membershipInvoices } from "@/lib/schema";
 import { createDuesSubscription, NmiApiError } from "@/lib/nmi";
 import { recomputeCanPay } from "@/lib/members";
+import { sendAdminEmail } from "@/lib/email";
 
 // Pays a new applicant's first year of dues from the emailed invoice link
 // (app/membership/pay/[token]) -- the token-based counterpart to
@@ -59,6 +60,15 @@ export async function POST(request: Request) {
 
   await db.update(membershipInvoices).set({ paidAt: new Date().toISOString() }).where(eq(membershipInvoices.id, invoice.id));
   await recomputeCanPay(db, member.id);
+
+  const origin = new URL(request.url).origin;
+  const signupLink = `${origin}/portal/signup`;
+  await sendAdminEmail(
+    member.email,
+    "Welcome to Kiowa Gun Club — Set Up Your Member Portal Account",
+    `<p>Your membership is approved and your dues are paid. You're officially a Kiowa Gun Club member!</p>
+     <p><a href="${signupLink}">Create your member portal account</a> to log in, manage your membership, and access member resources.</p>`
+  );
 
   return NextResponse.json({ ok: true });
 }

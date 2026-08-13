@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import RecipientPicker from "./RecipientPicker";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
 
 const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
 const SHOOTING_COMMITTEE = "Shooting Committee";
-// Shooting Committee is a subset of Member (like board members), not a
-// mutually-exclusive status, so it's offered as its own checkbox alongside
-// the status groups rather than folded into MEMBER_STATUSES.
-const RECIPIENT_GROUPS = [...MEMBER_STATUSES, SHOOTING_COMMITTEE] as const;
+const BOARD = "Board";
+// Shooting Committee and Board are subsets of Member, not mutually-exclusive
+// statuses, so they're offered as their own checkboxes alongside the status
+// groups rather than folded into MEMBER_STATUSES.
+const RECIPIENT_GROUPS = [...MEMBER_STATUSES, SHOOTING_COMMITTEE, BOARD] as const;
 
 function memberInGroup(m: Member, group: string) {
-  return group === SHOOTING_COMMITTEE ? !!m.onShootingCommittee : m.status === group;
+  if (group === SHOOTING_COMMITTEE) return !!m.onShootingCommittee;
+  if (group === BOARD) return !!m.onBoard;
+  return m.status === group;
 }
 
 type Campaign = {
@@ -25,6 +28,19 @@ type Campaign = {
   createdBy: string | null;
   recipientPhone: string | null;
   mediaUrl: string | null;
+  deliveredCount: number;
+  undeliveredCount: number;
+};
+
+type CampaignRecipient = {
+  id: number;
+  phone: string;
+  signalwireSid: string | null;
+  sendError: string | null;
+  status: string | null;
+  deliveredAt: string | null;
+  failedAt: string | null;
+  errorCode: string | null;
 };
 
 type Member = {
@@ -34,6 +50,7 @@ type Member = {
   phone: string | null;
   status: string;
   onShootingCommittee: number;
+  onBoard: number;
   smsOptIn: number;
 };
 
@@ -50,6 +67,21 @@ export default function SmsAdmin() {
   const [mediaFileName, setMediaFileName] = useState("");
   const [attachingMedia, setAttachingMedia] = useState(false);
   const [mediaError, setMediaError] = useState("");
+  const [expandedCampaignId, setExpandedCampaignId] = useState<number | null>(null);
+  const [recipientDetail, setRecipientDetail] = useState<CampaignRecipient[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  async function toggleCampaignDetail(id: number) {
+    if (expandedCampaignId === id) {
+      setExpandedCampaignId(null);
+      return;
+    }
+    setExpandedCampaignId(id);
+    setLoadingDetail(true);
+    const res = await fetch(`/api/admin/sms/${id}/recipients`);
+    setRecipientDetail((await res.json()) as CampaignRecipient[]);
+    setLoadingDetail(false);
+  }
 
   async function loadHistory() {
     const res = await fetch("/api/admin/sms");
@@ -241,30 +273,68 @@ export default function SmsAdmin() {
             <th>To</th>
             <th>Sent at</th>
             <th>Sent / Failed</th>
+            <th>Delivered</th>
+            <th>Undelivered</th>
             <th>By</th>
           </tr>
         </thead>
         <tbody>
           {history.map((c) => (
-            <tr key={c.id}>
-              <td>
-                {c.body}
-                {c.mediaUrl && (
-                  <>
-                    {" "}
-                    <a href={c.mediaUrl} target="_blank" rel="noopener">
-                      (picture)
-                    </a>
-                  </>
-                )}
-              </td>
-              <td>{c.recipientPhone ?? "All contacts"}</td>
-              <td>{c.sentAt}</td>
-              <td>
-                {c.sentCount} / {c.failedCount}
-              </td>
-              <td>{c.createdBy}</td>
-            </tr>
+            <Fragment key={c.id}>
+              <tr className="admin-table-row-clickable" onClick={() => void toggleCampaignDetail(c.id)}>
+                <td>
+                  {c.body}
+                  {c.mediaUrl && (
+                    <>
+                      {" "}
+                      <a href={c.mediaUrl} target="_blank" rel="noopener">
+                        (picture)
+                      </a>
+                    </>
+                  )}
+                </td>
+                <td>{c.recipientPhone ?? "All contacts"}</td>
+                <td>{c.sentAt}</td>
+                <td>
+                  {c.sentCount} / {c.failedCount}
+                </td>
+                <td>{c.deliveredCount}</td>
+                <td>{c.undeliveredCount}</td>
+                <td>{c.createdBy}</td>
+              </tr>
+              {expandedCampaignId === c.id && (
+                <tr>
+                  <td colSpan={7}>
+                    {loadingDetail ? (
+                      <p className="admin-note">Loading…</p>
+                    ) : (
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Recipient</th>
+                            <th>Status</th>
+                            <th>Delivered</th>
+                            <th>Undelivered</th>
+                            <th>Send error</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {recipientDetail.map((r) => (
+                            <tr key={r.id}>
+                              <td>{r.phone}</td>
+                              <td>{r.status ?? "—"}</td>
+                              <td>{r.deliveredAt ?? "—"}</td>
+                              <td>{r.failedAt ? `${r.failedAt} (${r.errorCode ?? "unknown"})` : "—"}</td>
+                              <td>{r.sendError ?? "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </td>
+                </tr>
+              )}
+            </Fragment>
           ))}
         </tbody>
       </table>

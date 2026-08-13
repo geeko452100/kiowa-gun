@@ -319,7 +319,7 @@
 
 .event-detail-admin-actions button {
     padding: 8px 18px;
-    min-height: 40px;
+    min-height: 44px;
     font: inherit;
     font-weight: 600;
     cursor: pointer;
@@ -377,7 +377,7 @@
 
 .event-edit-actions button {
     padding: 8px 18px;
-    min-height: 40px;
+    min-height: 44px;
     font: inherit;
     font-weight: 600;
     cursor: pointer;

@@ -27,7 +27,7 @@ export default async function CalendarPage() {
       <main className="container" id="main">
         {admin && <EditModeBanner name={admin.name} />}
         <section id="calendar" className="content-section">
-          <h2>Calendar</h2>
+          <h1>Calendar</h1>
           {intro && (
             <EditableSection
               id={intro.id}

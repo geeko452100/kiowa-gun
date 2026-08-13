@@ -17,6 +17,7 @@ type Member = {
   address: string | null;
   status: string;
   onShootingCommittee: number;
+  onBoard: number;
   smsOptIn: number;
   renewalDate: string | null;
   pendingDocs: number;
@@ -116,6 +117,20 @@ export default function MembersAdmin() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...m, onShootingCommittee }),
+    });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    void load();
+  }
+
+  async function toggleBoard(m: Member, onBoard: boolean) {
+    setError("");
+    const result = await adminFetch(`/api/admin/members/${m.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...m, onBoard }),
     });
     if (!result.ok) {
       setError(result.error);
@@ -288,6 +303,7 @@ export default function MembersAdmin() {
               <th>Status</th>
               <th>Payment Eligibility</th>
               <th>Shooting Committee</th>
+              <th>Board</th>
               <th>Texts OK</th>
               <th>Renewal Date</th>
               <th></th>
@@ -356,6 +372,13 @@ export default function MembersAdmin() {
                     type="checkbox"
                     checked={!!m.onShootingCommittee}
                     onChange={(e) => toggleShootingCommittee(m, e.target.checked)}
+                  />
+                </td>
+                <td data-label="Board">
+                  <input
+                    type="checkbox"
+                    checked={!!m.onBoard}
+                    onChange={(e) => toggleBoard(m, e.target.checked)}
                   />
                 </td>
                 <td data-label="Texts OK">

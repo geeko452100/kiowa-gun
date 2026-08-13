@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { siteSettings } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
+import { getCurrentMember } from "@/lib/memberAuth";
 import { resolveSiteImages } from "@/lib/siteImages";
 import NavToggle from "./NavToggle";
 import NavEditPanel from "./NavEditPanel";
@@ -20,8 +21,9 @@ const NAV_LINKS = [
 
 export default async function Header({ active }: { active: string }) {
   const db = await getDb();
-  const [admin, images, [settings]] = await Promise.all([
+  const [admin, member, images, [settings]] = await Promise.all([
     getCurrentAdmin(),
+    getCurrentMember(),
     resolveSiteImages(["nav-logo", "nav-hero"]),
     db.select().from(siteSettings).where(eq(siteSettings.id, 1)).limit(1),
   ]);
@@ -29,6 +31,16 @@ export default async function Header({ active }: { active: string }) {
   const title = settings?.navTitle ?? "Kiowa Gun Club";
   const subtitle = settings?.navSubtitle ?? "Great Bend, Kansas";
   const size = settings?.navTitleSize ?? "comfortable";
+
+  // Board members and standard members are two separate login systems
+  // (admin_users vs members) with their own profile pages -- this surfaces
+  // whichever one applies as a single "my account" entry point in the nav,
+  // similar to Amazon/eBay's account link, so it's visible from any page.
+  const account = admin
+    ? { href: "/admin/dashboard", name: admin.name, badge: "Board Member" }
+    : member
+      ? { href: "/portal", name: member.name, badge: "Member" }
+      : null;
 
   return (
     <header className="site-header">
@@ -51,36 +63,51 @@ export default async function Header({ active }: { active: string }) {
           </span>
         </Link>
 
-        <div className="hero-image">
-          <img
-            src={images["nav-hero"] ?? "/assets/gun-club.avif"}
-            alt="Kiowa Gun Club range"
-            width={1100}
-            height={190}
-          />
-        </div>
+        {account && (
+          <Link
+            href={account.href}
+            className="account-link"
+            aria-current={active === "dashboard" || active === "portal" ? "page" : undefined}
+          >
+            {account.name}
+            <span className={`account-badge account-badge-${account.badge === "Board Member" ? "board" : "member"}`}>
+              {account.badge}
+            </span>
+          </Link>
+        )}
 
-        <NavToggle>
-          <ul>
-            {NAV_LINKS.map((link) => (
-              <li key={link.slug}>
-                <Link href={link.href} aria-current={active === link.slug ? "page" : undefined}>
-                  {link.label}
-                </Link>
+        <div className="nav-column">
+          <div className="hero-image">
+            <img
+              src={images["nav-hero"] ?? "/assets/gun-club.avif"}
+              alt="Kiowa Gun Club range"
+              width={1400}
+              height={190}
+            />
+          </div>
+
+          <NavToggle>
+            <ul>
+              {NAV_LINKS.map((link) => (
+                <li key={link.slug}>
+                  <Link href={link.href} aria-current={active === link.slug ? "page" : undefined}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <a
+                  className="nra-link"
+                  href="https://membership.nra.org/"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Join the NRA
+                </a>
               </li>
-            ))}
-            <li>
-              <a
-                className="nra-link"
-                href="https://membership.nra.org/"
-                target="_blank"
-                rel="noopener"
-              >
-                Join the NRA
-              </a>
-            </li>
-          </ul>
-        </NavToggle>
+            </ul>
+          </NavToggle>
+        </div>
       </div>
 
       {isAdmin && (

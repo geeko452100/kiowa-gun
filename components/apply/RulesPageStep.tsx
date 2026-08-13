@@ -31,7 +31,7 @@ export default function RulesPageStep({
   return (
     <section className="apply-step">
       <ApplyProgressBar step={stepNumber} label={`Range Rules (${pageIndex + 1} of 4)`} />
-      <h2>Range Rules</h2>
+      <h1>Range Rules</h1>
       {introHtml && <div className="apply-step-intro" dangerouslySetInnerHTML={{ __html: introHtml }} />}
       <ol className="apply-rules-list" start={startNumber}>
         {page.rules.map((rule, i) => (

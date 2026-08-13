@@ -17,9 +17,9 @@ export const APPLY_TOTAL_STEPS = APPLY_STEP_PATHS.length;
 export type ApplicantType = "member" | "waitlist";
 
 type ApplyWizardState = {
-  // "member": renewing/current member, proves NRA membership.
-  // "waitlist": new applicant, proves a passed background check (or CCL) instead.
-  // See requirement 5.c.i vs 5.c.iii -- neither document is required of both groups.
+  // "member": renewing/current member. "waitlist": new applicant, who must
+  // also prove a passed background check (or CCL) in addition to NRA proof.
+  // NRA membership proof is required of every applicant regardless of type.
   applicantType: ApplicantType | "";
   name: string;
   email: string;
@@ -27,6 +27,7 @@ type ApplyWizardState = {
   smsOptIn: boolean;
   address: string;
   nraNumber: string;
+  nraExpirationDate: string;
   printedName: string;
   signature: string;
   agree: boolean;
@@ -54,6 +55,7 @@ const initialState: ApplyWizardState = {
   smsOptIn: false,
   address: "",
   nraNumber: "",
+  nraExpirationDate: "",
   printedName: "",
   signature: "",
   agree: false,

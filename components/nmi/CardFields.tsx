@@ -47,16 +47,9 @@ declare global {
         timeoutDuration?: number;
         timeoutCallback?: () => void;
       }) => void;
-      // Wipes whatever the user has typed into every configured field via a
-      // postMessage round trip to each iframe. Used when switching between
-      // Card and Bank Account so stale input from the method the user left
-      // doesn't linger.
-      clearInputs: () => void;
     };
   }
 }
-
-type Method = "card" | "ach";
 
 const COLLECT_JS_SRC = "https://secure.nmi.com/token/Collect.js";
 
@@ -87,39 +80,15 @@ function loadCollectJs(tokenizationKey: string): Promise<void> {
   return collectScriptPromise;
 }
 
-// Both Card and ACH fields are configured together in a single call, rather
-// than reconfiguring when the user switches tabs. Two reasons:
-//
-// 1. Collect.js's own tokenization-readiness check (read directly out of its
-//    minified source) is an OR across groups: it fires as soon as EITHER
-//    ccnumber+ccexp+cvv is complete OR checkname+checkaba+checkaccount is
-//    complete. So configuring all 6 fields at once and just letting the user
-//    fill in whichever group they picked works natively -- Collect.js
-//    figures out which one they used and tokenizes that.
-// 2. Collect.js's internal `this.iframes` registry is only ever initialized
-//    once (`this.iframes || (this.iframes = {})`) and never cleared between
-//    configure() calls, so its "all fields loaded" check compares a
-//    per-call response count against an ever-accumulating total. That means
-//    `fieldsAvailableCallback` can only ever fire correctly for the very
-//    first configure() call an instance receives -- reconfiguring for a
-//    method switch leaves it permanently unable to fire again (confirmed by
-//    testing: the fields got stuck looking like they never finish loading).
-//
-// Configuring once sidesteps both: no reconfigure ever happens, so neither
-// issue comes up. Switching tabs is a pure CSS visibility toggle plus a
-// clearInputs() call so data from the method the user left doesn't linger.
 const ALL_FIELDS = {
   ccnumber: { selector: "#nmi-cc-number", placeholder: "Card Number" },
   ccexp: { selector: "#nmi-cc-exp", placeholder: "MM / YY" },
   cvv: { selector: "#nmi-cc-cvv", placeholder: "CVV" },
-  checkname: { selector: "#nmi-ach-name", placeholder: "Name on Account" },
-  checkaba: { selector: "#nmi-ach-aba", placeholder: "Routing Number" },
-  checkaccount: { selector: "#nmi-ach-account", placeholder: "Account Number" },
 };
 
 // Renders NMI's Collect.js payment form: the input boxes below are iframes
-// NMI injects itself, so raw card/bank details never touch our server or JS
-// -- only the resulting single-use payment_token does.
+// NMI injects itself, so raw card details never touch our server or JS --
+// only the resulting single-use payment_token does.
 export default function CardFields({
   tokenizationKey,
   onToken,
@@ -136,7 +105,6 @@ export default function CardFields({
   const rawId = useId();
   const buttonId = `nmi-pay-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
   const [scriptLoaded, setScriptLoaded] = useState(false);
-  const [method, setMethod] = useState<Method>("card");
   const [ready, setReady] = useState(false);
   const configuredRef = useRef(false);
 
@@ -192,58 +160,12 @@ export default function CardFields({
     });
   }, [scriptLoaded, buttonId]);
 
-  function switchMethod(next: Method) {
-    if (next === method) return;
-    setMethod(next);
-    window.CollectJS?.clearInputs();
-  }
-
   return (
     <div className="nmi-card-fields">
-      <div className="nmi-method-tabs">
-        <button
-          type="button"
-          className={method === "card" ? "nmi-method-tab active" : "nmi-method-tab"}
-          disabled={disabled}
-          onClick={() => switchMethod("card")}
-        >
-          Card
-        </button>
-        <button
-          type="button"
-          className={method === "ach" ? "nmi-method-tab active" : "nmi-method-tab"}
-          disabled={disabled}
-          onClick={() => switchMethod("ach")}
-        >
-          Bank Account (ACH)
-        </button>
-      </div>
-      {/* Both groups stay mounted at all times -- Collect.js's iframes are
-          injected into these divs via a raw appendChild() outside React's
-          tracking, so unmounting/remounting them (as an earlier version of
-          this component did per-tab) orphans or duplicates iframes. Only
-          the active group is shown; the other is hidden via CSS. */}
-      <div
-        className={
-          ready
-            ? `nmi-card-field-group${method === "card" ? "" : " nmi-hidden"}`
-            : `nmi-card-field-group loading${method === "card" ? "" : " nmi-hidden"}`
-        }
-      >
+      <div className={ready ? "nmi-card-field-group" : "nmi-card-field-group loading"}>
         <div id="nmi-cc-number" className="nmi-card-field" />
         <div id="nmi-cc-exp" className="nmi-card-field" />
         <div id="nmi-cc-cvv" className="nmi-card-field" />
-      </div>
-      <div
-        className={
-          ready
-            ? `nmi-card-field-group${method === "ach" ? "" : " nmi-hidden"}`
-            : `nmi-card-field-group loading${method === "ach" ? "" : " nmi-hidden"}`
-        }
-      >
-        <div id="nmi-ach-name" className="nmi-card-field" />
-        <div id="nmi-ach-aba" className="nmi-card-field" />
-        <div id="nmi-ach-account" className="nmi-card-field" />
       </div>
       <button id={buttonId} type="button" disabled={disabled || !ready}>
         {ready ? submitLabel : "Loading payment form…"}

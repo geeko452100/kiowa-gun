@@ -38,6 +38,7 @@ export default async function MembershipPage() {
                 heading={terms.heading}
                 bodyHtml={terms.bodyHtml}
                 isAdmin={!!admin}
+                headingTag="h1"
               />
             )}
           </div>

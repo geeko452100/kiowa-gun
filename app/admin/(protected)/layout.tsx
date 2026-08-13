@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/auth";
 import { canManageBoard } from "@/lib/roles";
 import LogoutButton from "@/components/LogoutButton";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import "../admin.css";
 
 export const dynamic = "force-dynamic";
@@ -27,24 +29,30 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     : LINKS;
 
   return (
-    <div className="admin-shell">
-      <div className="admin-layout">
-        <aside className="admin-sidebar">
-          <h2>Kiowa Gun Club</h2>
-          <nav>
-            <Link href="/" className="admin-edit-site-link">
-              Edit Site Layout
-            </Link>
-            {links.map((link) => (
-              <Link key={link.href} href={link.href}>
-                {link.label}
+    <>
+      <Header active="dashboard" />
+      <div className="admin-shell">
+        <div className="admin-layout">
+          <aside className="admin-sidebar">
+            <h2>Board Menu</h2>
+            <nav>
+              <Link href="/" className="admin-edit-site-link">
+                Edit Site Layout
               </Link>
-            ))}
-          </nav>
-          <LogoutButton />
-        </aside>
-        <main className="admin-main">{children}</main>
+              {links.map((link) => (
+                <Link key={link.href} href={link.href}>
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            <LogoutButton />
+          </aside>
+          <main className="admin-main" id="main">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

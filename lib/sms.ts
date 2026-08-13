@@ -26,12 +26,16 @@ export async function sendSignalWireSms(
   projectId: string,
   apiToken: string,
   from: string,
-  { to, text, mediaUrl }: { to: string; text: string; mediaUrl?: string }
+  { to, text, mediaUrl, statusCallback }: { to: string; text: string; mediaUrl?: string; statusCallback?: string }
 ) {
   const params = new URLSearchParams({ From: from, To: to, Body: text });
   // A public-URL MediaUrl is all Twilio-compatible APIs (incl. SignalWire)
   // need to turn a plain SMS into an MMS -- it fetches the image itself.
   if (mediaUrl) params.set("MediaUrl", mediaUrl);
+  // SignalWire POSTs delivery-status updates (queued/sent/delivered/failed)
+  // to this URL asynchronously, as the carrier reports them -- the initial
+  // response here only confirms SignalWire accepted the send request.
+  if (statusCallback) params.set("StatusCallback", statusCallback);
 
   const res = await fetch(
     `https://${spaceUrl}/api/laml/2010-04-01/Accounts/${projectId}/Messages.json`,
@@ -46,7 +50,8 @@ export async function sendSignalWireSms(
     }
   );
   if (!res.ok) {
-    return { error: await res.text() };
+    return { error: await res.text(), sid: null };
   }
-  return { error: null };
+  const json = (await res.json()) as { sid?: string };
+  return { error: null, sid: json.sid ?? null };
 }
