@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alex_Brush } from "next/font/google";
 import CardFields from "@/components/nmi/CardFields";
+import FileField from "@/components/FileField";
 
 const signatureFont = Alex_Brush({ subsets: ["latin"], weight: "400" });
 
@@ -360,53 +361,50 @@ export default function MembershipForm({
 
       <fieldset>
         <legend>Document Uploads</legend>
-        <label>
-          NRA membership proof (card or magazine mailing label)
-          {mode === "portal" && (
-            <span className="membership-form-note">
-              {docByField.get("nraProof")?.fileName
-                ? `On file: ${docByField.get("nraProof")?.fileName}${docByField.get("nraProof")?.reviewed ? "" : " (pending review)"}`
-                : "None on file yet."}
-            </span>
-          )}
-          <input
-            type="file"
-            accept="application/pdf,image/jpeg,image/png,image/avif"
-            onChange={(e) => setNraProof(e.target.files?.[0] ?? null)}
-            required={mode === "apply"}
-          />
-        </label>
+        <FileField
+          label="NRA membership proof (card or magazine mailing label)"
+          accept="application/pdf,image/jpeg,image/png,image/avif"
+          required={mode === "apply"}
+          onChange={setNraProof}
+          note={
+            mode === "portal" && (
+              <span className="membership-form-note">
+                {docByField.get("nraProof")?.fileName
+                  ? `On file: ${docByField.get("nraProof")?.fileName}${docByField.get("nraProof")?.reviewed ? "" : " (pending review)"}`
+                  : "None on file yet."}
+              </span>
+            )
+          }
+        />
         {mode === "portal" && (
-          <label>
-            Cleanup-day discount card (optional)
-            <span className="membership-form-note">
-              {docByField.get("discountCard")?.fileName
-                ? `On file: ${docByField.get("discountCard")?.fileName}${docByField.get("discountCard")?.reviewed ? "" : " (pending review)"}`
-                : "None on file yet."}
-            </span>
-            <input
-              type="file"
-              accept="application/pdf,image/jpeg,image/png,image/avif"
-              onChange={(e) => setDiscountCard(e.target.files?.[0] ?? null)}
-            />
-          </label>
-        )}
-        <label>
-          Background-check cover page or CCL (any state)
-          {mode === "portal" && (
-            <span className="membership-form-note">
-              {docByField.get("backgroundCheck")?.fileName
-                ? `On file: ${docByField.get("backgroundCheck")?.fileName}${docByField.get("backgroundCheck")?.reviewed ? "" : " (pending review)"}`
-                : "None on file yet."}
-            </span>
-          )}
-          <input
-            type="file"
+          <FileField
+            label="Cleanup-day discount card (optional)"
             accept="application/pdf,image/jpeg,image/png,image/avif"
-            onChange={(e) => setBackgroundCheck(e.target.files?.[0] ?? null)}
-            required={mode === "apply"}
+            onChange={setDiscountCard}
+            note={
+              <span className="membership-form-note">
+                {docByField.get("discountCard")?.fileName
+                  ? `On file: ${docByField.get("discountCard")?.fileName}${docByField.get("discountCard")?.reviewed ? "" : " (pending review)"}`
+                  : "None on file yet."}
+              </span>
+            }
           />
-        </label>
+        )}
+        <FileField
+          label="Background-check cover page or CCL (any state)"
+          accept="application/pdf,image/jpeg,image/png,image/avif"
+          required={mode === "apply"}
+          onChange={setBackgroundCheck}
+          note={
+            mode === "portal" && (
+              <span className="membership-form-note">
+                {docByField.get("backgroundCheck")?.fileName
+                  ? `On file: ${docByField.get("backgroundCheck")?.fileName}${docByField.get("backgroundCheck")?.reviewed ? "" : " (pending review)"}`
+                  : "None on file yet."}
+              </span>
+            )
+          }
+        />
         <p className="membership-form-note">
           Need a background check? You can request one at{" "}
           <a href="https://www.criminalwatchdog.com" target="_blank" rel="noopener noreferrer">

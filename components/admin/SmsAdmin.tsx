@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from "react";
 import RecipientPicker from "./RecipientPicker";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
+import FileField from "@/components/FileField";
 
 const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
 const SHOOTING_COMMITTEE = "Shooting Committee";
@@ -67,9 +68,22 @@ export default function SmsAdmin() {
   const [mediaFileName, setMediaFileName] = useState("");
   const [attachingMedia, setAttachingMedia] = useState(false);
   const [mediaError, setMediaError] = useState("");
+  const [mediaFieldKey, setMediaFieldKey] = useState(0);
   const [expandedCampaignId, setExpandedCampaignId] = useState<number | null>(null);
   const [recipientDetail, setRecipientDetail] = useState<CampaignRecipient[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  async function deleteCampaign(id: number) {
+    const ok = await confirm("Delete this text from the send history? This can't be undone.", "Delete");
+    if (!ok) return;
+    const result = await adminFetch(`/api/admin/sms/${id}`, { method: "DELETE" });
+    if (!result.ok) {
+      setResult(result.error);
+      return;
+    }
+    if (expandedCampaignId === id) setExpandedCampaignId(null);
+    void loadHistory();
+  }
 
   async function toggleCampaignDetail(id: number) {
     if (expandedCampaignId === id) {
@@ -108,9 +122,8 @@ export default function SmsAdmin() {
     void loadMembers(true);
   }, []);
 
-  async function attachMedia(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  async function attachMedia(file: File | null) {
+    setMediaFieldKey((k) => k + 1);
     if (!file) return;
     setMediaError("");
     setAttachingMedia(true);
@@ -222,15 +235,13 @@ export default function SmsAdmin() {
         </label>
         <p className="admin-note">{body.length} / 1600 characters</p>
 
-        <label>
-          Attach a picture (optional — sends as a picture message/MMS)
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-            onChange={attachMedia}
-            disabled={attachingMedia}
-          />
-        </label>
+        <FileField
+          key={mediaFieldKey}
+          label="Attach a picture (optional — sends as a picture message/MMS)"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+          disabled={attachingMedia}
+          onChange={attachMedia}
+        />
         {mediaError && <p className="admin-error">{mediaError}</p>}
         {mediaUrl && (
           <p className="admin-note">
@@ -290,6 +301,7 @@ export default function SmsAdmin() {
             <th>Delivered</th>
             <th>Undelivered</th>
             <th>By</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -315,10 +327,15 @@ export default function SmsAdmin() {
                 <td>{c.deliveredCount}</td>
                 <td>{c.undeliveredCount}</td>
                 <td>{c.createdBy}</td>
+                <td>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); void deleteCampaign(c.id); }}>
+                    Delete
+                  </button>
+                </td>
               </tr>
               {expandedCampaignId === c.id && (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={8}>
                     {loadingDetail ? (
                       <p className="admin-note">Loading…</p>
                     ) : (

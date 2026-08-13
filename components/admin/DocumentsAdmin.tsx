@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
+import FileField from "@/components/FileField";
 
 type Doc = {
   id: number;
@@ -26,6 +27,7 @@ export default function DocumentsAdmin() {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [fileFieldKey, setFileFieldKey] = useState(0);
 
   async function load() {
     const res = await fetch("/api/admin/documents");
@@ -55,6 +57,7 @@ export default function DocumentsAdmin() {
     setTitle("");
     setDescription("");
     setFile(null);
+    setFileFieldKey((k) => k + 1);
     void load();
   }
 
@@ -113,15 +116,7 @@ export default function DocumentsAdmin() {
           Description
           <input value={description} onChange={(e) => setDescription(e.target.value)} />
         </label>
-        <label>
-          PDF file
-          <input
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            required
-          />
-        </label>
+        <FileField key={fileFieldKey} label="PDF file" accept="application/pdf" required onChange={setFile} />
         <button type="submit" disabled={uploading}>
           {uploading ? "Uploading…" : "Upload"}
         </button>

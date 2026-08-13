@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
+import FileField from "@/components/FileField";
 
 type MatchRow = {
   id: number;
@@ -325,11 +326,14 @@ export default function MatchesAdmin() {
                           ))}
                         </div>
                       )}
-                      <form onSubmit={uploadPhoto} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <input
-                          type="file"
+                      <form
+                        onSubmit={uploadPhoto}
+                        style={{ display: "flex", gap: 8, alignItems: "flex-end" }}
+                      >
+                        <FileField
+                          label="Add a picture"
                           accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                          onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                          onChange={setPhotoFile}
                         />
                         <button type="submit" disabled={!photoFile || photoUploading}>
                           {photoUploading ? "Uploading…" : "Upload"}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FileField from "@/components/FileField";
 
 const NRA_NUMBER_PATTERN = /^\d{5,12}$/;
 
@@ -88,15 +89,12 @@ export default function NraUpdateForm({
           required
         />
       </label>
-      <label>
-        Current NRA Card (photo)
-        <input
-          type="file"
-          accept="application/pdf,image/jpeg,image/png,image/avif"
-          onChange={(e) => setNraProof(e.target.files?.[0] ?? null)}
-          required
-        />
-      </label>
+      <FileField
+        label="Current NRA Card (photo)"
+        accept="application/pdf,image/jpeg,image/png,image/avif"
+        required
+        onChange={setNraProof}
+      />
       {error && <p className="membership-form-error">{error}</p>}
       <button type="submit" disabled={submitting}>
         {submitting ? "Submitting…" : "Submit for Review"}

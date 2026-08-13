@@ -5,6 +5,7 @@ import RichTextEditor from "./RichTextEditor";
 import RecipientPicker from "./RecipientPicker";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
+import FileField from "@/components/FileField";
 import { MAX_FILE_ATTACHMENTS } from "@/lib/emailAttachments";
 
 const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
@@ -72,6 +73,7 @@ export default function EmailAdmin() {
   const [fileAttachments, setFileAttachments] = useState<FileAttachment[]>([]);
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState("");
+  const [attachFieldKey, setAttachFieldKey] = useState(0);
   const [expandedCampaignId, setExpandedCampaignId] = useState<number | null>(null);
   const [recipientDetail, setRecipientDetail] = useState<CampaignRecipient[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -97,6 +99,18 @@ export default function EmailAdmin() {
     void loadMembers(true);
   }, []);
 
+  async function deleteCampaign(id: number) {
+    const ok = await confirm("Delete this email from the send history? This can't be undone.", "Delete");
+    if (!ok) return;
+    const result = await adminFetch(`/api/admin/email/${id}`, { method: "DELETE" });
+    if (!result.ok) {
+      setResult(result.error);
+      return;
+    }
+    if (expandedCampaignId === id) setExpandedCampaignId(null);
+    void loadHistory();
+  }
+
   async function toggleCampaignDetail(id: number) {
     if (expandedCampaignId === id) {
       setExpandedCampaignId(null);
@@ -120,9 +134,8 @@ export default function EmailAdmin() {
     return result.data.url;
   }
 
-  async function attachFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  async function attachFile(file: File | null) {
+    setAttachFieldKey((k) => k + 1);
     if (!file) return;
     setAttachError("");
     if (fileAttachments.length >= MAX_FILE_ATTACHMENTS) {
@@ -220,14 +233,12 @@ export default function EmailAdmin() {
           onImageUpload={uploadEmailImage}
         />
 
-        <label>
-          Attach a file (optional, e.g. a flyer PDF — shows as a downloadable attachment, not inline)
-          <input
-            type="file"
-            onChange={attachFile}
-            disabled={attaching || fileAttachments.length >= MAX_FILE_ATTACHMENTS}
-          />
-        </label>
+        <FileField
+          key={attachFieldKey}
+          label="Attach a file (optional, e.g. a flyer PDF — shows as a downloadable attachment, not inline)"
+          disabled={attaching || fileAttachments.length >= MAX_FILE_ATTACHMENTS}
+          onChange={attachFile}
+        />
         {attachError && <p className="admin-error">{attachError}</p>}
         {fileAttachments.length > 0 && (
           <ul className="admin-note">
@@ -281,6 +292,7 @@ export default function EmailAdmin() {
             <th>Bounces</th>
             <th>Spam</th>
             <th>By</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -298,10 +310,15 @@ export default function EmailAdmin() {
                 <td>{c.bouncedCount}</td>
                 <td>{c.spamCount}</td>
                 <td>{c.createdBy}</td>
+                <td>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); void deleteCampaign(c.id); }}>
+                    Delete
+                  </button>
+                </td>
               </tr>
               {expandedCampaignId === c.id && (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={10}>
                     {loadingDetail ? (
                       <p className="admin-note">Loading…</p>
                     ) : (

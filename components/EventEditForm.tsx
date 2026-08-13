@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { adminFetch } from "@/components/admin/adminFetch";
+import FileField from "@/components/FileField";
 import type { PanelEvent } from "./EventDetailPanel";
 
 // Inline create/edit form for a single calendar event, embedded directly in
@@ -33,8 +34,6 @@ export default function EventEditForm({
   const [linkLabel, setLinkLabel] = useState(event?.linkLabel ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const documentInputRef = useRef<HTMLInputElement>(null);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -88,30 +87,18 @@ export default function EventEditForm({
           placeholder="Details shown when someone clicks this date"
         />
       </label>
-      <label>
-        Picture (optional)
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-          onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-        />
-      </label>
+      <FileField
+        label="Picture (optional)"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+        onChange={setImageFile}
+      />
       {event?.imageUrl && !imageFile && (
         <label className="admin-inline-check">
           <input type="checkbox" checked={removeImage} onChange={(e) => setRemoveImage(e.target.checked)} />
           Remove current picture
         </label>
       )}
-      <label>
-        Document (optional, PDF)
-        <input
-          ref={documentInputRef}
-          type="file"
-          accept="application/pdf"
-          onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
-        />
-      </label>
+      <FileField label="Document (optional, PDF)" accept="application/pdf" onChange={setDocumentFile} />
       {event?.documentUrl && !documentFile && (
         <label className="admin-inline-check">
           <input

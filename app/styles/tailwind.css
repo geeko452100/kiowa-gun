@@ -236,6 +236,30 @@ html {
     @apply p-[8px] text-[0.9rem];
   }
 
+  .file-field {
+    @apply flex flex-col gap-[6px];
+  }
+
+  .file-field-label {
+    @apply font-normal;
+  }
+
+  .file-field-control {
+    @apply flex flex-wrap items-center gap-[10px];
+  }
+
+  .file-field-button {
+    @apply px-[14px] py-[8px] text-[0.9rem];
+  }
+
+  .file-field-name {
+    @apply text-[0.9rem] opacity-85;
+  }
+
+  .file-field-input {
+    @apply sr-only;
+  }
+
   /* Membership application wizard (app/membership/apply/*). */
   .apply-test-autofill {
     @apply fixed right-[16px] bottom-[16px] z-[1000] max-w-[260px] rounded-[8px]

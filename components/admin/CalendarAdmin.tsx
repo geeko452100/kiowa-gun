@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
+import FileField from "@/components/FileField";
 
 type EventRow = {
   id: number;
@@ -30,8 +31,7 @@ export default function CalendarAdmin() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const documentInputRef = useRef<HTMLInputElement>(null);
+  const [formResetKey, setFormResetKey] = useState(0);
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
@@ -93,8 +93,7 @@ export default function CalendarAdmin() {
     setExistingDocument(null);
     setLinkUrl("");
     setLinkLabel("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    if (documentInputRef.current) documentInputRef.current.value = "";
+    setFormResetKey((k) => k + 1);
   }
 
   function startEdit(ev: EventRow) {
@@ -113,8 +112,7 @@ export default function CalendarAdmin() {
     );
     setLinkUrl(ev.linkUrl ?? "");
     setLinkLabel(ev.linkLabel ?? "");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    if (documentInputRef.current) documentInputRef.current.value = "";
+    setFormResetKey((k) => k + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -250,15 +248,12 @@ export default function CalendarAdmin() {
             placeholder="Details shown when someone clicks this date"
           />
         </label>
-        <label>
-          Picture (optional)
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-          />
-        </label>
+        <FileField
+          key={`image-${formResetKey}`}
+          label="Picture (optional)"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+          onChange={setImageFile}
+        />
         {existingImage && !imageFile && (
           <label className="admin-inline-check">
             <input
@@ -269,15 +264,12 @@ export default function CalendarAdmin() {
             Remove current picture ({existingImage.fileName})
           </label>
         )}
-        <label>
-          Document (optional, PDF)
-          <input
-            ref={documentInputRef}
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
-          />
-        </label>
+        <FileField
+          key={`document-${formResetKey}`}
+          label="Document (optional, PDF)"
+          accept="application/pdf"
+          onChange={setDocumentFile}
+        />
         {existingDocument && !documentFile && (
           <label className="admin-inline-check">
             <input

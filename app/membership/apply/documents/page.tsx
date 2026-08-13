@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApplyWizard } from "@/components/apply/ApplyWizardContext";
 import ApplyProgressBar from "@/components/apply/ApplyProgressBar";
+import FileField from "@/components/FileField";
 
 export default function DocumentsStep() {
   const router = useRouter();
@@ -83,15 +84,12 @@ export default function DocumentsStep() {
       <ApplyProgressBar step={6} label="Document Uploads" />
       <h1>Document Uploads</h1>
       <form className="apply-form" onSubmit={onSubmit}>
-        <label>
-          NRA membership proof (card or magazine mailing label)
-          <input
-            type="file"
-            accept="application/pdf,image/jpeg,image/png,image/avif"
-            onChange={(e) => update({ nraProofFile: e.target.files?.[0] ?? null })}
-            required
-          />
-        </label>
+        <FileField
+          label="NRA membership proof (card or magazine mailing label)"
+          accept="application/pdf,image/jpeg,image/png,image/avif"
+          required
+          onChange={(file) => update({ nraProofFile: file })}
+        />
         <label>
           NRA membership expiration date
           <input
@@ -101,23 +99,17 @@ export default function DocumentsStep() {
             required
           />
         </label>
-        <label>
-          Background-check cover page or CCL (any state){backgroundCheckRequired ? "" : " (optional)"}
-          <input
-            type="file"
-            accept="application/pdf,image/jpeg,image/png,image/avif"
-            onChange={(e) => update({ backgroundCheckFile: e.target.files?.[0] ?? null })}
-            required={backgroundCheckRequired}
-          />
-        </label>
-        <label>
-          Cleanup-day discount card (optional)
-          <input
-            type="file"
-            accept="application/pdf,image/jpeg,image/png,image/avif"
-            onChange={(e) => update({ discountCardFile: e.target.files?.[0] ?? null })}
-          />
-        </label>
+        <FileField
+          label={`Background-check cover page or CCL (any state)${backgroundCheckRequired ? "" : " (optional)"}`}
+          accept="application/pdf,image/jpeg,image/png,image/avif"
+          required={backgroundCheckRequired}
+          onChange={(file) => update({ backgroundCheckFile: file })}
+        />
+        <FileField
+          label="Cleanup-day discount card (optional)"
+          accept="application/pdf,image/jpeg,image/png,image/avif"
+          onChange={(file) => update({ discountCardFile: file })}
+        />
         <p className="apply-step-note">
           Need a background check? You can request one at{" "}
           <a href="https://www.criminalwatchdog.com" target="_blank" rel="noopener noreferrer">
