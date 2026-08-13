@@ -8,7 +8,7 @@ import CalendarView from "@/components/CalendarView";
 import EditableSection from "@/components/EditableSection";
 import AdditionalSections from "@/components/AdditionalSections";
 import EditModeBanner from "@/components/EditModeBanner";
-import "../styles/calendar.css";
+import "../styles/vendor.css";
 
 export const metadata = { title: "Calendar - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";

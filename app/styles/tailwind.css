@@ -583,4 +583,149 @@ html {
   .editable-section-editing .link-popover-hint {
     @apply mt-[6px] text-[0.8rem] text-[#cbc6b8];
   }
+
+  /* Day/event detail side panel and its inline add/edit form (see
+     EventDetailPanel.tsx, EventEditForm.tsx; event-swatch and
+     admin-inline-check are also reused by components/admin/CalendarAdmin.tsx). */
+  .event-detail-dialog {
+    @apply fixed inset-[0_0_0_auto] m-0 box-border h-[100vh] max-h-[100vh] w-[min(440px,92vw)]
+      overflow-y-auto border-none border-l-2 border-border bg-bg px-[24px] py-[28px] text-text
+      max-[599px]:w-[100vw] max-[599px]:max-w-[100vw] max-[599px]:px-[18px] max-[599px]:py-[24px];
+  }
+
+  .event-detail-dialog::backdrop {
+    @apply bg-[rgba(0,0,0,0.55)];
+  }
+
+  .event-detail-close {
+    @apply absolute top-[12px] right-[12px] flex h-[44px] w-[44px] items-center justify-center rounded-full
+      border border-border bg-primary p-0 text-[1.75rem] leading-none text-white cursor-pointer;
+  }
+
+  .event-detail-close:hover {
+    @apply bg-accent;
+  }
+
+  .event-detail-date {
+    @apply mr-[44px] mb-[18px] text-[1.35rem];
+  }
+
+  .event-detail-empty {
+    @apply text-[1.05rem];
+  }
+
+  .event-detail-list {
+    @apply flex list-none flex-col gap-[22px];
+  }
+
+  .event-detail-item {
+    @apply border-b border-border pb-[22px];
+  }
+
+  .event-detail-item:last-child {
+    @apply border-b-0 pb-0;
+  }
+
+  .event-detail-title-row {
+    @apply flex items-center gap-[10px] text-[1.2rem];
+  }
+
+  .event-swatch {
+    @apply h-[14px] w-[14px] shrink-0 rounded-full;
+  }
+
+  .event-detail-time {
+    @apply mt-[8px] text-[1.05rem] text-[#cbc6b8];
+  }
+
+  .event-detail-description {
+    @apply mt-[12px] text-[1.05rem] leading-[1.5] whitespace-pre-wrap;
+  }
+
+  .event-detail-image {
+    @apply mt-[14px] block max-w-full rounded-[8px];
+  }
+
+  .event-detail-links {
+    @apply mt-[12px] flex flex-col gap-[6px];
+  }
+
+  .event-detail-links a {
+    @apply text-[#d8c894];
+  }
+
+  .event-detail-add-btn {
+    @apply mt-[4px] inline-flex min-h-[44px] items-center gap-[8px] rounded-[8px] border-2 border-accent
+      bg-accent px-[20px] py-[10px] text-base font-bold text-white [font-family:inherit] cursor-pointer;
+  }
+
+  .event-detail-add-btn:hover {
+    @apply border-primary bg-primary;
+  }
+
+  .event-detail-add {
+    @apply mt-[4px];
+  }
+
+  .event-detail-recurrence {
+    @apply mt-[8px] text-[0.9rem] text-[#9fd3ff];
+  }
+
+  .event-detail-admin-actions {
+    @apply mt-[14px] flex gap-[10px];
+  }
+
+  .event-detail-admin-actions button {
+    @apply min-h-[44px] cursor-pointer rounded-[6px] border border-accent bg-primary px-[18px] py-[8px]
+      font-semibold text-text [font-family:inherit];
+  }
+
+  .event-detail-admin-actions button:hover {
+    @apply bg-accent;
+  }
+
+  .event-detail-admin-actions button.danger {
+    @apply border-[#a8291a] bg-[#a8291a];
+  }
+
+  .event-detail-admin-actions button.danger:hover {
+    @apply bg-[#c7392a];
+  }
+
+  .event-edit-form {
+    @apply flex flex-col gap-[12px];
+  }
+
+  .event-edit-form label {
+    @apply flex flex-col gap-[6px] text-[0.92rem] font-semibold;
+  }
+
+  .event-edit-form .admin-inline-check {
+    @apply flex-row items-center gap-[8px];
+  }
+
+  .event-edit-form .admin-inline-check input {
+    @apply h-[18px] w-[18px] min-h-[auto];
+  }
+
+  .event-edit-actions {
+    @apply mt-[4px] flex items-center gap-[10px];
+  }
+
+  .event-edit-actions button {
+    @apply min-h-[44px] cursor-pointer rounded-[6px] border border-accent bg-primary px-[18px] py-[8px]
+      font-semibold text-text [font-family:inherit];
+  }
+
+  .event-edit-actions button:hover {
+    @apply bg-accent;
+  }
+
+  .event-edit-actions .event-edit-cancel {
+    @apply bg-transparent;
+  }
+
+  .event-edit-error {
+    @apply text-[0.9rem] text-[#ffb4a8];
+  }
 }

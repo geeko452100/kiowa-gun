@@ -1,0 +1,157 @@
+/* Theming for third-party library markup we don't control in JSX (their
+   own internal class names/CSS custom properties), so it can't be expressed
+   as Tailwind utility classes on our own elements. Keep verbatim CSS here
+   instead of forcing it through @apply. */
+
+/* FullCalendar (see components/CalendarView.tsx) */
+#range-calendar {
+  --fc-border-color: var(--color-border);
+  --fc-page-bg-color: var(--color-bg);
+  --fc-neutral-bg-color: #1a1c14;
+  --fc-list-event-hover-bg-color: #1a1c14;
+  --fc-today-bg-color: rgba(138, 31, 17, 0.25);
+  --fc-button-bg-color: var(--color-primary);
+  --fc-button-border-color: var(--color-primary);
+  --fc-button-hover-bg-color: var(--color-accent);
+  --fc-button-hover-border-color: var(--color-accent);
+  --fc-button-active-bg-color: var(--color-accent);
+  --fc-button-active-border-color: var(--color-accent);
+  color: var(--color-text);
+
+  /* Board-adjustable display size (CMS "Calendar display size" setting). These
+     "comfortable" values are also the default before the setting loads. */
+  --calendar-cell-min-h: 130px;
+  --calendar-cell-min-h-mobile: 68px;
+  --calendar-font-scale: 1;
+}
+
+#range-calendar[data-size="compact"] {
+  --calendar-cell-min-h: 90px;
+  --calendar-cell-min-h-mobile: 56px;
+  --calendar-font-scale: 0.9;
+}
+
+#range-calendar[data-size="large"] {
+  --calendar-cell-min-h: 170px;
+  --calendar-cell-min-h-mobile: 84px;
+  --calendar-font-scale: 1.2;
+}
+
+#range-calendar a {
+  color: var(--color-text);
+}
+
+#range-calendar .fc-scrollgrid {
+  border-width: 2px !important;
+}
+
+#range-calendar .fc-theme-standard td,
+#range-calendar .fc-theme-standard th {
+  border-width: 2px !important;
+}
+
+#range-calendar .fc-daygrid-day-frame {
+  border: 2px solid var(--fc-border-color) !important;
+  box-sizing: border-box;
+  min-height: var(--calendar-cell-min-h);
+  cursor: pointer;
+}
+
+#range-calendar .fc-daygrid-day-number {
+  font-size: calc(1rem * var(--calendar-font-scale));
+}
+
+#range-calendar .fc-event-title,
+#range-calendar .fc-event-time {
+  font-size: calc(0.95rem * var(--calendar-font-scale));
+}
+
+@media (max-width: 768px) {
+  #range-calendar .fc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  #range-calendar .fc-toolbar-title {
+    font-size: calc(1.3rem * var(--calendar-font-scale));
+    text-align: center;
+  }
+
+  #range-calendar .fc-button {
+    padding: 8px 14px;
+    font-size: calc(1rem * var(--calendar-font-scale));
+  }
+
+  #range-calendar .fc-daygrid-day-number {
+    font-size: calc(0.95rem * var(--calendar-font-scale));
+    padding: 4px 6px;
+  }
+
+  #range-calendar .fc-event-title,
+  #range-calendar .fc-event-time {
+    font-size: calc(0.9rem * var(--calendar-font-scale));
+  }
+
+  #range-calendar .fc-list-event-title,
+  #range-calendar .fc-list-event-time {
+    font-size: calc(1.05rem * var(--calendar-font-scale));
+  }
+}
+
+@media (max-width: 599px) {
+  #range-calendar .fc-scrollgrid,
+  #range-calendar .fc-theme-standard td,
+  #range-calendar .fc-theme-standard th,
+  #range-calendar .fc-daygrid-day-frame {
+    border-width: 1px !important;
+  }
+
+  #range-calendar .fc-toolbar-title {
+    font-size: calc(1.1rem * var(--calendar-font-scale));
+  }
+
+  #range-calendar .fc-button {
+    padding: 6px 10px;
+    font-size: calc(0.9rem * var(--calendar-font-scale));
+  }
+
+  #range-calendar .fc-daygrid-day-top {
+    flex-direction: row;
+  }
+
+  #range-calendar .fc-daygrid-day-frame {
+    min-height: var(--calendar-cell-min-h-mobile);
+  }
+
+  #range-calendar .fc-daygrid-day-number {
+    font-size: calc(0.85rem * var(--calendar-font-scale));
+    padding: 3px 4px;
+  }
+
+  #range-calendar .fc-daygrid-day-events {
+    margin-top: 3px;
+  }
+
+  #range-calendar .fc-daygrid-event {
+    margin: 0 1px 1px;
+    padding: 0;
+  }
+
+  #range-calendar .fc-event-title {
+    font-size: calc(0.8rem * var(--calendar-font-scale));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #range-calendar .fc-daygrid-event-dot {
+    margin: 0 2px;
+    border-width: 3px;
+  }
+
+  #range-calendar .fc-list-event-title,
+  #range-calendar .fc-list-event-time {
+    font-size: calc(0.95rem * var(--calendar-font-scale));
+  }
+}
