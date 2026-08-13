@@ -1212,4 +1212,349 @@ html {
   .dashboard-unlock button {
     @apply min-h-[44px] px-[14px] py-[8px] text-[0.9rem];
   }
+
+  /* Site chrome: header, nav, footer, home-page hero, and base call-to-action
+     buttons/links used sitewide (formerly app/styles/styles.css). */
+  .register-cta {
+    @apply mt-[-24px] mb-[16px] text-center;
+  }
+
+  .register-button {
+    @apply inline-block rounded-[4px] border border-accent bg-primary px-[24px] py-[12px]
+      font-bold text-text! no-underline;
+  }
+
+  .register-button:hover {
+    @apply bg-accent text-white!;
+  }
+
+  .skip-link {
+    @apply absolute top-0 left-[-9999px] z-[1000] bg-accent px-[16px] py-[10px] text-white no-underline;
+  }
+
+  .skip-link:focus {
+    @apply top-[10px] left-[10px];
+  }
+
+  .site-header {
+    @apply border-b-4 border-accent bg-header-bg text-white;
+  }
+
+  .site-header .container {
+    @apply max-w-[1800px];
+  }
+
+  .header-inner {
+    @apply relative flex flex-wrap items-center justify-between gap-[16px_24px] px-[20px] py-[14px]
+      max-[768px]:flex-col max-[768px]:items-start max-[420px]:px-[14px] max-[420px]:py-[12px];
+  }
+
+  .nav-toggle {
+    @apply hidden h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-full
+      border-none bg-transparent p-0 text-white [transition:background-color_0.15s_ease]
+      max-[768px]:inline-flex max-[768px]:self-end;
+  }
+
+  .nav-toggle:hover,
+  .nav-toggle[aria-expanded="true"] {
+    @apply bg-accent;
+  }
+
+  .nav-toggle-icon,
+  .nav-toggle-icon::before,
+  .nav-toggle-icon::after {
+    @apply block h-[2px] w-[20px] bg-white;
+  }
+
+  .nav-toggle-icon {
+    @apply relative;
+  }
+
+  .nav-toggle-icon::before,
+  .nav-toggle-icon::after {
+    content: "";
+    @apply absolute left-0 [transition:top_0.15s_ease,transform_0.15s_ease];
+  }
+
+  .nav-toggle-icon::before {
+    @apply top-[-6px];
+  }
+
+  .nav-toggle-icon::after {
+    @apply top-[6px];
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-icon {
+    @apply bg-transparent;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-icon::before {
+    @apply top-0 rotate-45;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-icon::after {
+    @apply top-0 -rotate-45;
+  }
+
+  .logo {
+    @apply flex items-center gap-[12px] text-white no-underline;
+  }
+
+  .logo img {
+    @apply h-[60px] w-auto max-[768px]:h-[44px];
+  }
+
+  .site-title {
+    @apply text-[1.2rem] leading-[1.2] font-bold max-[768px]:text-[1.05rem];
+  }
+
+  .site-title small {
+    @apply text-[0.75rem] font-normal opacity-85;
+  }
+
+  .site-title-compact {
+    @apply text-[0.95rem];
+  }
+
+  .site-title-large {
+    @apply text-[1.6rem];
+  }
+
+  .site-title-large small {
+    @apply text-[0.9rem];
+  }
+
+  .nav-column {
+    @apply flex min-w-0 flex-1 flex-col items-stretch gap-[8px];
+  }
+
+  .hero-image {
+    @apply w-full;
+  }
+
+  .hero-image img {
+    @apply block h-[190px] w-full rounded-[8px] object-cover shadow-[0_4px_16px_rgba(0,0,0,0.5)]
+      [object-position:center_35%] max-[1100px]:h-[170px] max-[768px]:h-[150px] max-[768px]:rounded-[6px];
+  }
+
+  .main-nav {
+    @apply ml-auto pt-[4px] max-[768px]:w-full max-[768px]:pt-0;
+  }
+
+  .main-nav ul {
+    @apply m-0 flex list-none flex-wrap gap-[4px] p-0
+      max-[768px]:max-h-0 max-[768px]:w-full max-[768px]:flex-col max-[768px]:flex-nowrap
+      max-[768px]:gap-0 max-[768px]:overflow-hidden max-[768px]:[transition:max-height_0.25s_ease];
+  }
+
+  .main-nav.is-open ul {
+    @apply max-[768px]:mt-[10px] max-[768px]:max-h-[600px];
+  }
+
+  .main-nav ul li {
+    @apply max-[768px]:border-t max-[768px]:border-border;
+  }
+
+  .main-nav a {
+    @apply inline-block rounded-[20px] px-[18px] py-[12px] text-[0.95rem] text-white no-underline
+      max-[1100px]:px-[14px] max-[1100px]:py-[10px]
+      max-[768px]:w-full max-[768px]:rounded-none max-[768px]:px-[14px] max-[768px]:py-[12px];
+  }
+
+  .main-nav a:hover {
+    @apply bg-accent;
+  }
+
+  .main-nav a[aria-current="page"] {
+    @apply bg-primary font-bold no-underline;
+  }
+
+  .nra-link {
+    @apply rounded-[20px] bg-accent px-[16px] py-[8px] text-[0.85rem] whitespace-nowrap text-white
+      no-underline max-[768px]:mt-[4px] max-[768px]:inline-block max-[768px]:rounded-[4px];
+  }
+
+  .nra-link:hover {
+    @apply bg-white text-header-bg;
+  }
+
+  /* Persistent "my account" entry point, sitting next to the logo outside the
+     collapsible mobile menu -- similar to Amazon/eBay's account link, it stays
+     reachable without opening the hamburger first. */
+  .account-link {
+    @apply inline-flex items-center gap-[8px] rounded-[20px] bg-primary px-[16px] py-[8px]
+      text-[0.95rem] whitespace-nowrap text-white no-underline;
+  }
+
+  .account-link:hover {
+    @apply bg-accent;
+  }
+
+  .account-link[aria-current="page"] {
+    @apply outline-2 outline-white outline-offset-2;
+  }
+
+  .account-badge {
+    @apply rounded-[12px] bg-[rgba(255,255,255,0.25)] px-[8px] py-[3px] text-[0.7rem]
+      font-bold tracking-[0.03em] uppercase;
+  }
+
+  .account-badge-board {
+    @apply bg-accent;
+  }
+
+  .content-section {
+    @apply px-0 py-[40px];
+  }
+
+  .site-footer {
+    @apply border-t-4 border-accent bg-header-bg px-0 py-[20px] text-center text-[0.85rem] text-white;
+  }
+
+  .site-footer p {
+    @apply my-[6px];
+  }
+
+  .board-login-link {
+    @apply mt-[8px] inline-block rounded-[20px] border border-[rgba(255,255,255,0.5)] px-[16px] py-[8px]
+      text-[0.85rem] whitespace-nowrap text-white no-underline opacity-75;
+  }
+
+  .board-login-link:hover {
+    @apply bg-[rgba(255,255,255,0.1)] opacity-100;
+  }
+
+  .hero {
+    @apply relative text-center text-white;
+  }
+
+  .hero-overlay {
+    @apply absolute top-1/2 left-1/2 w-[90%] -translate-x-1/2 -translate-y-1/2;
+  }
+
+  .hero-overlay h1 {
+    @apply mb-[8px] text-[1.5rem] [text-shadow:0_2px_6px_rgba(0,0,0,0.6)] max-[768px]:text-[1.8rem];
+  }
+
+  .hero-overlay p {
+    @apply text-[1.1rem] [text-shadow:0_1px_4px_rgba(0,0,0,0.6)];
+  }
+
+  .rules-summary {
+    @apply rounded-[8px] border-b-0 bg-primary px-[24px] py-[32px] text-white
+      shadow-[0_6px_20px_rgba(0,0,0,0.35)];
+  }
+
+  .rules-summary h2 {
+    @apply text-white;
+  }
+
+  .rules-summary ol {
+    @apply text-[1.1rem] font-bold;
+  }
+
+  .rules-summary li {
+    @apply mb-[10px];
+  }
+
+  .rules-summary a {
+    @apply text-white underline;
+  }
+
+  /* NMI Collect.js card fields -- the divs below are where Collect.js injects
+     its own iframes, so the height/border here is what gives the card number,
+     expiry, and CVV inputs a visible box before the iframe content loads. */
+  .nmi-card-fields {
+    @apply relative my-[12px] flex max-w-[320px] flex-col gap-[10px];
+  }
+
+  .nmi-card-fields > button {
+    @apply self-start;
+  }
+
+  .nmi-card-field-group {
+    @apply flex flex-col gap-[10px] [transition:opacity_0.15s_ease];
+  }
+
+  /* Collect.js's iframes take a moment (network round trip + postMessage
+     handshake) to load and render their own placeholder text -- dimming the
+     boxes in the meantime makes that gap read as "loading" instead of
+     "broken/frozen". Cleared by fieldsAvailableCallback, which only fires once
+     every field has actually finished loading.
+     No pointer-events-none here, even though the fields aren't interactive
+     yet anyway -- Collect.js's style sniffer runs at configure() time (before
+     fieldsAvailableCallback has ever fired, so this class is still present)
+     and copies the *computed* style of a bare input dropped inside each field
+     div, including inherited properties. pointer-events: none on this
+     ancestor gets inherited by that sniffed snapshot and baked permanently
+     into the field's style inside the iframe -- confirmed live: it left every
+     field completely unclickable forever, even after this class was removed. */
+  .nmi-card-field-group.loading {
+    @apply opacity-50;
+  }
+
+  .nmi-card-field {
+    @apply h-[42px] rounded-[4px] border border-border bg-header-bg;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-base leading-[1.6] text-text;
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  a {
+    @apply text-link [transition:color_0.15s_ease,background-color_0.15s_ease,opacity_0.15s_ease];
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    @apply outline outline-[3px] outline-link outline-offset-2;
+  }
+
+  /* Base form control styling so pages without their own form CSS (membership,
+     about, rules, news) still get a readable, accessible input/button instead
+     of raw browser defaults. */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    @apply rounded-[4px] border border-border bg-header-bg px-[12px] py-[10px] text-base text-text
+      [font-family:inherit] [transition:border-color_0.15s_ease,box-shadow_0.15s_ease];
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):hover,
+  textarea:hover,
+  select:hover {
+    @apply border-accent;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply border-accent shadow-[0_0_0_3px_rgba(76,94,58,0.4)] outline-none;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply accent-accent;
+  }
+
+  button {
+    @apply cursor-pointer rounded-[4px] border border-accent bg-primary px-[18px] py-[10px] text-base
+      font-semibold text-text [font-family:inherit]
+      [transition:background-color_0.15s_ease,transform_0.1s_ease];
+  }
+
+  button:hover:not(:disabled) {
+    @apply bg-accent;
+  }
+
+  button:active:not(:disabled) {
+    @apply translate-y-[1px];
+  }
+
+  button:disabled {
+    @apply cursor-default opacity-60;
+  }
 }

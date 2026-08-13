@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./styles/tailwind.css";
 import "./styles/content.css";
-import "./styles/styles.css";
 
 export const metadata: Metadata = {
   title: "Kiowa Gun Club - Great Bend Kansas",
