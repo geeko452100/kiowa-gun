@@ -7,7 +7,6 @@ import Footer from "@/components/Footer";
 import EditableSection from "@/components/EditableSection";
 import AdditionalSections from "@/components/AdditionalSections";
 import EditModeBanner from "@/components/EditModeBanner";
-import "../styles/about.css";
 
 const LOCATION_QUERY = "369 SW 50 Ave, Great Bend, KS 67530";
 
@@ -26,7 +25,10 @@ export default async function AboutPage() {
   return (
     <>
       <Header active="about" />
-      <main className="container" id="main">
+      <main
+        className="container [&_ul_li]:list-none [&_ul_li]:text-[1.25rem] [&_ul_li]:font-normal [&_ul_li]:leading-[1.6]"
+        id="main"
+      >
         {admin && <EditModeBanner name={admin.name} />}
         <section id="about" className="content-section">
           <h1>About Us / Map</h1>
@@ -42,7 +44,10 @@ export default async function AboutPage() {
               Get directions
             </a>
           </p>
-          <div id="range-map" className="map-embed">
+          <div
+            id="range-map"
+            className="aspect-video w-full overflow-hidden rounded-md border border-border"
+          >
             <iframe
               src={`https://www.google.com/maps?q=${encodedQuery}&output=embed`}
               width="100%"
