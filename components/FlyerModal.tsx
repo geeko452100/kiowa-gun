@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminFetch } from "@/components/admin/adminFetch";
 import { useConfirm } from "@/components/admin/useConfirm";
-import "@/app/styles/editable-image.css";
 
 export default function FlyerModal({
   src,
@@ -60,25 +59,32 @@ export default function FlyerModal({
   }
 
   return (
-    <div className="editable-image-wrap flyer-wrap">
+    <div className="editable-image-wrap w-[280px] max-w-[40%] shrink-0 max-md:w-full max-md:max-w-full">
       {confirmDialog}
-      <dialog ref={dialogRef} className="flyer-dialog">
+      <dialog
+        ref={dialogRef}
+        className="relative max-h-[95vh] max-w-[95vw] border-none bg-transparent p-0 text-text [&::backdrop]:bg-[rgba(0,0,0,0.85)]"
+      >
         <button
           type="button"
-          className="flyer-close"
+          className="absolute top-[8px] right-[8px] h-[44px] w-[44px] cursor-pointer rounded-full border border-border bg-header-bg text-[1.2rem] leading-none text-white hover:bg-accent"
           aria-label="Close enlarged flyer"
           onClick={() => dialogRef.current?.close()}
         >
           &times;
         </button>
-        <img src={src} alt={alt} />
+        <img src={src} alt={alt} className="block h-auto max-h-[95vh] w-auto max-w-[95vw]" />
       </dialog>
       <button
         type="button"
-        className="flyer-trigger"
+        className="block w-full cursor-pointer rounded-[6px] border border-border bg-transparent p-0 leading-[0]"
         onClick={() => dialogRef.current?.showModal()}
       >
-        <img src={src} alt={`${alt} — click to enlarge`} className="flyer-thumb" />
+        <img
+          src={src}
+          alt={`${alt} — click to enlarge`}
+          className="block h-auto w-full max-w-[320px] rounded-[5px]"
+        />
       </button>
       {isAdmin && imageKey && (
         <>

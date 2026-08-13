@@ -111,7 +111,7 @@ export default async function Header({ active }: { active: string }) {
       </div>
 
       {isAdmin && (
-        <div className="container nav-edit-container">
+        <div className="container px-0 py-[10px]">
           <NavEditPanel
             logoHasOverride={!!images["nav-logo"]}
             heroHasOverride={!!images["nav-hero"]}

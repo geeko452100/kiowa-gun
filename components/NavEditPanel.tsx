@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { adminFetch } from "@/components/admin/adminFetch";
 import { useConfirm } from "@/components/admin/useConfirm";
 import "@/app/styles/editable-section.css";
-import "@/app/styles/editable-image.css";
 
 const SIZES: { value: string; label: string }[] = [
   { value: "compact", label: "Compact" },
@@ -92,14 +91,14 @@ export default function NavEditPanel({
 
   if (!open) {
     return (
-      <button type="button" className="editable-section-edit-btn nav-edit-trigger" onClick={() => setOpen(true)}>
+      <button type="button" className="editable-section-edit-btn mb-0" onClick={() => setOpen(true)}>
         ⇪ Edit nav
       </button>
     );
   }
 
   return (
-    <div className="editable-section-editing nav-edit-panel">
+    <div className="editable-section-editing flex flex-col gap-[24px]">
       {dialog}
 
       <div className="nav-edit-section">
@@ -168,7 +167,7 @@ export default function NavEditPanel({
           placeholder="Subtitle"
           aria-label="Subtitle"
         />
-        <label className="nav-edit-size-label">
+        <label className="flex flex-col gap-[4px] text-[0.9rem] font-semibold max-w-[260px]">
           Text size
           <select value={sizeVal} onChange={(e) => setSizeVal(e.target.value)}>
             {SIZES.map((s) => (

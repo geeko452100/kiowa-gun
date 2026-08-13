@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminFetch } from "@/components/admin/adminFetch";
 import { useConfirm } from "@/components/admin/useConfirm";
-import "@/app/styles/editable-image.css";
 
 // Wraps one of the site's handful of hard-coded images (nav logo/hero,
 // range rules photo, matches flyer) so a board member can swap it for their
