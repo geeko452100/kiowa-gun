@@ -1499,6 +1499,61 @@ html {
 }
 
 @layer base {
+  /* The original site never had explicit h1-h6/p/ul/ol rules anywhere --
+     every heading and list sitewide, including admin-authored rich-text
+     content rendered via dangerouslySetInnerHTML, relied entirely on
+     browser UA default styling. Tailwind's Preflight resets exactly that
+     styling to nothing, so restore it here (values match common browser
+     UA defaults) rather than leaving every unstyled heading/list in
+     content.css-style content and EditableSection's bare <HeadingTag>
+     rendering as plain inherited text. More specific component classes
+     added elsewhere in this file (e.g. .hero-overlay h1, .rules-summary
+     ol) still win over these by specificity. */
+  h1 {
+    @apply my-[0.67em] text-[2em] font-bold;
+  }
+
+  h2 {
+    @apply my-[0.83em] text-[1.5em] font-bold;
+  }
+
+  h3 {
+    @apply my-[1em] text-[1.17em] font-bold;
+  }
+
+  h4 {
+    @apply my-[1.33em] text-base font-bold;
+  }
+
+  h5 {
+    @apply my-[1.83em] text-[0.83em] font-bold;
+  }
+
+  h6 {
+    @apply my-[2.33em] text-[0.67em] font-bold;
+  }
+
+  p {
+    @apply my-[1em];
+  }
+
+  ul,
+  ol {
+    @apply my-[1em] pl-[40px];
+  }
+
+  ul {
+    @apply list-disc;
+  }
+
+  ol {
+    @apply list-decimal;
+  }
+
+  li {
+    @apply my-[0.25em];
+  }
+
   body {
     @apply bg-bg text-base leading-[1.6] text-text;
     font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
