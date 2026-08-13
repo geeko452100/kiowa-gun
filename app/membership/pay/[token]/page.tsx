@@ -5,7 +5,6 @@ import { membershipInvoices, members } from "@/lib/schema";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import InvoicePaymentForm from "@/components/InvoicePaymentForm";
-import "../../../styles/apply.css";
 
 export const metadata = { title: "Pay Your Dues - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";

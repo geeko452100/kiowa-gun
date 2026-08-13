@@ -2,7 +2,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ApplyWizardProvider } from "@/components/apply/ApplyWizardContext";
 import ApplyStageBanner from "@/components/apply/ApplyStageBanner";
-import "../../styles/apply.css";
 
 export const metadata = { title: "Apply for Membership - Kiowa Gun Club" };
 

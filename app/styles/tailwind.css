@@ -224,4 +224,168 @@ html {
   .membership-form input[type="file"] {
     @apply p-[8px] text-[0.9rem];
   }
+
+  /* Membership application wizard (app/membership/apply/*). */
+  .apply-test-autofill {
+    @apply fixed right-[16px] bottom-[16px] z-[1000] max-w-[260px] rounded-[8px]
+      border border-[#b45454] bg-[#3a1f1f] px-[12px] py-[10px] text-[0.75rem];
+  }
+
+  .apply-test-autofill button {
+    @apply mb-[6px] w-full;
+  }
+
+  .apply-test-autofill p {
+    @apply m-0 opacity-85;
+  }
+
+  .apply-test-autofill code {
+    @apply whitespace-nowrap;
+  }
+
+  .apply-stage-banner {
+    @apply flex flex-wrap justify-center gap-[8px] border-b border-border bg-header-bg px-[20px] py-[16px];
+  }
+
+  .apply-stage {
+    @apply flex items-center gap-[8px] opacity-50;
+  }
+
+  .apply-stage:not(:last-child)::after {
+    @apply ml-[8px] h-[1px] w-[24px] bg-border content-[''] max-[600px]:w-[12px];
+  }
+
+  .apply-stage-active,
+  .apply-stage-done {
+    @apply opacity-100;
+  }
+
+  .apply-stage-dot {
+    @apply inline-flex h-[24px] w-[24px] items-center justify-center rounded-full border border-border
+      text-[0.8rem] font-bold;
+  }
+
+  .apply-stage-active .apply-stage-dot {
+    @apply border-link bg-accent;
+  }
+
+  .apply-stage-done .apply-stage-dot {
+    @apply border-[#7bd97b] bg-[#2f6e2f] text-[#eafff0];
+  }
+
+  .apply-stage-label {
+    @apply text-[0.9rem] font-semibold whitespace-nowrap max-[600px]:hidden;
+  }
+
+  .apply-main {
+    @apply max-w-[640px] pt-[24px] pb-[48px];
+  }
+
+  .apply-step {
+    @apply flex flex-col gap-[18px];
+  }
+
+  .apply-step h1 {
+    @apply m-0 text-[1.5rem];
+  }
+
+  .apply-step-intro {
+    @apply m-0 opacity-85;
+  }
+
+  .apply-progress {
+    @apply flex flex-col gap-[6px];
+  }
+
+  .apply-progress-track {
+    @apply h-[6px] overflow-hidden rounded-[3px] bg-border;
+  }
+
+  .apply-progress-fill {
+    @apply h-full bg-accent [transition:width_0.2s_ease];
+  }
+
+  .apply-progress-label {
+    @apply m-0 text-[0.85rem] opacity-75;
+  }
+
+  .apply-form {
+    @apply flex flex-col gap-[16px];
+  }
+
+  .apply-form label {
+    @apply flex flex-col gap-[6px] text-[0.92rem] font-semibold;
+  }
+
+  .apply-checkbox {
+    @apply -mx-[8px] -my-[10px] flex-row! cursor-pointer items-center gap-[10px]! rounded-[6px]
+      p-[10px_8px] font-normal leading-[1.4];
+  }
+
+  .apply-checkbox input[type="checkbox"] {
+    @apply h-[20px] w-[20px] shrink-0 cursor-pointer;
+  }
+
+  .apply-applicant-type {
+    @apply m-0 flex flex-col gap-[10px] rounded-[6px] border border-border p-[12px];
+  }
+
+  .apply-applicant-type legend {
+    @apply px-[4px] text-[0.92rem] font-semibold;
+  }
+
+  .apply-radio {
+    @apply flex-row! cursor-pointer items-center gap-[10px]! font-normal!;
+  }
+
+  .apply-radio input[type="radio"] {
+    @apply h-[18px] w-[18px] shrink-0 cursor-pointer;
+  }
+
+  .apply-signature {
+    @apply rounded-none border-none border-b-2 border-border bg-transparent p-[4px_6px_8px]
+      text-[2.4rem] leading-[1.1] text-text [font-family:inherit] max-[600px]:text-[2rem];
+  }
+
+  .apply-signature:hover {
+    @apply border-accent;
+  }
+
+  .apply-signature:focus-visible {
+    @apply border-accent shadow-none;
+  }
+
+  .apply-rules-list {
+    @apply m-0 flex flex-col gap-[12px] pl-[22px];
+  }
+
+  .apply-rules-clause {
+    @apply opacity-90 italic;
+  }
+
+  .apply-step-note {
+    @apply m-0 text-[0.85rem] opacity-75;
+  }
+
+  .apply-error {
+    @apply m-0 rounded-[6px] border border-[rgba(255,138,128,0.35)] bg-[rgba(255,138,128,0.12)]
+      px-[12px] py-[10px] text-[0.9rem] text-[#ff8a80];
+  }
+
+  .apply-step-nav {
+    @apply mt-[8px] flex items-center justify-between;
+  }
+
+  .apply-step-back {
+    @apply bg-transparent text-text;
+  }
+
+  .apply-complete {
+    @apply items-center px-0 py-[40px] text-center;
+  }
+
+  .apply-complete-check {
+    @apply flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#2f6e2f]
+      text-[2.2rem] font-bold text-[#eafff0];
+  }
 }
