@@ -7,8 +7,6 @@ import Footer from "@/components/Footer";
 import EditableSection from "@/components/EditableSection";
 import AdditionalSections from "@/components/AdditionalSections";
 import EditModeBanner from "@/components/EditModeBanner";
-import "../styles/rules-body.css";
-import "../styles/membership.css";
 
 export const metadata = { title: "Membership Info - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";
@@ -28,10 +26,13 @@ export default async function MembershipPage() {
   return (
     <>
       <Header active="membership" />
-      <main className="container" id="main">
+      <main className="container [&_a:hover]:text-white" id="main">
         {admin && <EditModeBanner name={admin.name} />}
-        <section id="membership" className="content-section">
-          <div className="membership-layout">
+        <section
+          id="membership"
+          className="content-section [&_ul_li]:list-none"
+        >
+          <div className="overflow-auto">
             {terms && (
               <EditableSection
                 id={terms.id}
@@ -43,14 +44,17 @@ export default async function MembershipPage() {
             )}
           </div>
         </section>
-        <section id="membership-apply" className="content-section">
-          <h2>Apply for Membership</h2>
-          <p>
+        <section
+          id="membership-apply"
+          className="content-section mt-[8px] border-t border-border"
+        >
+          <h2 className="mb-[4px]">Apply for Membership</h2>
+          <p className="opacity-[0.85]">
             Ready to join? Click below to fill out your information, read and sign the Range
             Rules, upload the required documents, and pay your dues. Once you&apos;re a member,
             your annual dues renew automatically.
           </p>
-          <p>
+          <p className="opacity-[0.85]">
             <a href="/membership/apply" target="_blank" rel="noopener noreferrer" className="register-button">
               Register for Membership
             </a>

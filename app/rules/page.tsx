@@ -9,8 +9,6 @@ import EditableSection from "@/components/EditableSection";
 import EditableImage from "@/components/EditableImage";
 import AdditionalSections from "@/components/AdditionalSections";
 import EditModeBanner from "@/components/EditModeBanner";
-import "../styles/rules-body.css";
-import "../styles/rules.css";
 
 export const metadata = { title: "Range Rules - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";
@@ -30,7 +28,10 @@ export default async function RulesPage() {
       <Header active="rules" />
       <main className="container" id="main">
         {admin && <EditModeBanner name={admin.name} />}
-        <section id="rules" className="content-section safety-rules">
+        <section
+          id="rules"
+          className="content-section [&_ol]:text-[1.1rem] [&_ol]:font-bold [&_li]:mb-2.5 [&_h3]:text-text [&_h3]:mb-1"
+        >
           {intro && (
             <EditableSection
               id={intro.id}
@@ -40,14 +41,14 @@ export default async function RulesPage() {
               headingTag="h1"
             />
           )}
-          <div className="rules-body">
+          <div className="flex items-start gap-8 max-md:flex-col max-md:items-stretch">
             <EditableImage
               imageKey="rules-photo"
               src={images["rules-photo"] ?? "/assets/guns-welcome.avif"}
               hasOverride={!!images["rules-photo"]}
               alt="Firearms laid out at the Kiowa Gun Club range"
-              className="rules-image"
-              wrapClassName="rules-image-wrap"
+              className="aspect-square w-[280px] max-w-[40%] shrink-0 rounded-md object-cover max-md:order-first max-md:w-full max-md:max-w-full"
+              wrapClassName="shrink-0 w-[280px] max-w-[40%] max-md:w-full max-md:max-w-full max-md:order-first"
               isAdmin={!!admin}
             />
             {body && (

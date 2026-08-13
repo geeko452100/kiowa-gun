@@ -1,0 +1,74 @@
+/* Retained classes for admin-authored rich-text content (stored as raw HTML
+   in the database via RichTextEditor) that Tailwind's JIT scanner can't see,
+   plus a couple of shared layout classes referenced by nested selectors
+   across multiple page stylesheets. Do not remove a class from here without
+   confirming it isn't still referenced by seeded/authored bodyHtml content
+   (see migrations/*.sql) or by another stylesheet's descendant selector. */
+
+.rules-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.rules-list {
+  margin: 0 0 16px;
+  padding-left: 20px;
+}
+
+.rules-list li {
+  margin-bottom: 10px;
+}
+
+/* PDF handout embed used in the #membership section's authored content
+   (see the "terms" page_sections row). */
+#membership .pdf-download {
+  float: left;
+  width: 362px;
+  max-width: 100%;
+  margin: 0 32px 16px 0;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  #membership .pdf-download {
+    float: none;
+    margin: 0 auto 24px;
+  }
+}
+
+#membership .pdf-download-caption {
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+#membership .pdf-thumb {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  width: 362px;
+  max-width: 100%;
+}
+
+#membership .pdf-thumb-icon {
+  width: 100%;
+  max-width: 362px;
+  height: auto;
+  aspect-ratio: 362 / 469;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+
+#membership .pdf-thumb:hover .pdf-thumb-icon {
+  transform: scale(1.05);
+}
+
+#membership .pdf-thumb-label {
+  font-size: 0.85rem;
+  word-break: break-word;
+  text-align: center;
+}

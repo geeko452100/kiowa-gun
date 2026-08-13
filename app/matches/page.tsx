@@ -10,8 +10,6 @@ import MatchScheduleTable from "@/components/MatchScheduleTable";
 import EditableSection from "@/components/EditableSection";
 import AdditionalSections from "@/components/AdditionalSections";
 import EditModeBanner from "@/components/EditModeBanner";
-import "../styles/rules-body.css";
-import "../styles/matches.css";
 
 export const metadata = { title: "Matches - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";
@@ -64,11 +62,11 @@ export default async function MatchesPage() {
           {disciplineOrder.map((discipline) => {
             const rows = scheduleByDiscipline.get(discipline)!;
             const resultsList = (
-              <ul className="match-results">
+              <ul className="m-0 list-none p-0">
                 {rows.map((row) => {
                   const rowPhotos = photosByMatch.get(row.id) ?? [];
                   return (
-                    <li key={row.id}>
+                    <li key={row.id} className="border-b border-border py-[3px]">
                       {row.resultsUrl ? (
                         <a href={row.resultsUrl} target="_blank" rel="noopener">
                           {row.eventDate}
@@ -76,13 +74,18 @@ export default async function MatchesPage() {
                       ) : (
                         <>
                           {row.eventDate}{" "}
-                          <span className="results-pending">(results not yet posted)</span>
+                          <span className="text-[0.9rem] opacity-70">(results not yet posted)</span>
                         </>
                       )}
                       {rowPhotos.length > 0 && (
-                        <div className="match-gallery">
+                        <div className="mt-[8px] mb-[4px] flex flex-wrap gap-[8px]">
                           {rowPhotos.map((p) => (
-                            <img key={p.id} src={`/api/match-photos/${p.id}`} alt="" />
+                            <img
+                              key={p.id}
+                              src={`/api/match-photos/${p.id}`}
+                              alt=""
+                              className="block h-[100px] w-[140px] rounded-[6px] object-cover"
+                            />
                           ))}
                         </div>
                       )}
@@ -93,14 +96,14 @@ export default async function MatchesPage() {
             );
 
             return (
-              <div key={discipline} className="discipline-group">
+              <div key={discipline} className="mt-[32px]">
                 <h2>{discipline}</h2>
-                <div className="match-schedule-wrap">
+                <div className="overflow-x-auto">
                   <MatchScheduleTable discipline={discipline} rows={rows} isAdmin={!!admin} />
                 </div>
 
                 {discipline === "Defensive Pistol" ? (
-                  <div className="results-body">
+                  <div className="flex items-start gap-[32px] max-md:flex-col max-md:items-stretch">
                     <FlyerModal
                       src={images["matches-flyer"] ?? "/assets/pistol-flyer.avif"}
                       alt="Defensive pistol match flyer"
@@ -109,7 +112,7 @@ export default async function MatchesPage() {
                       isAdmin={!!admin}
                     />
                     <div>
-                      <h3>Results</h3>
+                      <h3 className="mb-[4px]">Results</h3>
                       {resultsList}
                     </div>
                   </div>
