@@ -728,4 +728,488 @@ html {
   .event-edit-error {
     @apply text-[0.9rem] text-[#ffb4a8];
   }
+
+  /* Admin dashboard shell (app/admin/**). Everything below is scoped under
+     .admin-shell (or is only ever rendered on /admin pages), mirroring the
+     original admin.css. A handful of classes here (.confirm-*, .event-swatch)
+     are shared with public-page components already defined above -- this
+     file only adds the bits admin.css defined that those didn't (e.g. the
+     bare, unscoped rte/link-popover/admin-inline-check selectors, since
+     RichTextEditor renders inside .editable-section-editing on public pages
+     but directly inside .admin-shell here). */
+  .admin-shell {
+    @apply bg-bg text-[17px] leading-[1.5] text-text;
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .admin-shell-centered {
+    @apply flex justify-center px-[20px] py-[40px];
+  }
+
+  .admin-card {
+    @apply flex w-full max-w-[360px] flex-col gap-[14px] rounded-[10px] border border-border
+      bg-[#0d0f0a] p-[32px];
+  }
+
+  .admin-card h1 {
+    @apply mb-[6px] text-[1.4rem];
+  }
+
+  .admin-error {
+    @apply text-base font-semibold text-[#ffada3];
+  }
+
+  /* Scoped as `.admin-shell .admin-remember` (rather than a bare
+     `.admin-remember` class) since this label also matches the generic
+     `.admin-shell label` rule below at equal specificity -- being declared
+     later in this file is what lets the row layout win. */
+  .admin-shell .admin-remember {
+    @apply flex cursor-pointer flex-row items-center gap-[8px] text-[0.95rem];
+  }
+
+  .admin-remember input[type="checkbox"] {
+    @apply h-[18px] w-[18px] min-h-0 shrink-0 p-0;
+  }
+
+  .admin-layout {
+    @apply flex min-h-[70vh] max-[720px]:flex-col;
+  }
+
+  .admin-sidebar {
+    @apply w-[220px] shrink-0 border-r border-border bg-[#0d0f0a] py-[20px]
+      max-[720px]:w-full max-[720px]:border-r-0 max-[720px]:border-b max-[720px]:border-border
+      max-[720px]:py-[16px];
+  }
+
+  .admin-sidebar h2 {
+    @apply px-[20px] pb-[16px] text-[1.15rem];
+  }
+
+  .admin-sidebar nav {
+    @apply max-[720px]:flex max-[720px]:overflow-x-auto max-[720px]:[-webkit-overflow-scrolling:touch];
+  }
+
+  .admin-sidebar nav a {
+    @apply block px-[20px] py-[14px] text-[1.05rem] text-text no-underline
+      max-[720px]:px-[16px] max-[720px]:py-[10px] max-[720px]:whitespace-nowrap;
+  }
+
+  .admin-sidebar nav a:hover {
+    @apply bg-accent;
+  }
+
+  .admin-edit-site-link {
+    @apply mb-[6px] rounded-[6px] border border-dashed border-accent font-bold;
+  }
+
+  .admin-sidebar form {
+    @apply mt-[20px] px-[20px];
+  }
+
+  .admin-sidebar button {
+    @apply w-full;
+  }
+
+  .admin-main {
+    @apply max-w-[900px] flex-1 p-[32px] max-[720px]:max-w-full max-[720px]:px-[16px] max-[720px]:py-[20px];
+  }
+
+  .admin-main h1 {
+    @apply mt-0;
+  }
+
+  .admin-shell label {
+    @apply flex flex-col gap-[6px] text-base;
+  }
+
+  .admin-shell input,
+  .admin-shell textarea,
+  .admin-shell select {
+    @apply min-h-[44px] rounded-[6px] border border-border bg-[#1c2415] px-[14px] py-[12px]
+      text-base text-text [font-family:inherit];
+  }
+
+  .admin-shell input:focus-visible,
+  .admin-shell textarea:focus-visible,
+  .admin-shell select:focus-visible {
+    @apply outline-2 outline-offset-1 outline-accent;
+  }
+
+  .admin-password-field {
+    @apply relative flex;
+  }
+
+  .admin-password-field input {
+    @apply flex-1 pr-[60px];
+  }
+
+  /* Scoped as `.admin-shell .admin-password-toggle` (rather than a bare
+     class) since it also matches the generic `.admin-shell button`
+     catch-all below at equal specificity -- being declared later here is
+     what keeps this a transparent icon button instead of a solid block. */
+  .admin-shell .admin-password-toggle {
+    @apply absolute top-1/2 right-[2px] flex h-[44px] w-[44px] min-h-[auto] cursor-pointer
+      items-center justify-center rounded-[4px] bg-transparent p-0 text-text
+      [transform:translateY(-50%)] [transition:background-color_0.15s_ease];
+  }
+
+  .admin-shell .admin-password-toggle:hover {
+    @apply bg-accent;
+  }
+
+  /* Vertically centered via translateY(-50%), which the global button:active
+     rule's own translateY(1px) (app/styles/styles.css) would otherwise
+     clobber entirely (transform doesn't compose across cascaded rules) --
+     causing the button to jump ~16px on every press. */
+  .admin-shell .admin-password-toggle:active:not(:disabled) {
+    @apply [transform:translateY(calc(-50%+1px))];
+  }
+
+  .admin-shell .admin-password-toggle:focus-visible {
+    @apply outline-2 outline-offset-2 outline-text;
+  }
+
+  .admin-shell textarea {
+    @apply min-h-[140px] resize-y;
+  }
+
+  .rte {
+    @apply flex flex-col gap-[4px];
+  }
+
+  .rte-label {
+    @apply text-base;
+  }
+
+  .rte-toolbar {
+    @apply flex gap-[4px];
+  }
+
+  .rte-toolbar button {
+    @apply min-h-[44px] border border-border bg-[#1c2415] px-[14px] py-[8px] text-base;
+  }
+
+  .rte-toolbar button:hover {
+    @apply bg-accent;
+  }
+
+  .rte-toolbar button.active {
+    @apply border-text bg-accent;
+  }
+
+  .rte-content {
+    @apply min-h-[140px] rounded-[6px] border border-border bg-[#1c2415] px-[12px] py-[10px] text-text;
+  }
+
+  .rte-content:focus {
+    @apply outline-2 outline-offset-[-1px] outline-accent;
+  }
+
+  .rte-content ul,
+  .rte-content ol {
+    @apply pl-[24px];
+  }
+
+  .rte-content a {
+    @apply cursor-text text-[#9fd3ff] underline;
+  }
+
+  .rte-content a:not([href]) {
+    @apply opacity-85 [text-decoration-style:dashed];
+  }
+
+  .link-popover {
+    @apply absolute z-[1000] min-w-[220px] rounded-[8px] border border-border bg-[#0d0f0a]
+      px-[12px] py-[10px] shadow-[0_8px_30px_rgba(0,0,0,0.5)];
+  }
+
+  .link-popover-preview {
+    @apply flex items-center gap-[8px];
+  }
+
+  .link-popover-url {
+    @apply flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[0.9rem] text-[#9fd3ff];
+  }
+
+  .link-popover-caret {
+    @apply min-h-[auto] border border-border bg-transparent px-[8px] py-[2px] text-[0.8rem];
+  }
+
+  .link-popover-caret:hover {
+    @apply bg-accent;
+  }
+
+  .link-popover-edit label {
+    @apply flex flex-col gap-[4px] text-[0.9rem];
+  }
+
+  .link-popover-edit input {
+    @apply w-full;
+  }
+
+  .link-popover-hint {
+    @apply mt-[6px] text-[0.8rem] text-[#cbc6b8];
+  }
+
+  .admin-shell button {
+    @apply min-h-[44px] cursor-pointer rounded-[6px] border-none bg-primary px-[20px] py-[12px]
+      text-base font-semibold text-white [font-family:inherit];
+  }
+
+  .admin-shell button:hover {
+    @apply bg-accent;
+  }
+
+  .admin-shell button:focus-visible {
+    @apply outline-2 outline-offset-2 outline-[#f2f0ea];
+  }
+
+  .admin-shell button:disabled {
+    @apply cursor-not-allowed opacity-45;
+  }
+
+  .admin-shell button.danger {
+    @apply bg-[#a8291a];
+  }
+
+  .admin-table-wrap {
+    @apply mt-[12px] overflow-x-auto [-webkit-overflow-scrolling:touch] max-[720px]:overflow-x-visible;
+  }
+
+  .admin-table {
+    @apply w-full border-collapse max-[720px]:block max-[720px]:w-full;
+  }
+
+  .admin-table thead {
+    @apply max-[720px]:hidden;
+  }
+
+  .admin-table tbody {
+    @apply max-[720px]:block max-[720px]:w-full;
+  }
+
+  .admin-table tr {
+    @apply max-[720px]:mb-[14px] max-[720px]:block max-[720px]:w-full max-[720px]:overflow-hidden
+      max-[720px]:rounded-[8px] max-[720px]:border max-[720px]:border-border;
+  }
+
+  .admin-table tr:last-child {
+    @apply max-[720px]:mb-0;
+  }
+
+  .admin-table th {
+    @apply border-b border-border px-[14px] py-[12px] text-left align-top text-base;
+  }
+
+  .admin-table td {
+    @apply border-b border-border px-[14px] py-[12px] text-left align-top text-base
+      max-[720px]:block max-[720px]:w-full max-[720px]:py-[10px];
+  }
+
+  .admin-table tr td:last-child {
+    @apply max-[720px]:border-b-0;
+  }
+
+  .admin-table td[data-label]::before {
+    content: attr(data-label);
+    @apply mb-[4px] block text-[0.78rem] font-semibold tracking-[0.03em] text-text uppercase opacity-60;
+  }
+
+  .admin-table input,
+  .admin-table select {
+    @apply max-[720px]:w-full;
+  }
+
+  .admin-table-row-clickable {
+    @apply cursor-pointer;
+  }
+
+  .admin-table-row-clickable:hover {
+    @apply bg-[rgba(255,255,255,0.04)];
+  }
+
+  .admin-row-actions {
+    @apply flex items-center gap-[8px] max-[720px]:flex-wrap;
+  }
+
+  .admin-form {
+    @apply mb-[28px] flex max-w-[560px] flex-col gap-[12px] rounded-[8px] border border-border p-[16px];
+  }
+
+  .event-month-group {
+    @apply mb-[24px];
+  }
+
+  .event-month-group h3 {
+    @apply mb-[8px] border-b border-border pb-[6px] text-[1.15rem] text-text;
+  }
+
+  .event-month-group ul {
+    @apply list-none;
+  }
+
+  .event-list-item {
+    @apply flex items-center gap-[12px] border-b border-border py-[10px];
+  }
+
+  .event-thumb {
+    @apply h-[44px] w-[44px] shrink-0 rounded-[6px] object-cover;
+  }
+
+  .admin-inline-check {
+    @apply flex-row items-center gap-[8px];
+  }
+
+  .admin-inline-check input {
+    @apply h-[18px] w-[18px] min-h-[auto];
+  }
+
+  .event-details {
+    @apply flex-1 text-base leading-[1.5];
+  }
+
+  .admin-saved {
+    @apply text-base font-bold text-[#8fd694];
+  }
+
+  .confirm-box input {
+    @apply mb-[20px] w-full;
+  }
+
+  .admin-note {
+    @apply text-[0.95rem] text-[#cbc6b8];
+  }
+
+  .admin-badge {
+    @apply ml-[8px] inline-block rounded-full bg-[#5c3a1e] px-[8px] py-[2px] text-[0.8rem]
+      font-semibold whitespace-nowrap text-[#ffd9a3];
+  }
+
+  .admin-link {
+    @apply text-base text-[#9fd3ff] underline;
+  }
+
+  .admin-inline-checkbox {
+    @apply mb-[4px] flex items-center gap-[6px] text-[0.9rem] whitespace-nowrap;
+  }
+
+  .status-group-picker {
+    @apply flex flex-wrap items-center gap-[18px] rounded-[8px] border border-border px-[16px] py-[12px];
+  }
+
+  .status-group-picker legend {
+    @apply px-[6px] font-semibold;
+  }
+
+  .status-group-picker label {
+    @apply flex-row items-center gap-[8px] font-normal;
+  }
+
+  .status-group-picker input {
+    @apply h-[18px] w-[18px] min-h-[auto];
+  }
+
+  .recipient-picker {
+    @apply flex flex-col gap-[10px] rounded-[8px] border border-border p-[16px];
+  }
+
+  .recipient-picker-heading {
+    @apply flex items-baseline justify-between gap-[12px] border-b border-border pb-[10px] text-[1.05rem];
+  }
+
+  .recipient-picker-controls {
+    @apply flex flex-wrap items-center justify-between gap-[12px];
+  }
+
+  .recipient-picker-select-all {
+    @apply flex-row items-center gap-[8px] font-semibold;
+  }
+
+  .recipient-picker-select-all input {
+    @apply h-[18px] w-[18px] min-h-[auto];
+  }
+
+  .recipient-picker-sort {
+    @apply flex items-center gap-[8px];
+  }
+
+  .recipient-picker-sort button {
+    @apply min-h-[44px] border border-border bg-[#1c2415] px-[12px] py-[6px] text-[0.9rem];
+  }
+
+  .recipient-picker-sort button.active {
+    @apply bg-accent;
+  }
+
+  .recipient-picker-search {
+    @apply w-full;
+  }
+
+  .recipient-picker-list {
+    @apply max-h-[260px] list-none overflow-y-auto rounded-[6px] border border-border;
+  }
+
+  .recipient-picker-list li {
+    @apply border-b border-border;
+  }
+
+  .recipient-picker-list li:last-child {
+    @apply border-b-0;
+  }
+
+  .recipient-picker-list label {
+    @apply flex-row cursor-pointer items-center gap-[10px] px-[14px] py-[10px] text-base;
+  }
+
+  .recipient-picker-list input {
+    @apply h-[18px] w-[18px] min-h-[auto];
+  }
+
+  .recipient-picker-selected {
+    @apply m-0;
+  }
+
+  .dashboard-section-heading {
+    @apply mt-[32px] mb-[12px] border-b border-border pb-[8px] text-[1.25rem];
+  }
+
+  .dashboard-stat-grid {
+    @apply mb-[16px] grid gap-[14px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))];
+  }
+
+  .dashboard-stat-card {
+    @apply rounded-[10px] border border-border bg-[#0d0f0a] p-[20px];
+  }
+
+  .dashboard-stat-card-warn {
+    @apply border-[#a8291a] bg-[#2a1410];
+  }
+
+  .dashboard-stat-number {
+    @apply text-[2.2rem] font-bold leading-[1.1];
+  }
+
+  .dashboard-stat-label {
+    @apply mt-[6px] text-base text-[#cbc6b8];
+  }
+
+  .dashboard-message-card {
+    @apply rounded-[10px] border border-border bg-[#0d0f0a] p-[20px];
+  }
+
+  .dashboard-message-title {
+    @apply mb-[6px] text-[1.1rem] font-semibold;
+  }
+
+  .dashboard-message-card .admin-note {
+    @apply m-0;
+  }
+
+  .dashboard-unlock {
+    @apply mt-[12px];
+  }
+
+  .dashboard-unlock button {
+    @apply min-h-[44px] px-[14px] py-[8px] text-[0.9rem];
+  }
 }

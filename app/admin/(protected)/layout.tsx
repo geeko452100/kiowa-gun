@@ -5,7 +5,6 @@ import { canManageBoard } from "@/lib/roles";
 import LogoutButton from "@/components/LogoutButton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import "../admin.css";
 
 export const dynamic = "force-dynamic";
 

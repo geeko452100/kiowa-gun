@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ResetPasswordForm from "./ResetPasswordForm";
-import "../admin.css";
 
 export default function AdminResetPasswordPage() {
   return (
