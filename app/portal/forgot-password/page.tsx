@@ -1,7 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ForgotPasswordForm from "./ForgotPasswordForm";
-import "../../styles/portal.css";
 
 export default function PortalForgotPasswordPage() {
   return (

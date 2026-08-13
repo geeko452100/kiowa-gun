@@ -5,7 +5,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import VerifyEmailBanner from "@/components/portal/VerifyEmailBanner";
 import PortalLogoutButton from "@/components/portal/PortalLogoutButton";
-import "../../styles/portal.css";
 
 export const metadata = { title: "Verify Your Email - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";

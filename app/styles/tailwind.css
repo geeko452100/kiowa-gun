@@ -52,4 +52,176 @@ html {
   .nav-edit-section {
     @apply flex flex-col gap-[10px];
   }
+
+  /* Auth / member-portal shared component classes (login, signup,
+     forgot/reset-password, portal dashboard, and the membership
+     application form). Kept as @layer components + @apply, mirroring the
+     original portal.css, since these selectors are reused across 7+ route
+     files and several :not()/:hover/:focus-visible combinators don't map
+     cleanly onto one-off inline utility classes. */
+  .portal-card {
+    @apply mx-auto my-[40px] flex max-w-[420px] flex-col gap-[18px] rounded-[8px] border border-border
+      bg-header-bg p-[32px] shadow-[0_6px_20px_rgba(0,0,0,0.35)]
+      max-[480px]:my-[24px] max-[480px]:p-[22px] max-[480px]:rounded-[6px];
+  }
+
+  .portal-card h1 {
+    @apply m-0 text-[1.4rem];
+  }
+
+  .portal-card label,
+  .portal-panel label,
+  .portal-field {
+    @apply flex flex-col gap-[6px] text-[0.95rem];
+  }
+
+  .portal-card input:not([type="checkbox"]):not([type="radio"]),
+  .portal-panel input:not([type="checkbox"]):not([type="radio"]) {
+    @apply box-border h-[44px] rounded-[4px] border border-border bg-bg px-[12px] py-[10px]
+      text-base text-text leading-[1.4] [transition:border-color_0.15s_ease,box-shadow_0.15s_ease];
+  }
+
+  .portal-card input:hover,
+  .portal-panel input:hover {
+    @apply border-accent;
+  }
+
+  .portal-card input:focus-visible,
+  .portal-panel input:focus-visible {
+    @apply border-accent shadow-[0_0_0_3px_rgba(76,94,58,0.4)];
+  }
+
+  .portal-note {
+    @apply text-[0.9rem] opacity-85;
+  }
+
+  .portal-error {
+    @apply text-[0.9rem] text-[#ff8a80];
+  }
+
+  .portal-banner {
+    @apply mb-[16px] rounded-[8px] bg-[#5c3a1e] px-[16px] py-[12px] font-semibold text-[#ffd9a3];
+  }
+
+  .portal-card label.portal-remember {
+    @apply cursor-pointer flex-row items-center gap-[8px] text-[0.9rem];
+  }
+
+  .portal-link {
+    @apply text-[0.9rem];
+  }
+
+  .portal-password-field {
+    @apply relative flex;
+  }
+
+  .portal-password-field input {
+    @apply flex-1 pr-[50px];
+  }
+
+  .portal-password-toggle {
+    @apply absolute top-1/2 right-[2px] flex h-[44px] w-[44px] items-center justify-center
+      rounded-[4px] border-none bg-transparent p-[8px] text-text cursor-pointer
+      [transform:translateY(-50%)] [transition:background-color_0.15s_ease];
+  }
+
+  .portal-password-toggle:hover {
+    @apply bg-accent;
+  }
+
+  /* This button is vertically centered via translateY(-50%), which the
+     global button:active rule's own translateY(1px) would otherwise
+     clobber entirely (transform doesn't compose across cascaded rules) --
+     causing the button to jump ~23px on every press instead of nudging down. */
+  .portal-password-toggle:active:not(:disabled) {
+    @apply [transform:translateY(calc(-50%+1px))];
+  }
+
+  .portal-button,
+  .portal-card button[type="submit"] {
+    @apply rounded-[4px] border border-accent bg-primary px-[18px] py-[11px] text-base font-semibold
+      text-text cursor-pointer [transition:background-color_0.15s_ease,transform_0.1s_ease];
+  }
+
+  .portal-button:hover:not(:disabled),
+  .portal-card button[type="submit"]:hover:not(:disabled) {
+    @apply bg-accent;
+  }
+
+  .portal-button:active:not(:disabled),
+  .portal-card button[type="submit"]:active:not(:disabled) {
+    @apply translate-y-[1px];
+  }
+
+  .portal-button:disabled,
+  .portal-card button[type="submit"]:disabled {
+    @apply cursor-default opacity-60;
+  }
+
+  .portal-dashboard {
+    @apply mx-auto flex max-w-[640px] flex-col gap-[32px] px-0 py-[24px]
+      max-[480px]:gap-[20px] max-[480px]:py-[16px];
+  }
+
+  .portal-panel {
+    @apply flex flex-col gap-[14px] rounded-[8px] border border-border bg-header-bg p-[22px]
+      shadow-[0_4px_14px_rgba(0,0,0,0.25)] max-[480px]:p-[16px];
+  }
+
+  .portal-panel h1,
+  .portal-panel h2 {
+    @apply m-0 mb-[4px] border-b border-border pb-[10px] text-[1.15rem];
+  }
+
+  .portal-doc-list {
+    @apply m-0 flex list-none flex-col gap-[10px] p-0;
+  }
+
+  .portal-doc-status {
+    @apply text-[0.85rem] opacity-80;
+  }
+
+  .portal-badge {
+    @apply inline-block rounded-full border border-accent px-[12px] py-[3px] text-[0.8rem] font-semibold;
+  }
+
+  .portal-saved {
+    @apply text-[0.9rem] text-[#9be89b];
+  }
+
+  .membership-form {
+    @apply flex flex-col gap-[20px];
+  }
+
+  .membership-form fieldset {
+    @apply flex flex-col gap-[12px] rounded-[6px] border border-border p-[16px] max-[480px]:p-[12px];
+  }
+
+  .membership-form legend {
+    @apply px-[6px] font-semibold;
+  }
+
+  .membership-form label {
+    @apply flex flex-col gap-[6px] text-[0.95rem];
+  }
+
+  .membership-form-checkbox {
+    @apply flex-row! items-center gap-[8px]!;
+  }
+
+  .membership-form-note {
+    @apply text-[0.9rem] opacity-85;
+  }
+
+  .membership-form-link-button {
+    @apply cursor-pointer self-start border-none bg-transparent p-0 text-[0.9rem] text-accent underline;
+  }
+
+  .membership-form-error {
+    @apply text-[0.9rem] text-[#ff8a80];
+  }
+
+  .membership-form input[type="file"] {
+    @apply p-[8px] text-[0.9rem];
+  }
 }

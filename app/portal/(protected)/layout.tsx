@@ -2,7 +2,6 @@ import { getCurrentMember } from "@/lib/memberAuth";
 import { redirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import "../../styles/portal.css";
 
 export const dynamic = "force-dynamic";
 

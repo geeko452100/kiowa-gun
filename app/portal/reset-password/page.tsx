@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ResetPasswordForm from "./ResetPasswordForm";
-import "../../styles/portal.css";
 
 export default function PortalResetPasswordPage() {
   return (

@@ -3,7 +3,6 @@ import { getCurrentMember } from "@/lib/memberAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NraUpdateForm from "@/components/portal/NraUpdateForm";
-import "../../styles/portal.css";
 
 export const metadata = { title: "NRA Membership Expired - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";
