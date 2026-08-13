@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #2c3e1f;
+  --color-link: #fff;
+  --color-bg: #17250f;
+  --color-header-bg: #0d0f0a;
+  --color-accent: #4c5e3a;
+  --color-text: #f2f0ea;
+  --color-border: #3a3d33;
+
+  --breakpoint-xs: 420px;
+  --breakpoint-desktop: 1100px;
+}
+
+html {
+  /* 112.5% of the 16px browser default = 18px base. Bumped up site-wide
+     for the club's largely older membership -- everything else on the
+     site is sized in rem, so this one change scales all text and most
+     spacing/touch-targets consistently instead of raising each value by hand. */
+  font-size: 112.5%;
+}
+
+@layer components {
+  /* Shared "board-only edit control" look, reused identically by
+     EditableImage.tsx, FlyerModal.tsx, and NavEditPanel.tsx -- kept as one
+     definition via @apply instead of repeating the utility list 3+ times. */
+  .editable-image-wrap {
+    @apply inline-flex flex-col items-start gap-[4px];
+  }
+
+  .editable-image-controls {
+    @apply flex flex-wrap gap-[14px];
+  }
+
+  .editable-image-controls button {
+    @apply inline-flex items-center gap-[8px] rounded-[8px] border-2 border-accent
+      bg-accent px-[20px] py-[10px] min-h-[44px] text-base font-bold text-white
+      shadow-[0_2px_6px_rgba(0,0,0,0.35)] [font-family:inherit] cursor-pointer
+      hover:bg-primary hover:border-primary
+      focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-2
+      focus-visible:[outline-color:#ffd166]
+      disabled:cursor-default disabled:opacity-60;
+  }
+
+  .editable-image-error {
+    @apply text-xs text-[#ffb4a8];
+  }
+
+  /* Repeated per-field grouping inside the header's "Edit nav" panel
+     (components/NavEditPanel.tsx). */
+  .nav-edit-section {
+    @apply flex flex-col gap-[10px];
+  }
+}
