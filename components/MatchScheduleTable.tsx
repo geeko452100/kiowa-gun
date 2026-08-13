@@ -65,25 +65,33 @@ export default function MatchScheduleTable({
   }
 
   return (
-    <table className="match-schedule">
+    <table className="w-full border-collapse">
       <caption className="sr-only">{discipline} match schedule</caption>
       <thead>
         <tr>
-          <th scope="col">Date</th>
-          <th scope="col">Time</th>
-          <th scope="col">Notes</th>
-          {isAdmin && <th scope="col"></th>}
+          <th scope="col" className="border-b border-border px-[12px] py-[4px] text-left">
+            Date
+          </th>
+          <th scope="col" className="border-b border-border px-[12px] py-[4px] text-left">
+            Time
+          </th>
+          <th scope="col" className="border-b border-border px-[12px] py-[4px] text-left">
+            Notes
+          </th>
+          {isAdmin && (
+            <th scope="col" className="border-b border-border px-[12px] py-[4px] text-left"></th>
+          )}
         </tr>
       </thead>
       <tbody>
         {rows.map((row) => (
           <Fragment key={row.id}>
             <tr>
-              <td>{row.eventDate}</td>
-              <td>{row.eventTime}</td>
-              <td>{row.notes ?? ""}</td>
+              <td className="border-b border-border px-[12px] py-[4px] text-left">{row.eventDate}</td>
+              <td className="border-b border-border px-[12px] py-[4px] text-left">{row.eventTime}</td>
+              <td className="border-b border-border px-[12px] py-[4px] text-left">{row.notes ?? ""}</td>
               {isAdmin && (
-                <td>
+                <td className="border-b border-border px-[12px] py-[4px] text-left">
                   <button type="button" onClick={() => startEdit(row)}>
                     Edit
                   </button>
@@ -92,9 +100,9 @@ export default function MatchScheduleTable({
             </tr>
             {editingId === row.id && form && (
               <tr>
-                <td colSpan={4}>
-                  <div className="match-edit-form">
-                    <label>
+                <td colSpan={4} className="border-b border-border px-[12px] py-[4px] text-left">
+                  <div className="my-[6px] flex flex-col gap-[12px] rounded-[8px] border border-accent bg-[rgba(76,94,58,0.08)] p-[14px]">
+                    <label className="flex flex-col gap-[6px] text-[0.92rem] font-semibold">
                       Discipline
                       <input
                         value={form.discipline}
@@ -102,7 +110,7 @@ export default function MatchScheduleTable({
                         required
                       />
                     </label>
-                    <label>
+                    <label className="flex flex-col gap-[6px] text-[0.92rem] font-semibold">
                       Date (e.g. &quot;March 14th&quot;)
                       <input
                         value={form.eventDate}
@@ -110,7 +118,7 @@ export default function MatchScheduleTable({
                         required
                       />
                     </label>
-                    <label>
+                    <label className="flex flex-col gap-[6px] text-[0.92rem] font-semibold">
                       Time (e.g. &quot;1:00pm&quot;)
                       <input
                         value={form.eventTime}
@@ -118,14 +126,14 @@ export default function MatchScheduleTable({
                         required
                       />
                     </label>
-                    <label>
+                    <label className="flex flex-col gap-[6px] text-[0.92rem] font-semibold">
                       Notes
                       <input
                         value={form.notes ?? ""}
                         onChange={(e) => setForm({ ...form, notes: e.target.value })}
                       />
                     </label>
-                    <label>
+                    <label className="flex flex-col gap-[6px] text-[0.92rem] font-semibold">
                       Results URL (e.g. a PractiScore link)
                       <input
                         type="url"
@@ -134,14 +142,24 @@ export default function MatchScheduleTable({
                         placeholder="https://practiscore.com/..."
                       />
                     </label>
-                    <div className="match-edit-actions">
-                      <button type="button" onClick={save} disabled={saving}>
+                    <div className="flex items-center gap-[10px]">
+                      <button
+                        type="button"
+                        className="min-h-[44px] cursor-pointer rounded-[6px] border border-accent bg-primary px-[18px] py-[8px] font-semibold text-text [font-family:inherit] hover:bg-accent"
+                        onClick={save}
+                        disabled={saving}
+                      >
                         {saving ? "Saving…" : "Save"}
                       </button>
-                      <button type="button" className="match-edit-cancel" onClick={cancel} disabled={saving}>
+                      <button
+                        type="button"
+                        className="min-h-[44px] cursor-pointer rounded-[6px] border border-accent bg-transparent px-[18px] py-[8px] font-semibold text-text [font-family:inherit] hover:bg-accent"
+                        onClick={cancel}
+                        disabled={saving}
+                      >
                         Cancel
                       </button>
-                      {error && <span className="match-edit-error">{error}</span>}
+                      {error && <span className="text-[0.9rem] text-[#ffb4a8]">{error}</span>}
                     </div>
                   </div>
                 </td>
