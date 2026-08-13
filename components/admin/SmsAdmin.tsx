@@ -167,7 +167,12 @@ export default function SmsAdmin() {
     if (!ok) return;
     setSending(true);
     setResult("");
-    const result = await adminFetch<{ sentCount?: number; failedCount?: number }>("/api/admin/sms", {
+    const result = await adminFetch<{
+      sentCount?: number;
+      failedCount?: number;
+      riskyWords?: string[];
+      sentBody?: string;
+    }>("/api/admin/sms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ body, memberIds: Array.from(selectedIds), mediaUrl: mediaUrl || undefined }),
@@ -177,7 +182,16 @@ export default function SmsAdmin() {
       setResult(result.error);
       return;
     }
-    setResult(`Sent to ${result.data.sentCount} contacts (${result.data.failedCount} failed).`);
+    const sentSummary = `Sent to ${result.data.sentCount} contacts (${result.data.failedCount} failed).`;
+    if (result.data.riskyWords && result.data.riskyWords.length > 0) {
+      setResult(
+        `⚠️ Your message contained words carriers often block (${result.data.riskyWords.join(", ")}), ` +
+          `so it was likely to be blocked. We sent this safer version instead: "${result.data.sentBody}". ` +
+          sentSummary
+      );
+    } else {
+      setResult(sentSummary);
+    }
     setBody("");
     removeMedia();
     void loadHistory();

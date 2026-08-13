@@ -7,6 +7,7 @@ import { getCurrentMember } from "@/lib/memberAuth";
 import { resolveSiteImages } from "@/lib/siteImages";
 import NavToggle from "./NavToggle";
 import NavEditPanel from "./NavEditPanel";
+import AccountMenu from "./AccountMenu";
 
 const NAV_LINKS = [
   { href: "/", label: "Home", slug: "home" },
@@ -37,9 +38,29 @@ export default async function Header({ active }: { active: string }) {
   // whichever one applies as a single "my account" entry point in the nav,
   // similar to Amazon/eBay's account link, so it's visible from any page.
   const account = admin
-    ? { href: "/admin/dashboard", name: admin.name, badge: "Board Member" }
+    ? {
+        href: "/admin/dashboard",
+        name: admin.name,
+        badge: "Board Member" as const,
+        links: [
+          { href: "/admin/dashboard", label: "Dashboard" },
+          { href: "/admin/members", label: "Members" },
+          { href: "/admin/payments", label: "Payments" },
+          { href: "/admin/calendar", label: "Calendar" },
+          { href: "/admin/documents", label: "Documents" },
+        ],
+      }
     : member
-      ? { href: "/portal", name: member.name, badge: "Member" }
+      ? {
+          href: "/portal",
+          name: member.name,
+          badge: "Member" as const,
+          links: [
+            { href: "/portal", label: "My Info" },
+            { href: "/portal#dues", label: "Dues Payment" },
+            { href: "/portal#password", label: "Change Password" },
+          ],
+        }
       : null;
 
   return (
@@ -49,8 +70,8 @@ export default async function Header({ active }: { active: string }) {
           <img
             src={images["nav-logo"] ?? "/assets/kiowa-gun.avif"}
             alt="Kiowa Gun Club emblem"
-            width={60}
-            height={60}
+            width={84}
+            height={84}
           />
           <span className={`site-title site-title-${size}`}>
             {title}
@@ -63,23 +84,10 @@ export default async function Header({ active }: { active: string }) {
           </span>
         </Link>
 
-        {account && (
-          <Link
-            href={account.href}
-            className="account-link"
-            aria-current={active === "dashboard" || active === "portal" ? "page" : undefined}
-          >
-            {account.name}
-            <span className={`account-badge account-badge-${account.badge === "Board Member" ? "board" : "member"}`}>
-              {account.badge}
-            </span>
-          </Link>
-        )}
-
         <div className="nav-column">
           <div className="hero-image">
             <img
-              src={images["nav-hero"] ?? "/assets/gun-club.avif"}
+              src={images["nav-hero"] ?? "/assets/kiowa-hero.avif"}
               alt="Kiowa Gun Club range"
               width={1400}
               height={190}
@@ -108,6 +116,8 @@ export default async function Header({ active }: { active: string }) {
             </ul>
           </NavToggle>
         </div>
+
+        {account && <AccountMenu account={account} active={active} />}
       </div>
 
       {isAdmin && (

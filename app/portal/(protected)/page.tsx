@@ -75,7 +75,7 @@ export default async function PortalDashboardPage({
         />
       </section>
 
-      <section className="portal-panel">
+      <section className="portal-panel" id="dues">
         <h2>Dues Payment</h2>
         <PaymentSection
           email={member.email}
@@ -86,7 +86,7 @@ export default async function PortalDashboardPage({
         />
       </section>
 
-      <section className="portal-panel">
+      <section className="portal-panel" id="password">
         <h2>Change Password</h2>
         <ChangePasswordForm />
       </section>

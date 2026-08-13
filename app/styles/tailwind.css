@@ -21,6 +21,17 @@ html {
   font-size: 112.5%;
 }
 
+/* `container` collides with Tailwind's own built-in container utility
+   (which is 100% width with no auto margins -- it does NOT center by
+   default), so it silently overrode the site's actual .container design
+   used everywhere for page-width layout. @utility redefines what the
+   `container` class generates instead of composing with it. */
+@utility container {
+  max-width: 1100px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
 @layer components {
   /* Shared "board-only edit control" look, reused identically by
      EditableImage.tsx, FlyerModal.tsx, and NavEditPanel.tsx -- kept as one
@@ -1241,12 +1252,12 @@ html {
   }
 
   .site-header .container {
-    @apply max-w-[1800px];
+    @apply max-w-none!;
   }
 
   .header-inner {
-    @apply relative flex flex-wrap items-center justify-between gap-[16px_24px] px-[20px] py-[14px]
-      max-[768px]:flex-col max-[768px]:items-start max-[420px]:px-[14px] max-[420px]:py-[12px];
+    @apply relative flex flex-wrap items-start justify-between gap-[16px_24px] px-[8px] py-[14px]
+      max-[768px]:flex-col max-[768px]:items-start max-[420px]:px-[8px] max-[420px]:py-[12px];
   }
 
   .nav-toggle {
@@ -1297,31 +1308,31 @@ html {
   }
 
   .logo {
-    @apply flex items-center gap-[12px] text-white no-underline;
+    @apply flex shrink-0 items-center gap-[14px] self-start text-white no-underline;
   }
 
   .logo img {
-    @apply h-[60px] w-auto max-[768px]:h-[44px];
+    @apply h-[84px] w-auto max-[768px]:h-[56px];
   }
 
   .site-title {
-    @apply text-[1.2rem] leading-[1.2] font-bold max-[768px]:text-[1.05rem];
+    @apply text-[1.6rem] leading-[1.2] font-bold max-[768px]:text-[1.15rem];
   }
 
   .site-title small {
-    @apply text-[0.75rem] font-normal opacity-85;
+    @apply text-[0.9rem] font-normal opacity-85;
   }
 
   .site-title-compact {
-    @apply text-[0.95rem];
+    @apply text-[1.25rem];
   }
 
   .site-title-large {
-    @apply text-[1.6rem];
+    @apply text-[2rem];
   }
 
   .site-title-large small {
-    @apply text-[0.9rem];
+    @apply text-[1.05rem];
   }
 
   .nav-column {
@@ -1334,7 +1345,7 @@ html {
 
   .hero-image img {
     @apply block h-[190px] w-full rounded-[8px] object-cover shadow-[0_4px_16px_rgba(0,0,0,0.5)]
-      [object-position:center_35%] max-[1100px]:h-[170px] max-[768px]:h-[150px] max-[768px]:rounded-[6px];
+      [object-position:center_30%] max-[1100px]:h-[170px] max-[768px]:h-[150px] max-[768px]:rounded-[6px];
   }
 
   .main-nav {
@@ -1382,8 +1393,8 @@ html {
      collapsible mobile menu -- similar to Amazon/eBay's account link, it stays
      reachable without opening the hamburger first. */
   .account-link {
-    @apply inline-flex items-center gap-[8px] rounded-[20px] bg-primary px-[16px] py-[8px]
-      text-[0.95rem] whitespace-nowrap text-white no-underline;
+    @apply flex h-[44px] w-[44px] shrink-0 items-center justify-center self-start rounded-full
+      bg-primary text-[0.9rem] font-bold text-white no-underline;
   }
 
   .account-link:hover {
@@ -1394,12 +1405,70 @@ html {
     @apply outline-2 outline-white outline-offset-2;
   }
 
-  .account-badge {
-    @apply rounded-[12px] bg-[rgba(255,255,255,0.25)] px-[8px] py-[3px] text-[0.7rem]
-      font-bold tracking-[0.03em] uppercase;
+  .account-link-board {
+    @apply bg-accent;
   }
 
-  .account-badge-board {
+  .account-link {
+    @apply cursor-pointer border-none;
+  }
+
+  /* Hoverable account dashboard, modeled on Amazon/eBay's account menu:
+     stays anchored to the badge, opens on hover or click for touch/keyboard
+     users, and closes on a short delay so moving the mouse into the panel
+     doesn't dismiss it. */
+  .account-menu {
+    @apply relative self-start;
+  }
+
+  .account-dropdown {
+    @apply invisible absolute top-[calc(100%+8px)] right-0 z-[1000] w-[240px] -translate-y-[6px] rounded-[8px]
+      border border-border bg-header-bg opacity-0 shadow-[0_8px_30px_rgba(0,0,0,0.5)]
+      [transition:opacity_0.15s_ease,transform_0.15s_ease,visibility_0.15s_ease];
+  }
+
+  .account-dropdown.is-open {
+    @apply visible translate-y-0 opacity-100;
+  }
+
+  .account-dropdown-header {
+    @apply flex flex-col gap-[2px] border-b border-border px-[16px] py-[12px];
+  }
+
+  .account-dropdown-name {
+    @apply font-bold text-text;
+  }
+
+  .account-dropdown-badge {
+    @apply text-[0.8rem] text-[#b9c2ab];
+  }
+
+  .account-dropdown-links {
+    @apply m-0 flex list-none flex-col gap-0 p-0 py-[6px];
+  }
+
+  .account-dropdown-links a {
+    @apply block px-[16px] py-[8px] text-[0.9rem] text-white no-underline;
+  }
+
+  .account-dropdown-links a:hover {
+    @apply bg-accent;
+  }
+
+  .account-dropdown-footer {
+    @apply border-t border-border px-[16px] py-[10px];
+  }
+
+  .account-dropdown-footer form {
+    @apply m-0;
+  }
+
+  .account-dropdown-footer button {
+    @apply w-full cursor-pointer rounded-[6px] border border-border bg-transparent px-[12px] py-[6px]
+      text-[0.85rem] text-white;
+  }
+
+  .account-dropdown-footer button:hover {
     @apply bg-accent;
   }
 

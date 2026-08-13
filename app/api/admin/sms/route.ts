@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { members, smsCampaigns, smsCampaignRecipients } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
 import { sendSignalWireSms, toE164 } from "@/lib/sms";
+import { buildSafeMessage, findRiskyWords } from "@/lib/contentFilter";
 
 const BATCH_SIZE = 20; // send concurrently in small batches to stay within SignalWire's rate limits
 
@@ -72,6 +73,12 @@ export async function POST(request: Request) {
   const admin = await getCurrentAdmin();
   const statusCallback = `${new URL(request.url).origin}/api/webhooks/sms-status?secret=${env.SIGNALWIRE_WEBHOOK_SECRET}`;
 
+  // Carriers silently drop or delay SMS containing SHAFT-category (Sex,
+  // Hate, Alcohol, Firearms, Tobacco) language. Rather than risk the send
+  // being blocked, swap in a sanitized version and tell the sender why.
+  const riskyWords = findRiskyWords(body);
+  const outgoingBody = riskyWords.length > 0 ? buildSafeMessage(body) : body;
+
   let sentCount = 0;
   let failedCount = 0;
   const sendResults: { member: (typeof recipients)[number]; error: string | null; sid: string | null }[] = [];
@@ -87,7 +94,7 @@ export async function POST(request: Request) {
           env.SIGNALWIRE_PROJECT_ID,
           env.SIGNALWIRE_API_TOKEN,
           env.SIGNALWIRE_FROM_NUMBER,
-          { to, text: body, mediaUrl, statusCallback }
+          { to, text: outgoingBody, mediaUrl, statusCallback }
         );
       })
     );
@@ -108,7 +115,7 @@ export async function POST(request: Request) {
   const [campaign] = await db
     .insert(smsCampaigns)
     .values({
-      body,
+      body: outgoingBody,
       sentCount,
       failedCount,
       createdBy: admin?.email ?? null,
@@ -127,5 +134,11 @@ export async function POST(request: Request) {
     }))
   );
 
-  return NextResponse.json({ ok: true, sentCount, failedCount });
+  return NextResponse.json({
+    ok: true,
+    sentCount,
+    failedCount,
+    riskyWords: riskyWords.length > 0 ? riskyWords : undefined,
+    sentBody: riskyWords.length > 0 ? outgoingBody : undefined,
+  });
 }
