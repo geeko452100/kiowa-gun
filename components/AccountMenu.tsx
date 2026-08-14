@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 import PortalLogoutButton from "./portal/PortalLogoutButton";
@@ -29,19 +29,42 @@ export default function AccountMenu({
 }) {
   const [open, setOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const isBoard = account.badge === "Board Member";
 
+  function hasHover() {
+    return typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
+
   function openNow() {
+    if (!hasHover()) return;
     if (closeTimer.current) clearTimeout(closeTimer.current);
     setOpen(true);
   }
 
   function closeSoon() {
+    if (!hasHover()) return;
     closeTimer.current = setTimeout(() => setOpen(false), 150);
   }
 
+  useEffect(() => {
+    if (!open) return;
+    function onOutsideClick(e: Event) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onOutsideClick);
+    document.addEventListener("touchstart", onOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", onOutsideClick);
+      document.removeEventListener("touchstart", onOutsideClick);
+    };
+  }, [open]);
+
   return (
     <div
+      ref={rootRef}
       className="account-menu"
       onMouseEnter={openNow}
       onMouseLeave={closeSoon}
@@ -58,7 +81,7 @@ export default function AccountMenu({
         {getInitials(account.name)}
       </button>
 
-      <div className={`account-dropdown${open ? " is-open" : ""}`} onClick={() => setOpen(false)}>
+      <div className={`account-dropdown${open ? " is-open" : ""}`}>
         <div className="account-dropdown-header">
           <span className="account-dropdown-name">{account.name}</span>
           <span className="account-dropdown-badge">{account.badge}</span>
@@ -67,12 +90,16 @@ export default function AccountMenu({
         <ul className="account-dropdown-links">
           {account.links.map((link) => (
             <li key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
+              <Link href={link.href} onClick={() => setOpen(false)}>
+                {link.label}
+              </Link>
             </li>
           ))}
         </ul>
 
-        <div className="account-dropdown-footer">{isBoard ? <LogoutButton /> : <PortalLogoutButton />}</div>
+        <div className="account-dropdown-footer" onClick={() => setOpen(false)}>
+          {isBoard ? <LogoutButton /> : <PortalLogoutButton />}
+        </div>
       </div>
     </div>
   );

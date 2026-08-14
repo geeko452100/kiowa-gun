@@ -28,7 +28,7 @@ const PUBLIC_PORTAL_PATHS = new Set([
   "/api/portal/verify-email",
 ]);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAdminRoute = pathname.startsWith("/admin") && !PUBLIC_ADMIN_PATHS.has(pathname);
   const isAdminApi = pathname.startsWith("/api/admin") && !PUBLIC_ADMIN_PATHS.has(pathname);

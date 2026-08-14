@@ -5,7 +5,7 @@ import { members, memberEmailVerificationTokens } from "@/lib/schema";
 
 // Public by design (that's the point of an emailed link -- it may be opened
 // on a different device/browser than the one that's logged in) -- add to
-// middleware.ts's PUBLIC_PORTAL_PATHS accordingly.
+// proxy.ts's PUBLIC_PORTAL_PATHS accordingly.
 export async function GET(request: Request) {
   const token = new URL(request.url).searchParams.get("token");
   const origin = new URL(request.url).origin;

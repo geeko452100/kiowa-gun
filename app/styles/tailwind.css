@@ -249,11 +249,11 @@ html {
   }
 
   .file-field-button {
-    @apply px-[14px] py-[8px] text-[0.9rem];
+    @apply shrink-0 px-[14px] py-[8px] text-[0.9rem];
   }
 
   .file-field-name {
-    @apply text-[0.9rem] opacity-85;
+    @apply min-w-0 max-w-full truncate text-[0.9rem] opacity-85;
   }
 
   .file-field-input {
@@ -1336,7 +1336,7 @@ html {
   }
 
   .logo img {
-    @apply h-[84px] w-auto max-[768px]:h-[56px];
+    @apply h-[68px] w-auto max-[768px]:h-[56px];
   }
 
   .site-title {
@@ -1391,9 +1391,9 @@ html {
   }
 
   .main-nav a {
-    @apply inline-block rounded-[20px] px-[18px] py-[12px] text-[0.95rem] text-white no-underline
-      max-[1100px]:px-[14px] max-[1100px]:py-[10px]
-      max-[768px]:w-full max-[768px]:rounded-none max-[768px]:px-[14px] max-[768px]:py-[12px];
+    @apply inline-block rounded-[20px] px-[8px] py-[8px] text-[0.9rem] text-white no-underline
+      max-[1100px]:px-[6px] max-[1100px]:py-[6px]
+      max-[768px]:w-full max-[768px]:rounded-none max-[768px]:px-[14px] max-[768px]:py-[12px] max-[768px]:text-[0.95rem];
   }
 
   .main-nav a:hover {
@@ -1448,7 +1448,8 @@ html {
   .account-dropdown {
     @apply invisible absolute top-[calc(100%+8px)] right-0 z-[1000] w-[240px] -translate-y-[6px] rounded-[8px]
       border border-border bg-header-bg opacity-0 shadow-[0_8px_30px_rgba(0,0,0,0.5)]
-      [transition:opacity_0.15s_ease,transform_0.15s_ease,visibility_0.15s_ease];
+      [transition:opacity_0.15s_ease,transform_0.15s_ease,visibility_0.15s_ease]
+      max-[480px]:w-[calc(100vw-32px)];
   }
 
   .account-dropdown.is-open {
