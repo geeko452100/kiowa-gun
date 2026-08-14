@@ -1509,6 +1509,18 @@ html {
     @apply my-[6px];
   }
 
+  .footer-legal-links {
+    @apply my-[10px] flex flex-wrap items-center justify-center gap-x-[16px] gap-y-[4px];
+  }
+
+  .footer-legal-links a {
+    @apply text-white no-underline opacity-75;
+  }
+
+  .footer-legal-links a:hover {
+    @apply underline opacity-100;
+  }
+
   .board-login-link {
     @apply mt-[8px] inline-block rounded-[20px] border border-[rgba(255,255,255,0.5)] px-[16px] py-[8px]
       text-[0.85rem] whitespace-nowrap text-white no-underline opacity-75;
