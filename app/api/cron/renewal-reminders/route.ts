@@ -6,14 +6,22 @@ import { members, smsCampaigns } from "@/lib/schema";
 import { sendSignalWireSms, toE164 } from "@/lib/sms";
 
 // Triggered daily by a companion Cloudflare Worker's Cron Trigger (this app's
-// own Worker has no scheduled handler). Texts members whose renewal_date is
-// within 45 or 15 days, once per renewal cycle per threshold -- tracked via
+// own Worker has no scheduled handler). Texts members whose renewal_date
+// (the shared annual dues cutoff every member is due by -- see
+// lib/renewalCycle -- not a personal anniversary) is within 45 or 15 days,
+// once per renewal cycle per threshold -- tracked via
 // renewal_45/15_reminder_sent_for so a missed day still catches up on the
-// next run instead of silently skipping the window.
+// next run instead of silently skipping the window. Since renewal_date is
+// the same clubwide cutoff for every unpaid member, this is effectively "text
+// everyone 45 days before the cutoff, and again 15 days before."
 // Ascending order: the smallest threshold a member currently falls under is
-// the one that actually applies (a member added 10 days before renewal is
+// the one that actually applies (a member added 10 days before the cutoff is
 // "within 15 days", not "within 45 days", even though both are technically
 // true) -- and it implies every larger threshold has effectively fired too.
+// Dues are never charged automatically (see the guardrail comment atop
+// lib/nmi.ts) -- this reminder is the only nudge a member gets; paying is
+// always their own action (or, for cash/check, a board member manually
+// recording it).
 const THRESHOLDS = [
   { days: 15, field: "renewal15ReminderSentFor" as const },
   { days: 45, field: "renewal45ReminderSentFor" as const },
@@ -32,7 +40,7 @@ function messageFor(daysOut: number, renewalDate: string): string {
     year: "numeric",
     timeZone: "UTC",
   });
-  return `Kiowa Gun Club: Your annual membership renewal will be processed in ${daysOut} days (on ${formatted}). Questions? Contact the board.`;
+  return `Kiowa Gun Club: Your annual membership dues are due in ${daysOut} days (by ${formatted}). Nothing is charged automatically -- log in to the member portal to pay. Questions? Contact the board.`;
 }
 
 export async function POST(request: Request) {

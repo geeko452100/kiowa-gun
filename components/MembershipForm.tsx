@@ -202,7 +202,7 @@ export default function MembershipForm({
     setError("");
     setSubmitting(true);
     try {
-      const res = await fetch("/api/payments/subscribe", {
+      const res = await fetch("/api/payments/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, paymentToken }),
@@ -225,7 +225,8 @@ export default function MembershipForm({
       <div className="membership-form">
         <p>
           Thanks — your application has been saved. Enter your card info below to pay your first
-          year&apos;s dues and set up automatic renewal.
+          year&apos;s dues. Renewals are never billed automatically — you&apos;ll pay each year
+          yourself, and we&apos;ll remind you before it&apos;s due.
         </p>
         <CardFields
           tokenizationKey={tokenizationKey ?? ""}

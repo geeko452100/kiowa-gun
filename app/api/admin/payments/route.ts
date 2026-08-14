@@ -3,10 +3,14 @@ import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { payments, members, documents } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
+import { canViewFinancials } from "@/lib/roles";
 
 export async function GET() {
   const admin = await getCurrentAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!canViewFinancials(admin.role)) {
+    return NextResponse.json({ error: "Treasurer, President, Vice President, or Tech Admin access required" }, { status: 403 });
+  }
   const db = await getDb();
 
   const rows = await db

@@ -11,7 +11,11 @@ export default function DuesSuccessPage() {
       <main className="container" id="main">
         <section className="content-section">
           <h1>Thank You</h1>
-          <p>Your payment was received and your dues are now set to renew automatically each year.</p>
+          <p>
+            Your payment was received. Dues are never billed automatically — we&apos;ll text you a
+            reminder before next year&apos;s renewal is due, and you can pay from the member
+            portal.
+          </p>
           <p>
             <Link href="/">Return home</Link>
           </p>

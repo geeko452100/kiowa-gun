@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { members } from "@/lib/schema";
-import { createDuesSubscription, NmiApiError } from "@/lib/nmi";
+import { chargeDues, NmiApiError } from "@/lib/nmi";
+import { recordDuesPayment } from "@/lib/members";
 
-// Starts a member's recurring annual dues subscription from an NMI Collect.js
-// payment_token (see components/nmi/CardFields.tsx) -- the NMI equivalent of
-// the old Stripe Checkout redirect, except the card form is embedded on our
-// own page instead of a hosted page we send the member to.
+// Charges a member's dues as a single one-time sale from an NMI Collect.js
+// payment_token -- see the guardrail comment at the top of lib/nmi.ts. Used
+// both for a brand-new applicant's first payment (components/MembershipForm,
+// mode "apply") and for an existing member's annual renewal payment
+// (components/portal/PaymentSection) -- same "pay dues right now" action
+// either way, since nothing auto-bills. app/api/payments/invoice is the
+// token-based counterpart for a new applicant paying from their emailed
+// invoice link instead of a portal login.
 export async function POST(request: Request) {
   const { email, paymentToken } = (await request.json().catch(() => ({}))) as {
     email?: string;
@@ -35,9 +40,9 @@ export async function POST(request: Request) {
     );
   }
 
-  let result;
+  let transaction;
   try {
-    result = await createDuesSubscription(member, paymentToken);
+    transaction = await chargeDues(member, paymentToken);
   } catch (err) {
     if (err instanceof NmiApiError) {
       return NextResponse.json({ error: err.message }, { status: 402 });
@@ -45,18 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Could not reach the payment processor. Try again shortly." }, { status: 502 });
   }
 
-  await db
-    .update(members)
-    .set({
-      // customer_vault_id often comes back blank on subscription creation --
-      // don't write an empty string into a UNIQUE column (every empty-string
-      // member would collide on the 2nd signup). nmiSubscriptionId is always
-      // present and unique, so it's the reliable link.
-      nmiCustomerVaultId: result.customer_vault_id || null,
-      nmiSubscriptionId: result.id,
-      subscriptionStatus: "active",
-    })
-    .where(eq(members.id, member.id));
+  await recordDuesPayment(db, member, transaction);
 
   return NextResponse.json({ ok: true });
 }

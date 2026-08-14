@@ -1,20 +1,19 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/auth";
-import { canManageBoard } from "@/lib/roles";
+import { canManageBoard, canViewFinancials } from "@/lib/roles";
 import LogoutButton from "@/components/LogoutButton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const dynamic = "force-dynamic";
 
-const LINKS = [
+const BASE_LINKS = [
   { href: "/admin/dashboard", label: "Dashboard" },
   { href: "/admin/calendar", label: "Calendar" },
   { href: "/admin/matches", label: "Matches" },
   { href: "/admin/documents", label: "Documents" },
   { href: "/admin/members", label: "Members" },
-  { href: "/admin/payments", label: "Payments" },
   { href: "/admin/email", label: "Send Email" },
   { href: "/admin/sms", label: "Send Text" },
 ];
@@ -23,9 +22,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/admin/login");
 
-  const links = canManageBoard(admin.role)
-    ? [...LINKS, { href: "/admin/board", label: "Board Members" }]
-    : LINKS;
+  let links = canViewFinancials(admin.role)
+    ? [...BASE_LINKS, { href: "/admin/payments", label: "Payments" }]
+    : BASE_LINKS;
+  if (canManageBoard(admin.role)) {
+    links = [...links, { href: "/admin/board", label: "Board Members" }];
+  }
 
   return (
     <>

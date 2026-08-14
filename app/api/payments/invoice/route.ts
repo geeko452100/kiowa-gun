@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { members, membershipInvoices } from "@/lib/schema";
-import { createDuesSubscription, NmiApiError } from "@/lib/nmi";
-import { recomputeCanPay } from "@/lib/members";
+import { chargeDues, NmiApiError } from "@/lib/nmi";
+import { recomputeCanPay, recordDuesPayment } from "@/lib/members";
 import { sendAdminEmail } from "@/lib/email";
 
 // Pays a new applicant's first year of dues from the emailed invoice link
 // (app/membership/pay/[token]) -- the token-based counterpart to
-// app/api/payments/subscribe, which requires a portal login instead.
+// app/api/payments/pay, which requires a portal login instead.
 export async function POST(request: Request) {
   const { token, paymentToken } = (await request.json().catch(() => ({}))) as {
     token?: string;
@@ -38,9 +38,9 @@ export async function POST(request: Request) {
     );
   }
 
-  let result;
+  let transaction;
   try {
-    result = await createDuesSubscription(member, paymentToken);
+    transaction = await chargeDues(member, paymentToken);
   } catch (err) {
     if (err instanceof NmiApiError) {
       return NextResponse.json({ error: err.message }, { status: 402 });
@@ -48,16 +48,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Could not reach the payment processor. Try again shortly." }, { status: 502 });
   }
 
-  await db
-    .update(members)
-    .set({
-      nmiCustomerVaultId: result.customer_vault_id || null,
-      nmiSubscriptionId: result.id,
-      subscriptionStatus: "active",
-      status: "Member",
-    })
-    .where(eq(members.id, member.id));
-
+  await recordDuesPayment(db, member, transaction);
+  await db.update(members).set({ status: "Member" }).where(eq(members.id, member.id));
   await db.update(membershipInvoices).set({ paidAt: new Date().toISOString() }).where(eq(membershipInvoices.id, invoice.id));
   await recomputeCanPay(db, member.id);
 

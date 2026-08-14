@@ -12,7 +12,7 @@ export const adminUsers = sqliteTable("admin_users", {
   passwordHash: text("password_hash").notNull(),
   salt: text("salt").notNull(),
   name: text("name").notNull(),
-  role: text("role").notNull().default("board_member"), // "tech_admin" | "president" | "board_member"
+  role: text("role").notNull().default("board_member"), // "tech_admin" | "president" | "vice_president" | "treasurer" | "board_member"
   position: text("position"), // free-text title (Vice President, Treasurer, etc.) -- display only, grants no access
   phone: text("phone"),
   createdAt: text("created_at").notNull().default(now),
@@ -198,9 +198,13 @@ export const members = sqliteTable("members", {
   // touched on opt-out), kept as evidence of consent if it's ever disputed.
   smsOptIn: integer("sms_opt_in").notNull().default(0),
   smsOptInAt: text("sms_opt_in_at"),
-  // Set manually by a board admin, or advanced automatically by the NMI
-  // webhook (app/api/webhooks/nmi) on each successful renewal charge. Drives
-  // the automated 45- and 15-day-out renewal reminder texts.
+  // The shared annual dues cutoff (see lib/renewalCycle) this member has
+  // paid through -- not a personal rolling anniversary. Set manually by a
+  // board admin, or advanced automatically by lib/members.ts
+  // recordDuesPayment right after a one-time charge succeeds (dues are never
+  // auto-billed -- see the guardrail comment atop lib/nmi.ts). Drives the
+  // 45- and 15-day-out renewal reminder texts and the annual termination
+  // sweep, both keyed off this same cutoff.
   renewalDate: text("renewal_date"), // "YYYY-MM-DD"
   // The renewalDate value each reminder threshold has already been sent for,
   // so the daily cron job doesn't re-text the same renewal cycle.
@@ -217,10 +221,17 @@ export const members = sqliteTable("members", {
   // address directly with no proof of ownership -- this is what actually
   // confirms it, after the fact rather than gating account creation on it.
   emailVerified: integer("email_verified").notNull().default(0),
-  // Set once a member starts a dues subscription via NMI (app/api/payments/subscribe).
+  // Legacy-only: rows written before the board's no-auto-billing decision
+  // (see the guardrail comment atop lib/nmi.ts), back when a dues payment
+  // created a recurring NMI subscription and stored the card on NMI's side.
+  // Nothing writes these anymore -- app/api/payments/pay and
+  // app/api/payments/invoice do a one-time, non-vaulted charge instead. Kept
+  // around so app/api/admin/payments/cancel-legacy-subscriptions can find and
+  // cancel any subscription still auto-charging at NMI; clears both fields
+  // once cancelled.
   nmiCustomerVaultId: text("nmi_customer_vault_id").unique(),
   nmiSubscriptionId: text("nmi_subscription_id").unique(),
-  subscriptionStatus: text("subscription_status"), // e.g. "active", "past_due" -- set from NMI webhook events
+  subscriptionStatus: text("subscription_status"), // "active" once dues are paid for the current cutoff; set directly by the payment routes, not by a webhook
   // Admin-toggled once a new applicant's (status "Pending Review") background
   // check has been manually verified. Only meaningful pre-membership -- see
   // recomputeCanPay in lib/members.ts.
@@ -272,9 +283,11 @@ export const memberSessions = sqliteTable("member_sessions", {
 });
 
 // One row per successful NMI sale for member dues (first payment and every
-// renewal alike). Rows are written by the NMI webhook (app/api/webhooks/nmi,
-// event "transaction.sale.success"), not by the subscribe route, so a
-// payment only shows up here once NMI has actually confirmed it.
+// renewal alike, all one-time charges -- see the guardrail comment atop
+// lib/nmi.ts). Rows are written by lib/members.ts recordDuesPayment right
+// after app/api/payments/pay or app/api/payments/invoice gets a confirmed
+// success back from NMI -- there's no webhook step, since a one-time sale
+// has no async follow-up the way a subscription's recurring charge did.
 export const payments = sqliteTable("payments", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   memberId: integer("member_id").notNull(),
@@ -282,7 +295,7 @@ export const payments = sqliteTable("payments", {
   currency: text("currency").notNull().default("usd"),
   paymentMethodType: text("payment_method_type"), // e.g. "card", "check"
   // NMI's transaction id -- present on every sale, so it doubles as this
-  // table's idempotency key (the webhook may redeliver the same event).
+  // table's idempotency key.
   nmiTransactionId: text("nmi_transaction_id").unique(),
   paidAt: text("paid_at").notNull().default(now),
 });

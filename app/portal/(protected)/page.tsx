@@ -80,8 +80,7 @@ export default async function PortalDashboardPage({
         <PaymentSection
           email={member.email}
           tokenizationKey={env.NMI_TOKENIZATION_KEY}
-          hasSubscription={!!member.nmiCustomerVaultId}
-          subscriptionStatus={member.subscriptionStatus}
+          renewalDate={member.renewalDate}
           canPay={!!member.canPay}
         />
       </section>

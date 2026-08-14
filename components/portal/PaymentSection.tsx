@@ -4,35 +4,36 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CardFields from "@/components/nmi/CardFields";
 
-const STATUS_LABELS: Record<string, string> = {
-  active: "Active",
-  past_due: "Payment past due",
-};
+function formatDate(dateStr: string) {
+  return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
 
 export default function PaymentSection({
   email,
   tokenizationKey,
-  hasSubscription,
-  subscriptionStatus,
+  renewalDate,
   canPay,
 }: {
   email: string;
   tokenizationKey: string;
-  hasSubscription: boolean;
-  subscriptionStatus: string | null;
+  renewalDate: string | null;
   canPay: boolean;
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [showUpdateForm, setShowUpdateForm] = useState(false);
 
-  async function subscribe(paymentToken: string) {
+  async function pay(paymentToken: string) {
     setError("");
     setSaved(false);
     setSubmitting(true);
-    const res = await fetch("/api/payments/subscribe", {
+    const res = await fetch("/api/payments/pay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, paymentToken }),
@@ -44,29 +45,9 @@ export default function PaymentSection({
       return;
     }
     setSaved(true);
-    // hasSubscription/subscriptionStatus come from the server component that
-    // renders this -- refresh so it re-fetches and swaps to the "manage"
-    // view instead of showing "Pay Dues" again.
+    // renewalDate comes from the server component that renders this --
+    // refresh so it re-fetches and shows the new paid-through date.
     router.refresh();
-  }
-
-  async function updateMethod(paymentToken: string) {
-    setError("");
-    setSaved(false);
-    setSubmitting(true);
-    const res = await fetch("/api/payments/update-method", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentToken }),
-    });
-    const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-    setSubmitting(false);
-    if (!res.ok || !data.ok) {
-      setError(data.error ?? "We couldn't update your payment method. Please reach out to the club for help.");
-      return;
-    }
-    setSaved(true);
-    setShowUpdateForm(false);
   }
 
   if (!canPay) {
@@ -80,45 +61,21 @@ export default function PaymentSection({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {hasSubscription ? (
-        <>
-          <p>
-            Dues status:{" "}
-            <span className="portal-badge">
-              {(subscriptionStatus && STATUS_LABELS[subscriptionStatus]) ?? "Status unavailable"}
-            </span>
-          </p>
-          {showUpdateForm ? (
-            <CardFields
-              tokenizationKey={tokenizationKey}
-              onToken={updateMethod}
-              onError={setError}
-              submitLabel={submitting ? "Saving…" : "Save Payment Method"}
-              disabled={submitting}
-            />
-          ) : (
-            <button type="button" onClick={() => setShowUpdateForm(true)}>
-              Update Payment Method
-            </button>
-          )}
-        </>
-      ) : (
-        <>
-          <p>
-            You don&apos;t have a dues payment on file yet. Pay with a card or bank account below
-            to set up automatic renewal each year.
-          </p>
-          <CardFields
-            tokenizationKey={tokenizationKey}
-            onToken={subscribe}
-            onError={setError}
-            submitLabel={submitting ? "Processing…" : "Pay Dues"}
-            disabled={submitting}
-          />
-        </>
-      )}
+      <p>
+        {renewalDate
+          ? `Dues status: paid through ${formatDate(renewalDate)}.`
+          : "You don't have a dues payment on file yet."}{" "}
+        Nothing is billed automatically — pay below to cover your dues for the current period.
+      </p>
+      <CardFields
+        tokenizationKey={tokenizationKey}
+        onToken={pay}
+        onError={setError}
+        submitLabel={submitting ? "Processing…" : "Pay Dues"}
+        disabled={submitting}
+      />
       {error && <p className="portal-error">{error}</p>}
-      {saved && !error && <p className="portal-saved">Your payment info has been saved.</p>}
+      {saved && !error && <p className="portal-saved">Your payment has been received.</p>}
     </div>
   );
 }

@@ -253,6 +253,12 @@ export default function BoardAdmin({
             <option value="board_member">
               Board member (regular admin access)
             </option>
+            <option value="treasurer">
+              Treasurer (regular admin access, plus financial records)
+            </option>
+            <option value="vice_president">
+              Vice President (same access as President)
+            </option>
             <option value="president">
               President (can also manage board member logins)
             </option>
@@ -376,6 +382,8 @@ export default function BoardAdmin({
                         }
                       >
                         <option value="board_member">Board member</option>
+                        <option value="treasurer">Treasurer</option>
+                        <option value="vice_president">Vice President</option>
                         <option value="president">President</option>
                         {isTechAdmin && (
                           <option value="tech_admin">Tech Admin</option>

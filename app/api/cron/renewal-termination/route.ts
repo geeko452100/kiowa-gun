@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
-import { and, eq, isNull, ne, or } from "drizzle-orm";
+import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { members, documents, siteSettings, adminUsers } from "@/lib/schema";
 import { sendAdminEmail } from "@/lib/email";
 import { RENEWAL_TERMINATION_CUTOFF } from "@/lib/constants";
+import { cutoffDate } from "@/lib/renewalCycle";
 
 // Triggered nightly by the companion Cloudflare Worker's Cron Trigger
 // (kiowa-gun-cron), alongside renewal-reminders and nra-check. Once a year,
-// on/after RENEWAL_TERMINATION_CUTOFF, soft-terminates any Member who hasn't
-// paid this cycle's dues: status -> "Terminated", PII scrubbed, uploaded
-// documents deleted. `payments` rows are left untouched -- financial history
-// stays linked via memberId to the now-anonymized shell row.
+// on/after RENEWAL_TERMINATION_CUTOFF, soft-terminates any Member whose
+// renewalDate hasn't reached this year's cutoff (i.e. hasn't paid this
+// cycle's dues -- see lib/renewalCycle): status -> "Terminated", PII
+// scrubbed, uploaded documents deleted. `payments` rows are left untouched --
+// financial history stays linked via memberId to the now-anonymized shell
+// row. Dues are never auto-charged (see the guardrail comment atop
+// lib/nmi.ts), so this is the only thing that ever moves a member out of
+// "Member" for non-payment -- there's no NMI failure webhook doing it anymore.
 export async function POST(request: Request) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = request.headers.get("authorization");
@@ -35,10 +40,7 @@ export async function POST(request: Request) {
     .select({ id: members.id, name: members.name, email: members.email })
     .from(members)
     .where(
-      and(
-        eq(members.status, "Member"),
-        or(isNull(members.subscriptionStatus), ne(members.subscriptionStatus, "active"))
-      )
+      and(eq(members.status, "Member"), or(isNull(members.renewalDate), lt(members.renewalDate, cutoffDate(thisYear))))
     );
 
   for (const m of unpaid) {

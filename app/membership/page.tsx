@@ -51,8 +51,9 @@ export default async function MembershipPage() {
           <h2 className="mb-[4px]">Apply for Membership</h2>
           <p className="opacity-[0.85]">
             Ready to join? Click below to fill out your information, read and sign the Range
-            Rules, upload the required documents, and pay your dues. Once you&apos;re a member,
-            your annual dues renew automatically.
+            Rules, upload the required documents, and pay your dues. Dues are never billed
+            automatically — you&apos;ll pay each year yourself, and we&apos;ll remind you before
+            it&apos;s due.
           </p>
           <p className="opacity-[0.85]">
             <a href="/membership/apply" target="_blank" rel="noopener noreferrer" className="register-button">
