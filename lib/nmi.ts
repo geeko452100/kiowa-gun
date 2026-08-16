@@ -80,9 +80,9 @@ function splitName(name: string) {
 // emailed invoice link) so the charge-shape logic only lives in one place.
 export async function chargeDues(member: { name: string; email: string }, paymentToken: string): Promise<NmiTransaction> {
   const { firstName, lastName } = splitName(member.name);
-  return nmiRequest<NmiTransaction>("/transactions", "POST", {
-    type: "sale",
+  return nmiRequest<NmiTransaction>("/payments/sale", "POST", {
     amount: (DUES_AMOUNT_CENTS / 100).toFixed(2),
+    currency: "USD",
     payment_details: { payment_token: paymentToken },
     billing_address: { first_name: firstName, last_name: lastName, email: member.email },
   });
