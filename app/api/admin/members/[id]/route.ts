@@ -57,6 +57,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       onBoard: onBoard ? 1 : 0,
       smsOptIn: smsOptIn ? 1 : 0,
       ...(smsOptIn && !existing.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
+      // The cached carrier (lib/sms.ts) is only valid for the phone number it
+      // was looked up for -- clear it so the next send re-queries Veriphone
+      // instead of texting the old number's gateway.
+      ...((phone || null) !== existing.phone ? { carrier: null } : {}),
       ...(backgroundCheckCleared !== undefined ? { backgroundCheckCleared: backgroundCheckCleared ? 1 : 0 } : {}),
       ...(nraActive !== undefined ? { nraActive: nraActive ? 1 : 0 } : {}),
     })

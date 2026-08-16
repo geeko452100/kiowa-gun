@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { members, smsCampaigns } from "@/lib/schema";
-import { sendSignalWireSms, toE164 } from "@/lib/sms";
+import { sendGatewaySms } from "@/lib/sms";
 
 // Triggered daily by a companion Cloudflare Worker's Cron Trigger (this app's
 // own Worker has no scheduled handler). Texts members whose renewal_date
@@ -62,8 +62,6 @@ export async function POST(request: Request) {
 
   for (const m of rows) {
     if (!m.renewalDate || !m.phone) continue;
-    const to = toE164(m.phone);
-    if (!to) continue;
 
     const daysOut = daysUntil(m.renewalDate, today);
     if (daysOut < 0) continue;
@@ -73,13 +71,7 @@ export async function POST(request: Request) {
     );
     if (!due) continue;
 
-    const { error } = await sendSignalWireSms(
-      env.SIGNALWIRE_SPACE_URL,
-      env.SIGNALWIRE_PROJECT_ID,
-      env.SIGNALWIRE_API_TOKEN,
-      env.SIGNALWIRE_FROM_NUMBER,
-      { to, text: messageFor(daysOut, m.renewalDate) }
-    );
+    const { error } = await sendGatewaySms(m.id, m.phone, messageFor(daysOut, m.renewalDate));
 
     if (error) {
       failedCount += 1;

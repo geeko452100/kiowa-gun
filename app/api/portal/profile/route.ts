@@ -49,6 +49,9 @@ export async function PATCH(request: Request) {
       .set({
         name,
         phone: phone || null,
+        // See app/api/admin/members/[id]/route.ts for why a phone change
+        // clears the cached carrier.
+        ...((phone || null) !== member.phone ? { carrier: null } : {}),
         smsOptIn: smsOptIn ? 1 : 0,
         ...(smsOptIn && !member.smsOptIn ? { smsOptInAt: sql`CURRENT_TIMESTAMP` } : {}),
         address,

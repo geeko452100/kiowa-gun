@@ -198,6 +198,14 @@ export const members = sqliteTable("members", {
   // touched on opt-out), kept as evidence of consent if it's ever disputed.
   smsOptIn: integer("sms_opt_in").notNull().default(0),
   smsOptInAt: text("sms_opt_in_at"),
+  // Cached result of the Veriphone carrier lookup (lib/veriphone.ts) for this
+  // member's phone number, e.g. "Verizon Wireless" -- looked up once on first
+  // send and reused after, since texts go out via each carrier's
+  // email-to-SMS gateway (lib/sms.ts) rather than a shared SMS API, so the
+  // gateway domain depends on knowing the carrier. Cleared if the phone
+  // number changes (see app/api/admin/members) so a stale carrier can't send
+  // to the wrong gateway.
+  carrier: text("carrier"),
   // The shared annual dues cutoff (see lib/renewalCycle) this member has
   // paid through -- not a personal rolling anniversary. Set manually by a
   // board admin, or advanced automatically by lib/members.ts
@@ -311,21 +319,23 @@ export const emailCampaigns = sqliteTable("email_campaigns", {
   recipientEmail: text("recipient_email"), // set only for single-member sends; null means "all active members"
 });
 
-// One row per member a campaign was actually sent to, keyed to Postmark's
-// per-message MessageID so the webhook (app/api/webhooks/postmark) can match
-// an open/click/bounce/spam event back to the right recipient.
+// One row per member a campaign was actually sent to, keyed to Resend's
+// per-message id so the webhook (app/api/webhooks/resend) can match an
+// open/click/bounce/spam event back to the right recipient. Column is still
+// named postmark_message_id at the DB level (pre-dates the Resend switch) --
+// only the TS-side name changed, so no migration was needed.
 export const emailCampaignRecipients = sqliteTable("email_campaign_recipients", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   campaignId: integer("campaign_id").notNull(),
   memberId: integer("member_id"),
   email: text("email").notNull(),
-  postmarkMessageId: text("postmark_message_id"),
+  emailId: text("postmark_message_id"),
   sendError: text("send_error"),
   deliveredAt: text("delivered_at"),
   openedAt: text("opened_at"),
   clickedAt: text("clicked_at"),
   bouncedAt: text("bounced_at"),
-  bounceType: text("bounce_type"), // Postmark's bounce Type, e.g. "HardBounce", "SpamNotification"
+  bounceType: text("bounce_type"), // e.g. Resend's bounce subType, "MailboxFull"
   spamComplaintAt: text("spam_complaint_at"),
 });
 
@@ -356,16 +366,20 @@ export const smsCampaigns = sqliteTable("sms_campaigns", {
   mediaUrl: text("media_url"),
 });
 
-// One row per member a text campaign was actually sent to, keyed to
-// SignalWire's per-message SID so the status-callback webhook
-// (app/api/webhooks/sms-status) can match a delivery/failure event back to
-// the right recipient. Mirrors emailCampaignRecipients, minus the
+// One row per member a text campaign was actually sent to. Texts now go out
+// through each carrier's email-to-SMS gateway (lib/sms.ts) rather than
+// SignalWire, so there's no per-message SID or delivery-status webhook
+// anymore -- signalwireSid/status/deliveredAt/failedAt/errorCode stay
+// populated only on rows from before that switch. gatewayEmail is the
+// <number>@<carrier gateway> address the text was actually mailed to, kept
+// for troubleshooting a bad send. Mirrors emailCampaignRecipients, minus the
 // opens/clicks/spam-complaint fields SMS has no equivalent of.
 export const smsCampaignRecipients = sqliteTable("sms_campaign_recipients", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   campaignId: integer("campaign_id").notNull(),
   memberId: integer("member_id"),
   phone: text("phone").notNull(),
+  gatewayEmail: text("gateway_email"),
   signalwireSid: text("signalwire_sid"),
   sendError: text("send_error"),
   status: text("status"), // SignalWire's MessageStatus: queued/sending/sent/delivered/undelivered/failed

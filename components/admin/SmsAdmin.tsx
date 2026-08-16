@@ -4,7 +4,6 @@ import { Fragment, useEffect, useState } from "react";
 import RecipientPicker from "./RecipientPicker";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
-import FileField from "@/components/FileField";
 
 const MEMBER_STATUSES = ["Waiting List", "Non-Member", "Member"] as const;
 const SHOOTING_COMMITTEE = "Shooting Committee";
@@ -29,14 +28,12 @@ type Campaign = {
   createdBy: string | null;
   recipientPhone: string | null;
   mediaUrl: string | null;
-  deliveredCount: number;
-  undeliveredCount: number;
 };
 
 type CampaignRecipient = {
   id: number;
   phone: string;
-  signalwireSid: string | null;
+  gatewayEmail: string | null;
   sendError: string | null;
   status: string | null;
   deliveredAt: string | null;
@@ -64,11 +61,6 @@ export default function SmsAdmin() {
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [recipientGroups, setRecipientGroups] = useState<Set<string>>(new Set(["Member"]));
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [mediaUrl, setMediaUrl] = useState("");
-  const [mediaFileName, setMediaFileName] = useState("");
-  const [attachingMedia, setAttachingMedia] = useState(false);
-  const [mediaError, setMediaError] = useState("");
-  const [mediaFieldKey, setMediaFieldKey] = useState(0);
   const [expandedCampaignId, setExpandedCampaignId] = useState<number | null>(null);
   const [recipientDetail, setRecipientDetail] = useState<CampaignRecipient[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -122,31 +114,6 @@ export default function SmsAdmin() {
     void loadMembers(true);
   }, []);
 
-  async function attachMedia(file: File | null) {
-    setMediaFieldKey((k) => k + 1);
-    if (!file) return;
-    setMediaError("");
-    setAttachingMedia(true);
-    const formData = new FormData();
-    formData.append("image", file);
-    const result = await adminFetch<{ url: string }>("/api/admin/sms/media", {
-      method: "POST",
-      body: formData,
-    });
-    setAttachingMedia(false);
-    if (!result.ok) {
-      setMediaError(result.error);
-      return;
-    }
-    setMediaUrl(result.data.url);
-    setMediaFileName(file.name);
-  }
-
-  function removeMedia() {
-    setMediaUrl("");
-    setMediaFileName("");
-  }
-
   const withPhone = allMembers.filter((m) => m.phone && m.smsOptIn);
   const activeMembers = withPhone.filter((m) => [...recipientGroups].some((g) => memberInGroup(m, g)));
   const noPhoneCount = allMembers.filter(
@@ -188,7 +155,7 @@ export default function SmsAdmin() {
     }>("/api/admin/sms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body, memberIds: Array.from(selectedIds), mediaUrl: mediaUrl || undefined }),
+      body: JSON.stringify({ body, memberIds: Array.from(selectedIds) }),
     });
     setSending(false);
     if (!result.ok) {
@@ -206,7 +173,6 @@ export default function SmsAdmin() {
       setResult(sentSummary);
     }
     setBody("");
-    removeMedia();
     void loadHistory();
     void loadMembers(true);
   }
@@ -234,23 +200,6 @@ export default function SmsAdmin() {
           />
         </label>
         <p className="admin-note">{body.length} / 1600 characters</p>
-
-        <FileField
-          key={mediaFieldKey}
-          label="Attach a picture (optional — sends as a picture message/MMS)"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-          disabled={attachingMedia}
-          onChange={attachMedia}
-        />
-        {mediaError && <p className="admin-error">{mediaError}</p>}
-        {mediaUrl && (
-          <p className="admin-note">
-            {mediaFileName}{" "}
-            <button type="button" onClick={removeMedia}>
-              Remove
-            </button>
-          </p>
-        )}
 
         <fieldset className="status-group-picker">
           <legend>Contact groups</legend>
@@ -298,8 +247,6 @@ export default function SmsAdmin() {
             <th>To</th>
             <th>Sent at</th>
             <th>Sent / Failed</th>
-            <th>Delivered</th>
-            <th>Undelivered</th>
             <th>By</th>
             <th></th>
           </tr>
@@ -324,8 +271,6 @@ export default function SmsAdmin() {
                 <td>
                   {c.sentCount} / {c.failedCount}
                 </td>
-                <td>{c.deliveredCount}</td>
-                <td>{c.undeliveredCount}</td>
                 <td>{c.createdBy}</td>
                 <td>
                   <button type="button" onClick={(e) => { e.stopPropagation(); void deleteCampaign(c.id); }}>
@@ -335,7 +280,7 @@ export default function SmsAdmin() {
               </tr>
               {expandedCampaignId === c.id && (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={6}>
                     {loadingDetail ? (
                       <p className="admin-note">Loading…</p>
                     ) : (
@@ -343,9 +288,7 @@ export default function SmsAdmin() {
                         <thead>
                           <tr>
                             <th>Recipient</th>
-                            <th>Status</th>
-                            <th>Delivered</th>
-                            <th>Undelivered</th>
+                            <th>Sent via</th>
                             <th>Send error</th>
                           </tr>
                         </thead>
@@ -353,9 +296,7 @@ export default function SmsAdmin() {
                           {recipientDetail.map((r) => (
                             <tr key={r.id}>
                               <td>{r.phone}</td>
-                              <td>{r.status ?? "—"}</td>
-                              <td>{r.deliveredAt ?? "—"}</td>
-                              <td>{r.failedAt ? `${r.failedAt} (${r.errorCode ?? "unknown"})` : "—"}</td>
+                              <td>{r.gatewayEmail ?? "—"}</td>
                               <td>{r.sendError ?? "—"}</td>
                             </tr>
                           ))}

@@ -1,57 +1,29 @@
 import { NextResponse } from "next/server";
-import { desc, eq, inArray, sql } from "drizzle-orm";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { desc, inArray } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { members, smsCampaigns, smsCampaignRecipients } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
-import { sendSignalWireSms, toE164 } from "@/lib/sms";
+import { sendGatewaySms } from "@/lib/sms";
 import { buildSafeMessage, findRiskyWords } from "@/lib/contentFilter";
 
-const BATCH_SIZE = 20; // send concurrently in small batches to stay within SignalWire's rate limits
+const BATCH_SIZE = 20; // send concurrently in small batches so Resend isn't hit with hundreds of calls at once
 
 export async function GET() {
   const db = await getDb();
-  const rows = await db
-    .select({
-      id: smsCampaigns.id,
-      body: smsCampaigns.body,
-      sentAt: smsCampaigns.sentAt,
-      sentCount: smsCampaigns.sentCount,
-      failedCount: smsCampaigns.failedCount,
-      createdBy: smsCampaigns.createdBy,
-      recipientPhone: smsCampaigns.recipientPhone,
-      mediaUrl: smsCampaigns.mediaUrl,
-      deliveredCount: sql<number>`count(distinct case when ${smsCampaignRecipients.deliveredAt} is not null then ${smsCampaignRecipients.id} end)`,
-      undeliveredCount: sql<number>`count(distinct case when ${smsCampaignRecipients.failedAt} is not null then ${smsCampaignRecipients.id} end)`,
-    })
-    .from(smsCampaigns)
-    .leftJoin(smsCampaignRecipients, eq(smsCampaignRecipients.campaignId, smsCampaigns.id))
-    .groupBy(smsCampaigns.id)
-    .orderBy(desc(smsCampaigns.sentAt));
+  const rows = await db.select().from(smsCampaigns).orderBy(desc(smsCampaigns.sentAt));
   return NextResponse.json(rows);
 }
 
 export async function POST(request: Request) {
-  const { body, memberIds, mediaUrl } = (await request.json()) as {
+  const { body, memberIds } = (await request.json()) as {
     body: string;
     memberIds?: number[];
-    mediaUrl?: string;
   };
   if (!body) {
     return NextResponse.json({ error: "Message text is required" }, { status: 400 });
   }
   if (!memberIds || memberIds.length === 0) {
     return NextResponse.json({ error: "Select at least one recipient" }, { status: 400 });
-  }
-  // mediaUrl comes straight from client JSON and gets handed to SignalWire,
-  // which fetches whatever it points to and relays it to carriers under the
-  // club's number -- it must stay inside our own upload namespace, not an
-  // arbitrary attacker-supplied URL.
-  if (mediaUrl) {
-    const origin = new URL(request.url).origin;
-    if (!mediaUrl.startsWith(`${origin}/api/sms-media/`)) {
-      return NextResponse.json({ error: "Invalid picture reference." }, { status: 400 });
-    }
   }
 
   const db = await getDb();
@@ -69,9 +41,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { env } = await getCloudflareContext({ async: true });
   const admin = await getCurrentAdmin();
-  const statusCallback = `${new URL(request.url).origin}/api/webhooks/sms-status?secret=${env.SIGNALWIRE_WEBHOOK_SECRET}`;
 
   // Carriers silently drop or delay SMS containing SHAFT-category (Sex,
   // Hate, Alcohol, Firearms, Tobacco) language. Rather than risk the send
@@ -81,21 +51,18 @@ export async function POST(request: Request) {
 
   let sentCount = 0;
   let failedCount = 0;
-  const sendResults: { member: (typeof recipients)[number]; error: string | null; sid: string | null }[] = [];
+  const sendResults: {
+    member: (typeof recipients)[number];
+    error: string | null;
+    gatewayEmail: string | null;
+  }[] = [];
 
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const chunk = recipients.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(
       chunk.map((m) => {
-        const to = m.phone ? toE164(m.phone) : null;
-        if (!to) return Promise.resolve({ error: "No valid phone number", sid: null });
-        return sendSignalWireSms(
-          env.SIGNALWIRE_SPACE_URL,
-          env.SIGNALWIRE_PROJECT_ID,
-          env.SIGNALWIRE_API_TOKEN,
-          env.SIGNALWIRE_FROM_NUMBER,
-          { to, text: outgoingBody, mediaUrl, statusCallback }
-        );
+        if (!m.phone) return Promise.resolve({ error: "No valid phone number", gatewayEmail: null });
+        return sendGatewaySms(m.id, m.phone, outgoingBody);
       })
     );
     chunk.forEach((m, idx) => sendResults.push({ member: m, ...results[idx] }));
@@ -120,16 +87,15 @@ export async function POST(request: Request) {
       failedCount,
       createdBy: admin?.email ?? null,
       recipientPhone: isAllContacts ? null : recipients.map((r) => r.phone ?? r.name).join(", "),
-      mediaUrl: mediaUrl || null,
     })
     .returning({ id: smsCampaigns.id });
 
   await db.insert(smsCampaignRecipients).values(
-    sendResults.map(({ member, error, sid }) => ({
+    sendResults.map(({ member, error, gatewayEmail }) => ({
       campaignId: campaign.id,
       memberId: member.id,
       phone: member.phone ?? "",
-      signalwireSid: sid,
+      gatewayEmail,
       sendError: error,
     }))
   );
