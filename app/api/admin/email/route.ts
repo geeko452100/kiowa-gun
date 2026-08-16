@@ -4,11 +4,11 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { members, emailCampaigns, emailCampaignRecipients } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
-import { sendPostmarkEmail } from "@/lib/email";
+import { sendResendBatch } from "@/lib/email";
 import { buildEmailAttachments } from "@/lib/emailAttachments";
 
-const FROM = { name: "Kiowa Gun Club", email: "newsletter@prairiewebstudio.com" };
-const BATCH_SIZE = 20; // send concurrently in small batches to stay within Postmark's rate limits
+const FROM = { name: "Kiowa Gun Club", email: "newsletter@kiowa.prairiewebstudio.com" };
+const BATCH_SIZE = 100; // Resend's per-request cap for the batch send endpoint
 
 export async function GET() {
   const db = await getDb();
@@ -72,16 +72,9 @@ export async function POST(request: Request) {
 
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const chunk = recipients.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(
-      chunk.map((m) =>
-        sendPostmarkEmail(env.POSTMARK_SERVER_TOKEN, {
-          from: FROM,
-          to: m.email,
-          subject,
-          html: sendHtml,
-          attachments,
-        })
-      )
+    const results = await sendResendBatch(
+      env.RESEND_API,
+      chunk.map((m) => ({ from: FROM, to: m.email, subject, html: sendHtml, attachments }))
     );
     chunk.forEach((m, idx) => sendResults.push({ member: m, ...results[idx] }));
     for (const { error } of results) {
@@ -114,7 +107,7 @@ export async function POST(request: Request) {
       campaignId: campaign.id,
       memberId: member.id,
       email: member.email,
-      postmarkMessageId: messageId,
+      emailId: messageId,
       sendError: error,
     }))
   );

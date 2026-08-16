@@ -6,8 +6,8 @@ export const MAX_FILE_ATTACHMENTS = 5;
 
 // Raw (pre-base64) budget for the combined inline images + file attachments.
 // Base64 adds ~37%; leaving room for the HTML body and JSON overhead keeps
-// the whole request under Postmark's 10MB total-message cap.
-export const MAX_TOTAL_ATTACHMENT_BYTES = 6 * 1024 * 1024;
+// the whole request under Resend's 40MB total-message cap.
+export const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -27,7 +27,7 @@ function formatMB(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1);
 }
 
-// Resolves everything a composed email references into what Postmark needs:
+// Resolves everything a composed email references into what Resend needs:
 // composer images (uploaded to R2 as <img src="{origin}/api/email-images/{key}">
 // for a live preview while editing) become inline CID attachments, and
 // board-picked files become plain downloadable ones. Both are validated
@@ -83,7 +83,7 @@ export async function buildEmailAttachments(
     if (!object) continue;
     const content = arrayBufferToBase64(await object.arrayBuffer());
     const contentType = object.httpMetadata?.contentType ?? "image/jpeg";
-    attachments.push({ Name: key, Content: content, ContentType: contentType, ContentID: `cid:${key}` });
+    attachments.push({ filename: key, content, content_type: contentType, content_id: key });
     processedHtml = processedHtml.replace(
       new RegExp(`(["'])(?:https?:\\/\\/[^"']*)?\\/api\\/email-images\\/${escapeRegExp(key)}\\1`, "g"),
       `$1cid:${key}$1`
@@ -95,7 +95,7 @@ export async function buildEmailAttachments(
     if (!object) continue;
     const content = arrayBufferToBase64(await object.arrayBuffer());
     const contentType = object.httpMetadata?.contentType ?? "application/octet-stream";
-    attachments.push({ Name: ref.fileName, Content: content, ContentType: contentType });
+    attachments.push({ filename: ref.fileName, content, content_type: contentType });
   }
 
   return { ok: true, html: processedHtml, attachments };

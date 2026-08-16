@@ -5,7 +5,7 @@ import { members } from "@/lib/schema";
 import { toE164 } from "@/lib/sms";
 
 // SignalWire's inbound-message webhook (Twilio-LaML compatible) has no
-// built-in signature the way NMI does, so -- same pattern as the Postmark
+// built-in signature the way NMI does, so -- same pattern as the Resend
 // webhook -- the URL configured on the number in the SignalWire dashboard
 // must include this secret as a query param:
 // https://.../api/webhooks/sms?secret=<SIGNALWIRE_WEBHOOK_SECRET>.
