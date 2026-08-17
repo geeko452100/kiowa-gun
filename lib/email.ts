@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-export const FROM_NAME = "Kiowa Gun Club Admin";
-export const FROM_EMAIL = "admin@kiowa.prairiewebstudio.com";
+export const FROM_NAME = "Gavin | Prairie Web Studio";
+export const FROM_EMAIL = "ggriffith@kiowa.prairiewebstudio.com";
 
 export async function sendAdminEmail(to: string, subject: string, html: string) {
   const { env } = await getCloudflareContext({ async: true });
