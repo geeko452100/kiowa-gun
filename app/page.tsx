@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import EditableSection from "@/components/EditableSection";
 import AdditionalSections from "@/components/AdditionalSections";
 import EditModeBanner from "@/components/EditModeBanner";
+import ScrollReveal from "@/components/ScrollReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -24,50 +25,58 @@ export default async function HomePage() {
       <Header active="home" />
       <main className="container" id="main">
         {admin && <EditModeBanner name={admin.name} />}
-        <section id="welcome" className="content-section">
-          {welcome && (
-            <EditableSection
-              id={welcome.id}
-              heading={welcome.heading}
-              bodyHtml={welcome.bodyHtml}
-              isAdmin={!!admin}
-              headingTag="h1"
-            />
-          )}
-        </section>
+        <ScrollReveal>
+          <section id="welcome" className="content-section">
+            {welcome && (
+              <EditableSection
+                id={welcome.id}
+                heading={welcome.heading}
+                bodyHtml={welcome.bodyHtml}
+                isAdmin={!!admin}
+                headingTag="h1"
+              />
+            )}
+          </section>
+        </ScrollReveal>
 
-        <p className="register-cta">
-          <a href="/membership/apply" target="_blank" rel="noopener noreferrer" className="register-button">
-            Register for Membership
-          </a>
-        </p>
-
-        <section id="rules" className="content-section rules-summary">
-          <h2>Jeff Cooper&apos;s Rules of Gun Safety</h2>
-          <ol>
-            <li>RULE I: ALL GUNS ARE ALWAYS LOADED</li>
-            <li>RULE II: NEVER LET THE MUZZLE COVER ANYTHING YOU ARE NOT WILLING TO DESTROY</li>
-            <li>RULE III: KEEP YOUR FINGER OFF THE TRIGGER UNTIL YOUR SIGHTS ARE ON THE TARGET</li>
-            <li>RULE IV: BE SURE OF YOUR TARGET</li>
-          </ol>
-          <p>
-            <a href="/rules">View full range rules &rarr;</a>
+        <ScrollReveal delay={80}>
+          <p className="register-cta">
+            <a href="/membership/apply" target="_blank" rel="noopener noreferrer" className="register-button">
+              Register for Membership
+            </a>
           </p>
-        </section>
+        </ScrollReveal>
 
-        <section id="matches" className="content-section">
-          {matchesTeaser && (
-            <EditableSection
-              id={matchesTeaser.id}
-              heading={matchesTeaser.heading}
-              bodyHtml={matchesTeaser.bodyHtml}
-              isAdmin={!!admin}
-            />
-          )}
-          <p>
-            <a href="/matches">View full match schedule &rarr;</a>
-          </p>
-        </section>
+        <ScrollReveal delay={160}>
+          <section id="rules" className="content-section rules-summary">
+            <h2>Jeff Cooper&apos;s Rules of Gun Safety</h2>
+            <ol>
+              <li>RULE I: ALL GUNS ARE ALWAYS LOADED</li>
+              <li>RULE II: NEVER LET THE MUZZLE COVER ANYTHING YOU ARE NOT WILLING TO DESTROY</li>
+              <li>RULE III: KEEP YOUR FINGER OFF THE TRIGGER UNTIL YOUR SIGHTS ARE ON THE TARGET</li>
+              <li>RULE IV: BE SURE OF YOUR TARGET</li>
+            </ol>
+            <p>
+              <a href="/rules">View full range rules &rarr;</a>
+            </p>
+          </section>
+        </ScrollReveal>
+
+        <ScrollReveal delay={240}>
+          <section id="matches" className="content-section">
+            {matchesTeaser && (
+              <EditableSection
+                id={matchesTeaser.id}
+                heading={matchesTeaser.heading}
+                bodyHtml={matchesTeaser.bodyHtml}
+                isAdmin={!!admin}
+              />
+            )}
+            <p>
+              <a href="/matches">View full match schedule &rarr;</a>
+            </p>
+          </section>
+        </ScrollReveal>
 
         <AdditionalSections pageSlug="home" sections={sections} isAdmin={!!admin} />
       </main>

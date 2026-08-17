@@ -5,20 +5,11 @@ import { siteSettings } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
 import { getCurrentMember } from "@/lib/memberAuth";
 import { resolveSiteImages } from "@/lib/siteImages";
+import { NAV_LINKS } from "@/lib/navLinks";
 import NavToggle from "./NavToggle";
 import NavEditPanel from "./NavEditPanel";
 import AccountMenu from "./AccountMenu";
-
-const NAV_LINKS = [
-  { href: "/", label: "Home", slug: "home" },
-  { href: "/calendar", label: "Calendar", slug: "calendar" },
-  { href: "/about", label: "About Us / Map", slug: "about" },
-  { href: "/rules", label: "Range Rules", slug: "rules" },
-  { href: "/membership", label: "Membership Info", slug: "membership" },
-  { href: "/matches", label: "Matches", slug: "matches" },
-  { href: "/contact", label: "Contact Us", slug: "contact" },
-  { href: "/portal", label: "Member Portal", slug: "portal" },
-];
+import StickyHeader from "./StickyHeader";
 
 export default async function Header({ active }: { active: string }) {
   const db = await getDb();
@@ -64,36 +55,31 @@ export default async function Header({ active }: { active: string }) {
       : null;
 
   return (
-    <header className="site-header">
-      <div className="container header-inner">
-        <Link href="/" className="logo">
-          <img
-            src={images["nav-logo"] ?? "/assets/kiowa-gun.avif"}
-            alt="Kiowa Gun Club emblem"
-            width={84}
-            height={84}
-          />
-          <span className={`site-title site-title-${size}`}>
-            {title}
-            {subtitle && (
-              <>
-                <br />
-                <small>{subtitle}</small>
-              </>
-            )}
-          </span>
-        </Link>
-
-        <div className="nav-column">
-          <div className="hero-image">
+    <>
+      <StickyHeader>
+        <div className="container header-top">
+          <Link href="/" className="logo">
             <img
-              src={images["nav-hero"] ?? "/assets/kiowa-hero.avif"}
-              alt="Kiowa Gun Club range"
-              width={1400}
-              height={190}
+              src={images["nav-logo"] ?? "/assets/kiowa-gun.avif"}
+              alt="Kiowa Gun Club emblem"
+              width={84}
+              height={84}
             />
-          </div>
+            <span className={`site-title site-title-${size}`}>
+              {title}
+              {subtitle && (
+                <>
+                  <br />
+                  <small>{subtitle}</small>
+                </>
+              )}
+            </span>
+          </Link>
 
+          {account && <AccountMenu account={account} active={active} />}
+        </div>
+
+        <div className="container header-nav-bar-inner">
           <NavToggle>
             <ul>
               {NAV_LINKS.map((link) => (
@@ -103,34 +89,44 @@ export default async function Header({ active }: { active: string }) {
                   </Link>
                 </li>
               ))}
-              <li>
-                <a
-                  className="nra-link"
-                  href="https://membership.nra.org/"
-                  target="_blank"
-                  rel="noopener"
-                >
-                  Join the NRA
-                </a>
-              </li>
             </ul>
           </NavToggle>
         </div>
+      </StickyHeader>
 
-        {account && <AccountMenu account={account} active={active} />}
-      </div>
-
-      {isAdmin && (
-        <div className="container px-0 py-[10px]">
-          <NavEditPanel
-            logoHasOverride={!!images["nav-logo"]}
-            heroHasOverride={!!images["nav-hero"]}
-            title={title}
-            subtitle={subtitle}
-            size={size}
-          />
+      {active === "home" && (
+        <div className="header-below-sticky">
+          <div className="container hero-banner">
+            <div className="hero-image">
+              <img
+                src={images["nav-hero"] ?? "/assets/kiowa-hero.avif"}
+                alt="Kiowa Gun Club range"
+                width={1400}
+                height={190}
+              />
+            </div>
+          </div>
         </div>
       )}
-    </header>
+
+      {isAdmin && (
+        <div className="header-below-sticky">
+          <div className="container px-0 py-[10px]">
+            <NavEditPanel
+              logoHasOverride={!!images["nav-logo"]}
+              heroHasOverride={!!images["nav-hero"]}
+              title={title}
+              subtitle={subtitle}
+              size={size}
+              contactPhone={settings?.contactPhone ?? ""}
+              contactAddress={settings?.contactAddress ?? ""}
+              socialFacebook={settings?.socialFacebook ?? ""}
+              socialInstagram={settings?.socialInstagram ?? ""}
+              socialYoutube={settings?.socialYoutube ?? ""}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

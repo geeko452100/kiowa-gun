@@ -113,6 +113,13 @@ export const siteSettings = sqliteTable("site_settings", {
   // (app/api/cron/renewal-termination) -- set to the year the sweep last
   // ran so the daily cron doesn't re-run it every day after the cutoff.
   lastTerminationSweepYear: integer("last_termination_sweep_year"),
+  // Optional club contact info and social links, shown in the footer.
+  // Nullable -- a club with no Instagram just doesn't render that icon.
+  contactPhone: text("contact_phone"),
+  contactAddress: text("contact_address"),
+  socialFacebook: text("social_facebook"),
+  socialInstagram: text("social_instagram"),
+  socialYoutube: text("social_youtube"),
 });
 
 export const matches = sqliteTable("matches", {

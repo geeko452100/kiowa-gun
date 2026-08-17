@@ -23,12 +23,22 @@ export default function NavEditPanel({
   title,
   subtitle,
   size,
+  contactPhone,
+  contactAddress,
+  socialFacebook,
+  socialInstagram,
+  socialYoutube,
 }: {
   logoHasOverride: boolean;
   heroHasOverride: boolean;
   title: string;
   subtitle: string;
   size: string;
+  contactPhone: string;
+  contactAddress: string;
+  socialFacebook: string;
+  socialInstagram: string;
+  socialYoutube: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -44,6 +54,13 @@ export default function NavEditPanel({
   const [subtitleVal, setSubtitleVal] = useState(subtitle);
   const [sizeVal, setSizeVal] = useState(size);
   const [savingText, setSavingText] = useState(false);
+
+  const [phoneVal, setPhoneVal] = useState(contactPhone);
+  const [addressVal, setAddressVal] = useState(contactAddress);
+  const [facebookVal, setFacebookVal] = useState(socialFacebook);
+  const [instagramVal, setInstagramVal] = useState(socialInstagram);
+  const [youtubeVal, setYoutubeVal] = useState(socialYoutube);
+  const [savingContact, setSavingContact] = useState(false);
 
   async function uploadImage(key: "nav-logo" | "nav-hero", file: File) {
     const setUploading = key === "nav-logo" ? setUploadingLogo : setUploadingHero;
@@ -72,15 +89,47 @@ export default function NavEditPanel({
     router.refresh();
   }
 
+  // Both save buttons hit the same singleton settings row, so each sends the
+  // full field set (not just the section it edits) or the other section's
+  // values would get wiped out.
+  function settingsPayload() {
+    return {
+      navTitle: titleVal,
+      navSubtitle: subtitleVal,
+      navTitleSize: sizeVal,
+      contactPhone: phoneVal,
+      contactAddress: addressVal,
+      socialFacebook: facebookVal,
+      socialInstagram: instagramVal,
+      socialYoutube: youtubeVal,
+    };
+  }
+
   async function saveText() {
     setSavingText(true);
     setError("");
     const result = await adminFetch("/api/admin/site-settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ navTitle: titleVal, navSubtitle: subtitleVal, navTitleSize: sizeVal }),
+      body: JSON.stringify(settingsPayload()),
     });
     setSavingText(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function saveContact() {
+    setSavingContact(true);
+    setError("");
+    const result = await adminFetch("/api/admin/site-settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settingsPayload()),
+    });
+    setSavingContact(false);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -179,6 +228,50 @@ export default function NavEditPanel({
         <div className="editable-section-actions">
           <button type="button" onClick={saveText} disabled={savingText}>
             {savingText ? "Saving…" : "Save text"}
+          </button>
+        </div>
+      </div>
+
+      <div className="nav-edit-section">
+        <strong>Contact &amp; social (shown in the footer)</strong>
+        <input
+          className="editable-section-heading-input"
+          value={phoneVal}
+          onChange={(e) => setPhoneVal(e.target.value)}
+          placeholder="Phone, e.g. (620) 555-1234"
+          aria-label="Club phone number"
+        />
+        <input
+          className="editable-section-heading-input"
+          value={addressVal}
+          onChange={(e) => setAddressVal(e.target.value)}
+          placeholder="Address"
+          aria-label="Club address"
+        />
+        <input
+          className="editable-section-heading-input"
+          value={facebookVal}
+          onChange={(e) => setFacebookVal(e.target.value)}
+          placeholder="Facebook URL"
+          aria-label="Facebook URL"
+        />
+        <input
+          className="editable-section-heading-input"
+          value={instagramVal}
+          onChange={(e) => setInstagramVal(e.target.value)}
+          placeholder="Instagram URL"
+          aria-label="Instagram URL"
+        />
+        <input
+          className="editable-section-heading-input"
+          value={youtubeVal}
+          onChange={(e) => setYoutubeVal(e.target.value)}
+          placeholder="YouTube URL"
+          aria-label="YouTube URL"
+        />
+        <div className="editable-section-actions">
+          <button type="button" onClick={saveContact} disabled={savingContact}>
+            {savingContact ? "Saving…" : "Save contact info"}
           </button>
         </div>
       </div>
