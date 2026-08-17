@@ -3,7 +3,13 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { members } from "@/lib/schema";
 import { lookupCarrier } from "@/lib/veriphone";
-import { sendResendEmail, FROM_NAME, FROM_EMAIL } from "@/lib/email";
+import { sendResendEmail } from "@/lib/email";
+
+// Automated/gateway texts (admin broadcast + renewal-reminder cron) send
+// under a distinct identity from regular member email (lib/email.ts) --
+// see worker/dev-notes.md in Dispatcher-Micro-Plugin for the source of truth.
+const SMS_FROM_NAME = "Prairie Web Automation";
+const SMS_FROM_EMAIL = "host@kiowa.prairiewebstudio.com";
 
 // Members' phone numbers are free-text (e.g. "(555) 123-4567"); Veriphone and
 // the carrier gateways below require E.164. Assumes US/Canada numbers since
@@ -83,7 +89,7 @@ export async function sendGatewaySms(memberId: number, phone: string, text: stri
 
   const gatewayEmail = `${digits}@${domain}`;
   const { error } = await sendResendEmail(env.RESEND_API, {
-    from: { name: FROM_NAME, email: FROM_EMAIL },
+    from: { name: SMS_FROM_NAME, email: SMS_FROM_EMAIL },
     to: gatewayEmail,
     subject: "",
     text,

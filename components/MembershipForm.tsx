@@ -273,8 +273,9 @@ export default function MembershipForm({
         </label>
         <p className="membership-form-note">
           Texting is optional and won&apos;t affect your membership. Message and data rates may
-          apply; message frequency varies. Reply STOP to any text to stop, or uncheck this anytime.
-          We don&apos;t sell or share your phone number.
+          apply; message frequency varies. Texts are sent through your carrier&apos;s email-to-text
+          gateway, so replying STOP won&apos;t reach us &mdash; uncheck this box here or in your member
+          portal anytime to stop. We don&apos;t sell or share your phone number.
         </p>
         <label>
           Home Address

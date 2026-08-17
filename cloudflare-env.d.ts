@@ -11,12 +11,6 @@ interface __BaseEnv_CloudflareEnv {
 	NMI_API_KEY: string;
 	NMI_TOKENIZATION_KEY: string;
 	NMI_WEBHOOK_SECRET: string;
-	SIGNALWIRE_SPACE_URL: string;
-	SIGNALWIRE_PROJECT_ID: string;
-	SIGNALWIRE_API_TOKEN: string;
-	SIGNALWIRE_FROM_NUMBER: string;
-	SIGNALWIRE_TEST_NUMBER: string;
-	SIGNALWIRE_WEBHOOK_SECRET: string;
 	CRON_SECRET: string;
 	ADMIN_PROD: string;
 	ADMIN_PASS: string;
@@ -33,7 +27,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "RESEND_API" | "RESEND_WEBHOOK_SECRET" | "NMI_ENVIRONMENT" | "NMI_API_KEY" | "NMI_TOKENIZATION_KEY" | "NMI_WEBHOOK_SECRET" | "SIGNALWIRE_SPACE_URL" | "SIGNALWIRE_PROJECT_ID" | "SIGNALWIRE_API_TOKEN" | "SIGNALWIRE_FROM_NUMBER" | "SIGNALWIRE_TEST_NUMBER" | "SIGNALWIRE_WEBHOOK_SECRET" | "CRON_SECRET" | "ADMIN_PROD" | "ADMIN_PASS" | "VERIPHONE_API_KEY">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "RESEND_API" | "RESEND_WEBHOOK_SECRET" | "NMI_ENVIRONMENT" | "NMI_API_KEY" | "NMI_TOKENIZATION_KEY" | "NMI_WEBHOOK_SECRET" | "CRON_SECRET" | "ADMIN_PROD" | "ADMIN_PASS" | "VERIPHONE_API_KEY">> {}
 }
 
 // Begin runtime types

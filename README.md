@@ -12,7 +12,8 @@ code.
 - **D1** (SQLite) via **Drizzle ORM** for the database — schema in `lib/schema.ts`, migrations in
   `migrations/`
 - **R2** for uploaded PDF forms (`documents` table)
-- **Postmark** for bulk member email, **SignalWire** for bulk/automated member SMS
+- **Resend** for bulk member email; member texts go out through each carrier's
+  email-to-SMS gateway (Veriphone carrier lookup + Resend), not a dedicated SMS API
 - Session-based admin auth (email/password, PBKDF2 hashing, DB-backed sessions) — no third-party
   login provider
 
@@ -44,8 +45,8 @@ npm run db:migrate:local
 INITIAL_ADMIN_EMAIL=you@kiowagunclub.org INITIAL_ADMIN_PASSWORD='choose-a-password' \
   INITIAL_ADMIN_NAME="Your Name" node scripts/seed-admin.mjs --local
 
-# Copy .dev.vars.example -> .dev.vars and fill in a Postmark server token for local email testing,
-# plus SignalWire credentials and a from-number for local SMS testing
+# Copy .dev.vars.example -> .dev.vars and fill in a Resend API key for local
+# email/SMS-gateway testing, plus a Veriphone API key for carrier lookups
 cp .dev.vars.example .dev.vars
 
 npm run dev
@@ -58,15 +59,13 @@ Visit `http://localhost:3000` for the public site and `/admin/login` for the CMS
 ```bash
 npm run db:migrate:remote
 INITIAL_ADMIN_EMAIL=... INITIAL_ADMIN_PASSWORD=... node scripts/seed-admin.mjs   # no --local = remote
-npx wrangler secret put POSTMARK_SERVER_TOKEN
+npx wrangler secret put RESEND_API
+npx wrangler secret put RESEND_WEBHOOK_SECRET
+npx wrangler secret put VERIPHONE_API_KEY
 npx wrangler secret put NMI_ENVIRONMENT      # "sandbox" or "production"
 npx wrangler secret put NMI_API_KEY
 npx wrangler secret put NMI_TOKENIZATION_KEY
 npx wrangler secret put NMI_WEBHOOK_SECRET   # from NMI Merchant Portal > Settings > Webhooks
-npx wrangler secret put SIGNALWIRE_SPACE_URL
-npx wrangler secret put SIGNALWIRE_PROJECT_ID
-npx wrangler secret put SIGNALWIRE_API_TOKEN
-npx wrangler secret put SIGNALWIRE_FROM_NUMBER
 npx wrangler secret put CRON_SECRET   # also set as CRON_SECRET in ../kiowa-gun-cron — see below
 npm run cf:deploy
 ```
@@ -97,8 +96,10 @@ for its own setup/deploy steps.
   appears as a download link on the Membership page
 - `/admin/members` — add members one at a time or bulk-import a CSV (`name,email,phone` header);
   each member can also have a renewal date, which drives the automated renewal reminder texts below
-- `/admin/email` — compose and send to every active member via Postmark; every send is logged
-- `/admin/sms` — compose and send a text to selected members via SignalWire; every send is logged
+- `/admin/email` — compose and send to every active member via Resend; every send is logged
+- `/admin/sms` — compose and send a text to selected opted-in members via each member's carrier
+  email-to-SMS gateway (Resend, carrier resolved via Veriphone and cached on the member); every
+  send is logged
 
 ## Content notes
 
