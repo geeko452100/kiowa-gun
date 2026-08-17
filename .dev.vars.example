@@ -1,12 +1,17 @@
-POSTMARK_SERVER_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-POSTMARK_WEBHOOK_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 NMI_ENVIRONMENT=sandbox
 NMI_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 NMI_TOKENIZATION_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 NMI_WEBHOOK_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SIGNALWIRE_SPACE_URL=your-space.signalwire.com
-SIGNALWIRE_PROJECT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-SIGNALWIRE_API_TOKEN=PTxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SIGNALWIRE_FROM_NUMBER=+15555550100
-SIGNALWIRE_WEBHOOK_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 CRON_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Resend (https://resend.com) - member email (lib/email.ts) and the
+# carrier email-to-SMS gateway relay (lib/sms.ts).
+RESEND_API=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+RESEND_WEBHOOK_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Veriphone (https://veriphone.io) - looks up a member's phone carrier so
+# gateway texts (lib/sms.ts) reach the right carrier domain.
+VERIPHONE_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+ADMIN_PROD=admin@example.com
+ADMIN_PASS=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
