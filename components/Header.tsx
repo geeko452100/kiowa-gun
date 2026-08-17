@@ -119,6 +119,7 @@ export default async function Header({ active }: { active: string }) {
               subtitle={subtitle}
               size={size}
               contactPhone={settings?.contactPhone ?? ""}
+              contactEmail={settings?.contactEmail ?? ""}
               contactAddress={settings?.contactAddress ?? ""}
               socialFacebook={settings?.socialFacebook ?? ""}
               socialInstagram={settings?.socialInstagram ?? ""}

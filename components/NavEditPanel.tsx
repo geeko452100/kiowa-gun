@@ -24,6 +24,7 @@ export default function NavEditPanel({
   subtitle,
   size,
   contactPhone,
+  contactEmail,
   contactAddress,
   socialFacebook,
   socialInstagram,
@@ -35,6 +36,7 @@ export default function NavEditPanel({
   subtitle: string;
   size: string;
   contactPhone: string;
+  contactEmail: string;
   contactAddress: string;
   socialFacebook: string;
   socialInstagram: string;
@@ -56,6 +58,7 @@ export default function NavEditPanel({
   const [savingText, setSavingText] = useState(false);
 
   const [phoneVal, setPhoneVal] = useState(contactPhone);
+  const [emailVal, setEmailVal] = useState(contactEmail);
   const [addressVal, setAddressVal] = useState(contactAddress);
   const [facebookVal, setFacebookVal] = useState(socialFacebook);
   const [instagramVal, setInstagramVal] = useState(socialInstagram);
@@ -98,6 +101,7 @@ export default function NavEditPanel({
       navSubtitle: subtitleVal,
       navTitleSize: sizeVal,
       contactPhone: phoneVal,
+      contactEmail: emailVal,
       contactAddress: addressVal,
       socialFacebook: facebookVal,
       socialInstagram: instagramVal,
@@ -240,6 +244,13 @@ export default function NavEditPanel({
           onChange={(e) => setPhoneVal(e.target.value)}
           placeholder="Phone, e.g. (620) 555-1234"
           aria-label="Club phone number"
+        />
+        <input
+          className="editable-section-heading-input"
+          value={emailVal}
+          onChange={(e) => setEmailVal(e.target.value)}
+          placeholder="Email"
+          aria-label="Club email"
         />
         <input
           className="editable-section-heading-input"

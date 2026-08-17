@@ -54,7 +54,12 @@ export default async function Footer() {
     settings?.socialYoutube && { key: "youtube", href: settings.socialYoutube },
   ].filter((s): s is { key: string; href: string } => !!s);
 
-  const hasContact = !!(settings?.contactPhone || settings?.contactAddress || socials.length);
+  const hasContact = !!(
+    settings?.contactPhone ||
+    settings?.contactEmail ||
+    settings?.contactAddress ||
+    socials.length
+  );
 
   return (
     <footer className="site-footer">
@@ -90,6 +95,11 @@ export default async function Footer() {
             {settings?.contactPhone && (
               <a className="footer-contact-line" href={`tel:${settings.contactPhone.replace(/[^\d+]/g, "")}`}>
                 {settings.contactPhone}
+              </a>
+            )}
+            {settings?.contactEmail && (
+              <a className="footer-contact-line" href={`mailto:${settings.contactEmail}`}>
+                {settings.contactEmail}
               </a>
             )}
             {settings?.contactAddress && (

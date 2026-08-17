@@ -116,6 +116,7 @@ export const siteSettings = sqliteTable("site_settings", {
   // Optional club contact info and social links, shown in the footer.
   // Nullable -- a club with no Instagram just doesn't render that icon.
   contactPhone: text("contact_phone"),
+  contactEmail: text("contact_email"),
   contactAddress: text("contact_address"),
   socialFacebook: text("social_facebook"),
   socialInstagram: text("social_instagram"),
