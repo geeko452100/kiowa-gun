@@ -7,7 +7,7 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { sendResendBatch } from "@/lib/email";
 import { buildEmailAttachments } from "@/lib/emailAttachments";
 
-const FROM = { name: "Kiowa Gun Club", email: "newsletter@kiowa.prairiewebstudio.com" };
+const FROM = { name: "Kiowa Gun Club", email: "newsletter@prairiewebstudio.com" };
 const BATCH_SIZE = 100; // Resend's per-request cap for the batch send endpoint
 
 export async function GET() {

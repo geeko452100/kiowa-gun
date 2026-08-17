@@ -9,7 +9,7 @@ import { sendResendEmail } from "@/lib/email";
 // under a distinct identity from regular member email (lib/email.ts) --
 // see worker/dev-notes.md in Dispatcher-Micro-Plugin for the source of truth.
 const SMS_FROM_NAME = "Prairie Web Automation";
-const SMS_FROM_EMAIL = "host@kiowa.prairiewebstudio.com";
+const SMS_FROM_EMAIL = "kiowa@prairiewebstudio.com";
 
 // Members' phone numbers are free-text (e.g. "(555) 123-4567"); Veriphone and
 // the carrier gateways below require E.164. Assumes US/Canada numbers since
