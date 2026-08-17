@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!(image instanceof File) || image.size === 0) {
     return NextResponse.json({ error: "An image file is required" }, { status: 400 });
   }
-  const error = validateCalendarImage(image);
+  const error = await validateCalendarImage(image);
   if (error) return NextResponse.json({ error }, { status: 400 });
 
   const db = await getDb();

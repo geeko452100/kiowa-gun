@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { adminUsers, passwordResetTokens } from "@/lib/schema";
 import { generateToken } from "@/lib/auth";
 import { sendAdminEmail } from "@/lib/email";
+import { checkRateLimit, RATE_LIMITED_RESPONSE_BODY } from "@/lib/rateLimit";
 
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 const RESEND_COOLDOWN_MS = 2 * 60 * 1000; // don't re-email the same inbox more than once every 2 minutes
@@ -14,6 +15,10 @@ const GENERIC_MESSAGE = "If that email is linked to an admin account, we've sent
 // so the response must be identical whether or not the email belongs to an
 // admin — never reveal which emails have logins.
 export async function POST(request: Request) {
+  if (!(await checkRateLimit("admin-forgot-password", request))) {
+    return NextResponse.json(RATE_LIMITED_RESPONSE_BODY, { status: 429 });
+  }
+
   const { email } = (await request.json().catch(() => ({}))) as { email?: string };
   if (!email) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });

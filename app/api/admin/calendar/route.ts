@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     let imageR2Key: string | null = null;
     let imageFileName: string | null = null;
     if (image instanceof File && image.size > 0) {
-      const error = validateCalendarImage(image);
+      const error = await validateCalendarImage(image);
       if (error) return NextResponse.json({ error }, { status: 400 });
       imageR2Key = `calendar/${crypto.randomUUID()}-${image.name}`;
       await env.DOCS.put(imageR2Key, await image.arrayBuffer(), {
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     let documentR2Key: string | null = null;
     let documentFileName: string | null = null;
     if (document instanceof File && document.size > 0) {
-      const error = validateCalendarDocument(document);
+      const error = await validateCalendarDocument(document);
       if (error) return NextResponse.json({ error }, { status: 400 });
       documentR2Key = `calendar/${crypto.randomUUID()}-${document.name}`;
       await env.DOCS.put(documentR2Key, await document.arrayBuffer(), {

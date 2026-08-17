@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { adminUsers, passwordResetTokens } from "@/lib/schema";
-import { hashPassword } from "@/lib/auth";
+import { hashPassword, destroyOtherSessions } from "@/lib/auth";
 
 export async function POST(request: Request) {
   const { token, password } = (await request.json()) as { token?: string; password?: string };
@@ -33,6 +33,10 @@ export async function POST(request: Request) {
     .set({ passwordHash: hash, salt, failedLoginCount: 0, lockedUntil: null })
     .where(eq(adminUsers.id, admin.id));
   await db.delete(passwordResetTokens).where(eq(passwordResetTokens.adminUserId, admin.id));
+  // No active session at this point (this is the unauthenticated token
+  // flow) -- but if the admin's cookie was compromised, this makes sure it
+  // doesn't survive the reset.
+  await destroyOtherSessions(admin.id);
 
   return NextResponse.json({ ok: true });
 }

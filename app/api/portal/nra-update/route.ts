@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { members, documents } from "@/lib/schema";
 import { getCurrentMember } from "@/lib/memberAuth";
 import { MEMBERSHIP_ALLOWED_FILE_TYPES, MEMBERSHIP_DOC_CATEGORIES } from "@/lib/constants";
+import { hasValidFileSignature } from "@/lib/fileSignature";
 
 // Lets a member suspended for a lapsed NRA membership (app/portal/nra-expired,
 // gated by the layout redirect in app/portal/(protected)/layout.tsx)
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: "Please upload a photo of your current NRA card" }, { status: 400 });
   }
-  if (!MEMBERSHIP_ALLOWED_FILE_TYPES.includes(file.type)) {
+  if (!MEMBERSHIP_ALLOWED_FILE_TYPES.includes(file.type) || !(await hasValidFileSignature(file))) {
     return NextResponse.json({ error: "NRA card must be a PDF, JPEG, or PNG file" }, { status: 400 });
   }
 

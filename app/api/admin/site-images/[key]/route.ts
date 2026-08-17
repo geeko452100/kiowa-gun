@@ -24,7 +24,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ key:
   if (!(image instanceof File)) {
     return NextResponse.json({ error: "An image file is required" }, { status: 400 });
   }
-  const error = validateCalendarImage(image);
+  const error = await validateCalendarImage(image);
   if (error) return NextResponse.json({ error }, { status: 400 });
 
   const db = await getDb();

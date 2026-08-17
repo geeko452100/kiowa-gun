@@ -5,6 +5,7 @@ import { members } from "@/lib/schema";
 import { hashPassword } from "@/lib/auth";
 import { createMemberSession } from "@/lib/memberAuth";
 import { sendVerificationEmail } from "@/lib/portalVerification";
+import { checkRateLimit, RATE_LIMITED_RESPONSE_BODY } from "@/lib/rateLimit";
 import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 
 // Members pick their own email + password directly -- no emailed
@@ -13,6 +14,10 @@ import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 // an existing "Member"-status row (e.g. one a board admin entered manually,
 // or from an approved application) -- it never creates a new members row.
 export async function POST(request: Request) {
+  if (!(await checkRateLimit("portal-signup", request))) {
+    return NextResponse.json(RATE_LIMITED_RESPONSE_BODY, { status: 429 });
+  }
+
   const { name, email, password } = (await request.json().catch(() => ({}))) as {
     name?: string;
     email?: string;

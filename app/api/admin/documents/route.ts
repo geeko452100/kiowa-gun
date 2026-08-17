@@ -4,6 +4,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/lib/db";
 import { documents, members } from "@/lib/schema";
 import { getCurrentAdmin } from "@/lib/auth";
+import { hasValidFileSignature } from "@/lib/fileSignature";
 
 export async function GET() {
   const admin = await getCurrentAdmin();
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
   const category = String(formData.get("category") ?? "general");
   const description = String(formData.get("description") ?? "");
 
-  if (!(file instanceof File) || file.type !== "application/pdf") {
+  if (!(file instanceof File) || file.type !== "application/pdf" || !(await hasValidFileSignature(file))) {
     return NextResponse.json({ error: "A PDF file is required" }, { status: 400 });
   }
   if (!title) {

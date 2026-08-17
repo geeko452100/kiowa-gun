@@ -15,6 +15,7 @@ interface __BaseEnv_CloudflareEnv {
 	ADMIN_PROD: string;
 	ADMIN_PASS: string;
 	VERIPHONE_API_KEY: string;
+	AUTH_RATE_LIMITER: RateLimit;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {

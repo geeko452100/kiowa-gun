@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   if (!(image instanceof File)) {
     return NextResponse.json({ error: "An image file is required" }, { status: 400 });
   }
-  const error = validateCalendarImage(image);
+  const error = await validateCalendarImage(image);
   if (error) return NextResponse.json({ error }, { status: 400 });
 
   const { env } = await getCloudflareContext({ async: true });

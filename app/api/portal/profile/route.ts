@@ -5,6 +5,7 @@ import { getDb, isUniqueConstraintError } from "@/lib/db";
 import { members, documents } from "@/lib/schema";
 import { getCurrentMember } from "@/lib/memberAuth";
 import { MEMBERSHIP_ALLOWED_FILE_TYPES, MEMBERSHIP_FILE_FIELDS } from "@/lib/constants";
+import { hasValidFileSignature } from "@/lib/fileSignature";
 
 // GET intentionally omitted -- the portal dashboard (app/portal/(protected)/page.tsx)
 // is a server component that reads the member's info and documents directly
@@ -37,7 +38,7 @@ export async function PATCH(request: Request) {
   for (const { field, label } of MEMBERSHIP_FILE_FIELDS) {
     const file = formData.get(field);
     if (!(file instanceof File) || file.size === 0) continue;
-    if (!MEMBERSHIP_ALLOWED_FILE_TYPES.includes(file.type)) {
+    if (!MEMBERSHIP_ALLOWED_FILE_TYPES.includes(file.type) || !(await hasValidFileSignature(file))) {
       return NextResponse.json({ error: `${label} must be a PDF, JPEG, or PNG file` }, { status: 400 });
     }
   }

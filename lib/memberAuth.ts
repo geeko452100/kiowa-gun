@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { getDb } from "./db";
 import { members, memberSessions } from "./schema";
 import { MEMBER_SESSION_COOKIE } from "./constants";
@@ -32,6 +32,23 @@ export async function createMemberSession(memberId: number, remember = false) {
     ...(remember ? { expires: new Date(expiresAt) } : {}),
   });
   return id;
+}
+
+// Invalidates every other active session for this member -- called right
+// after a password change/reset so a stolen session cookie doesn't survive
+// it. Scoped to "other" sessions (not the current one) by the caller passing
+// currentSessionId, so a self-service password change doesn't log the
+// member themselves out. See lib/auth.ts destroyOtherSessions (admin
+// equivalent) for the same pattern.
+export async function destroyOtherMemberSessions(memberId: number, currentSessionId?: string) {
+  const db = await getDb();
+  await db
+    .delete(memberSessions)
+    .where(
+      currentSessionId
+        ? and(eq(memberSessions.memberId, memberId), ne(memberSessions.id, currentSessionId))
+        : eq(memberSessions.memberId, memberId)
+    );
 }
 
 export async function destroyMemberSession() {

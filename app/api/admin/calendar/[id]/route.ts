@@ -47,7 +47,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { env } = await getCloudflareContext({ async: true });
 
   if (image instanceof File && image.size > 0) {
-    const error = validateCalendarImage(image);
+    const error = await validateCalendarImage(image);
     if (error) return NextResponse.json({ error }, { status: 400 });
     if (existing.imageR2Key) await env.DOCS.delete(existing.imageR2Key);
     imageR2Key = `calendar/${crypto.randomUUID()}-${image.name}`;
@@ -62,7 +62,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   if (document instanceof File && document.size > 0) {
-    const error = validateCalendarDocument(document);
+    const error = await validateCalendarDocument(document);
     if (error) return NextResponse.json({ error }, { status: 400 });
     if (existing.documentR2Key) await env.DOCS.delete(existing.documentR2Key);
     documentR2Key = `calendar/${crypto.randomUUID()}-${document.name}`;

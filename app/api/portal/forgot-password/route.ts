@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { members, memberPasswordResetTokens } from "@/lib/schema";
 import { generateToken } from "@/lib/auth";
 import { sendAdminEmail } from "@/lib/email";
+import { checkRateLimit, RATE_LIMITED_RESPONSE_BODY } from "@/lib/rateLimit";
 
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 const RESEND_COOLDOWN_MS = 2 * 60 * 1000; // don't re-email the same inbox more than once every 2 minutes
@@ -14,6 +15,10 @@ const GENERIC_MESSAGE = "If that email is linked to a portal account, we've sent
 // whether or not the email belongs to a member with a portal login -- never
 // reveal which emails have accounts. Mirrors app/api/admin/forgot-password.
 export async function POST(request: Request) {
+  if (!(await checkRateLimit("portal-forgot-password", request))) {
+    return NextResponse.json(RATE_LIMITED_RESPONSE_BODY, { status: 429 });
+  }
+
   const { email } = (await request.json().catch(() => ({}))) as { email?: string };
   if (!email) {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });

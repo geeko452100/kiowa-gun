@@ -4,16 +4,25 @@ import { getDb } from "@/lib/db";
 import { adminUsers } from "@/lib/schema";
 import {
   verifyPassword,
+  hashPassword,
+  needsRehash,
   createSession,
   DUMMY_SALT,
   DUMMY_HASH,
   MAX_FAILED_LOGIN_ATTEMPTS,
   LOGIN_LOCKOUT_MS,
 } from "@/lib/auth";
+import { checkRateLimit, RATE_LIMITED_RESPONSE_BODY } from "@/lib/rateLimit";
 
 const INVALID_CREDENTIALS = NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
 
 export async function POST(request: Request) {
+  // Per-account lockout below doesn't stop credential stuffing spread across
+  // many admin accounts from one IP -- this catches that.
+  if (!(await checkRateLimit("admin-login", request))) {
+    return NextResponse.json(RATE_LIMITED_RESPONSE_BODY, { status: 429 });
+  }
+
   const { email, password, remember } = (await request.json()) as {
     email: string;
     password: string;
@@ -63,6 +72,12 @@ export async function POST(request: Request) {
       .update(adminUsers)
       .set({ failedLoginCount: 0, lockedUntil: null })
       .where(eq(adminUsers.id, admin.id));
+  }
+
+  // Transparently upgrade hashes written under an older, lower PBKDF2 cost.
+  if (needsRehash(admin.passwordHash)) {
+    const { hash, salt } = await hashPassword(password);
+    await db.update(adminUsers).set({ passwordHash: hash, salt }).where(eq(adminUsers.id, admin.id));
   }
 
   await createSession(admin.id, Boolean(remember));

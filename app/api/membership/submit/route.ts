@@ -5,6 +5,7 @@ import { getDb, isUniqueConstraintError } from "@/lib/db";
 import { members, documents } from "@/lib/schema";
 import { MEMBERSHIP_ALLOWED_FILE_TYPES, MEMBERSHIP_FILE_FIELDS } from "@/lib/constants";
 import { recomputeCanPay } from "@/lib/members";
+import { hasValidFileSignature } from "@/lib/fileSignature";
 
 const ALLOWED_FILE_TYPES = MEMBERSHIP_ALLOWED_FILE_TYPES;
 
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
       }
       continue;
     }
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+    if (!ALLOWED_FILE_TYPES.includes(file.type) || !(await hasValidFileSignature(file))) {
       return NextResponse.json({ error: `${label} must be a PDF, JPEG, or PNG file` }, { status: 400 });
     }
   }

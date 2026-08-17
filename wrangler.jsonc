@@ -26,5 +26,18 @@
 			"binding": "DOCS",
 			"bucket_name": "kiowa-gun-club-docs"
 		}
-	]
+	],
+	// Per-IP throttling for login/signup/forgot-password (see lib/rateLimit.ts).
+	// namespace_id is just a locally-unique label for this binding, not a
+	// resource that needs pre-creating.
+	"unsafe": {
+		"bindings": [
+			{
+				"name": "AUTH_RATE_LIMITER",
+				"type": "ratelimit",
+				"namespace_id": "1001",
+				"simple": { "limit": 20, "period": 60 }
+			}
+		]
+	}
 }

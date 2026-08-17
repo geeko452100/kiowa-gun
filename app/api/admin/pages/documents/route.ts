@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "A document file is required" }, { status: 400 });
   }
-  const error = validateCalendarDocument(file);
+  const error = await validateCalendarDocument(file);
   if (error) return NextResponse.json({ error }, { status: 400 });
 
   const { env } = await getCloudflareContext({ async: true });

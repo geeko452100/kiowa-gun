@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { members, memberPasswordResetTokens } from "@/lib/schema";
 import { hashPassword } from "@/lib/auth";
+import { destroyOtherMemberSessions } from "@/lib/memberAuth";
 import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 
 export async function POST(request: Request) {
@@ -41,6 +42,10 @@ export async function POST(request: Request) {
     .set({ passwordHash: hash, salt, failedLoginCount: 0, lockedUntil: null })
     .where(eq(members.id, member.id));
   await db.delete(memberPasswordResetTokens).where(eq(memberPasswordResetTokens.memberId, member.id));
+  // No active session at this point (this is the unauthenticated token
+  // flow) -- but if the member's cookie was compromised, this makes sure it
+  // doesn't survive the reset.
+  await destroyOtherMemberSessions(member.id);
 
   return NextResponse.json({ ok: true });
 }
