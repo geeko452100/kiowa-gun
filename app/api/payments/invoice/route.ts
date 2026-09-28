@@ -2,19 +2,16 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { members, membershipInvoices } from "@/lib/schema";
-import { chargeDues, NmiApiError } from "@/lib/nmi";
-import { recomputeCanPay, recordDuesPayment } from "@/lib/members";
-import { sendAdminEmail } from "@/lib/email";
+import { createDuesCheckoutSession, StripeApiError, StripeConfigError } from "@/lib/stripe";
 
-// Pays a new applicant's first year of dues from the emailed invoice link
-// (app/membership/pay/[token]) -- the token-based counterpart to
-// app/api/payments/pay, which requires a portal login instead.
+// Starts a one-time Stripe Checkout Session for a new applicant's first year
+// of dues from the emailed invoice link (app/membership/pay/[token]) -- the
+// token-based counterpart to app/api/payments/pay, which requires a portal
+// login instead. Fulfillment (Member status, invoice paid, welcome email)
+// happens in fulfillPaidCheckoutSession once Stripe confirms payment.
 export async function POST(request: Request) {
-  const { token, paymentToken } = (await request.json().catch(() => ({}))) as {
-    token?: string;
-    paymentToken?: string;
-  };
-  if (!token || !paymentToken) {
+  const { token } = (await request.json().catch(() => ({}))) as { token?: string };
+  if (!token) {
     return NextResponse.json({ error: "Payment info is required" }, { status: 400 });
   }
 
@@ -38,29 +35,24 @@ export async function POST(request: Request) {
     );
   }
 
-  let transaction;
+  const origin = new URL(request.url).origin;
   try {
-    transaction = await chargeDues(member, paymentToken);
+    const session = await createDuesCheckoutSession({
+      memberId: member.id,
+      memberEmail: member.email,
+      kind: "invoice",
+      invoiceToken: token,
+      origin,
+      returnUrl: `${origin}/membership/pay/${token}?session_id={CHECKOUT_SESSION_ID}`,
+    });
+    return NextResponse.json({ clientSecret: session.clientSecret });
   } catch (err) {
-    if (err instanceof NmiApiError) {
+    if (err instanceof StripeConfigError) {
+      return NextResponse.json({ error: "Online payment isn't configured yet." }, { status: 503 });
+    }
+    if (err instanceof StripeApiError) {
       return NextResponse.json({ error: err.message }, { status: 402 });
     }
     return NextResponse.json({ error: "Could not reach the payment processor. Try again shortly." }, { status: 502 });
   }
-
-  await recordDuesPayment(db, member, transaction);
-  await db.update(members).set({ status: "Member" }).where(eq(members.id, member.id));
-  await db.update(membershipInvoices).set({ paidAt: new Date().toISOString() }).where(eq(membershipInvoices.id, invoice.id));
-  await recomputeCanPay(db, member.id);
-
-  const origin = new URL(request.url).origin;
-  const signupLink = `${origin}/portal/signup`;
-  await sendAdminEmail(
-    member.email,
-    "Welcome to Kiowa Gun Club — Set Up Your Member Portal Account",
-    `<p>Your membership is approved and your dues are paid. You're officially a Kiowa Gun Club member!</p>
-     <p><a href="${signupLink}">Create your member portal account</a> to log in, manage your membership, and access member resources.</p>`
-  );
-
-  return NextResponse.json({ ok: true });
 }

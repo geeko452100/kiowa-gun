@@ -3,7 +3,6 @@ import { getDb } from "./db";
 import { members, payments } from "./schema";
 import { DUES_AMOUNT_CENTS } from "./constants";
 import { nextCutoffAfterPayment } from "./renewalCycle";
-import type { NmiTransaction } from "./nmi";
 
 // Single source of truth for whether a member is currently allowed to pay
 // dues (checked by every payment entry point -- app/api/payments/pay
@@ -21,17 +20,17 @@ export async function recomputeCanPay(db: Awaited<ReturnType<typeof getDb>>, mem
   }
 }
 
-// Records a dues charge that NMI has just confirmed synchronously (chargeDues
-// already returned success -- there's no async webhook step to wait on,
-// since one-time sales aren't subscriptions). Shared by app/api/payments/pay
-// and app/api/payments/invoice so the "what happens after a successful
-// charge" logic only lives in one place. Pushes renewalDate out to the next
-// annual cutoff the member hasn't already paid through (see
-// lib/renewalCycle) and re-arms the reminder cron for that cycle.
+// Records a dues charge Stripe has confirmed (Checkout Session payment_status
+// "paid"). Shared by the webhook and the return-page complete route so the
+// "what happens after a successful charge" logic only lives in one place.
+// Pushes renewalDate out to the next annual cutoff the member hasn't already
+// paid through (see lib/renewalCycle) and re-arms the reminder cron for that
+// cycle. Idempotent on stripeCheckoutSessionId so a webhook + return-page
+// race records the payment once.
 export async function recordDuesPayment(
   db: Awaited<ReturnType<typeof getDb>>,
   member: { id: number; renewalDate: string | null },
-  transaction: NmiTransaction
+  charge: { stripeCheckoutSessionId: string; paymentMethodType?: string }
 ) {
   await db
     .insert(payments)
@@ -39,8 +38,8 @@ export async function recordDuesPayment(
       memberId: member.id,
       amountCents: DUES_AMOUNT_CENTS,
       currency: "usd",
-      paymentMethodType: "card",
-      nmiTransactionId: transaction.id,
+      paymentMethodType: charge.paymentMethodType ?? "card",
+      stripeCheckoutSessionId: charge.stripeCheckoutSessionId,
     })
     .onConflictDoNothing();
 

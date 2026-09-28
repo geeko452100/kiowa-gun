@@ -2,24 +2,18 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { members } from "@/lib/schema";
-import { chargeDues, NmiApiError } from "@/lib/nmi";
-import { recordDuesPayment } from "@/lib/members";
+import { createDuesCheckoutSession, StripeApiError, StripeConfigError } from "@/lib/stripe";
 
-// Charges a member's dues as a single one-time sale from an NMI Collect.js
-// payment_token -- see the guardrail comment at the top of lib/nmi.ts. Used
-// both for a brand-new applicant's first payment (components/MembershipForm,
-// mode "apply") and for an existing member's annual renewal payment
-// (components/portal/PaymentSection) -- same "pay dues right now" action
-// either way, since nothing auto-bills. app/api/payments/invoice is the
+// Starts a one-time Stripe Checkout Session for dues -- see the guardrail
+// comment at the top of lib/stripe.ts. Used for an existing member's annual
+// renewal (components/portal/PaymentSection). app/api/payments/invoice is the
 // token-based counterpart for a new applicant paying from their emailed
-// invoice link instead of a portal login.
+// invoice link instead of a portal login. Nothing auto-bills; completing
+// Checkout is the member's own action.
 export async function POST(request: Request) {
-  const { email, paymentToken } = (await request.json().catch(() => ({}))) as {
-    email?: string;
-    paymentToken?: string;
-  };
-  if (!email || !paymentToken) {
-    return NextResponse.json({ error: "Email and payment info are required" }, { status: 400 });
+  const { email } = (await request.json().catch(() => ({}))) as { email?: string };
+  if (!email) {
+    return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
   const db = await getDb();
@@ -40,17 +34,23 @@ export async function POST(request: Request) {
     );
   }
 
-  let transaction;
+  const origin = new URL(request.url).origin;
   try {
-    transaction = await chargeDues(member, paymentToken);
+    const session = await createDuesCheckoutSession({
+      memberId: member.id,
+      memberEmail: member.email,
+      kind: "dues",
+      origin,
+      returnUrl: `${origin}/dues/success?session_id={CHECKOUT_SESSION_ID}`,
+    });
+    return NextResponse.json({ clientSecret: session.clientSecret });
   } catch (err) {
-    if (err instanceof NmiApiError) {
+    if (err instanceof StripeConfigError) {
+      return NextResponse.json({ error: "Online payment isn't configured yet." }, { status: 503 });
+    }
+    if (err instanceof StripeApiError) {
       return NextResponse.json({ error: err.message }, { status: 402 });
     }
     return NextResponse.json({ error: "Could not reach the payment processor. Try again shortly." }, { status: 502 });
   }
-
-  await recordDuesPayment(db, member, transaction);
-
-  return NextResponse.json({ ok: true });
 }

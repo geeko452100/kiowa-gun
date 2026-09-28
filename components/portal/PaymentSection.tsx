@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import CardFields from "@/components/nmi/CardFields";
+import { useCallback } from "react";
+import EmbeddedCheckout from "@/components/stripe/EmbeddedCheckout";
 
 function formatDate(dateStr: string) {
   return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString("en-US", {
@@ -15,40 +14,27 @@ function formatDate(dateStr: string) {
 
 export default function PaymentSection({
   email,
-  tokenizationKey,
+  publishableKey,
   renewalDate,
   canPay,
 }: {
   email: string;
-  tokenizationKey: string;
+  publishableKey: string | null;
   renewalDate: string | null;
   canPay: boolean;
 }) {
-  const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-
-  async function pay(paymentToken: string) {
-    setError("");
-    setSaved(false);
-    setSubmitting(true);
+  const createSession = useCallback(async () => {
     const res = await fetch("/api/payments/pay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, paymentToken }),
+      body: JSON.stringify({ email }),
     });
-    const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-    setSubmitting(false);
-    if (!res.ok || !data.ok) {
-      setError(data.error ?? "We couldn't process your payment. Please reach out to the club for help.");
-      return;
+    const data = (await res.json().catch(() => ({}))) as { clientSecret?: string; error?: string };
+    if (!res.ok || !data.clientSecret) {
+      throw new Error(data.error ?? "We couldn't start checkout. Please reach out to the club for help.");
     }
-    setSaved(true);
-    // renewalDate comes from the server component that renders this --
-    // refresh so it re-fetches and shows the new paid-through date.
-    router.refresh();
-  }
+    return data.clientSecret;
+  }, [email]);
 
   if (!canPay) {
     return (
@@ -67,15 +53,13 @@ export default function PaymentSection({
           : "You don't have a dues payment on file yet."}{" "}
         Nothing is billed automatically — pay below to cover your dues for the current period.
       </p>
-      <CardFields
-        tokenizationKey={tokenizationKey}
-        onToken={pay}
-        onError={setError}
-        submitLabel={submitting ? "Processing…" : "Pay Dues"}
-        disabled={submitting}
-      />
-      {error && <p className="portal-error">{error}</p>}
-      {saved && !error && <p className="portal-saved">Your payment has been received.</p>}
+      {publishableKey ? (
+        <EmbeddedCheckout publishableKey={publishableKey} createSession={createSession} />
+      ) : (
+        <p className="portal-error">
+          Online card payment isn&apos;t available yet. Contact the club to pay dues another way.
+        </p>
+      )}
     </div>
   );
 }

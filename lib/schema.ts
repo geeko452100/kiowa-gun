@@ -195,7 +195,7 @@ export const members = sqliteTable("members", {
   rulesAcknowledgedPrintedName: text("rules_acknowledged_printed_name"),
   rulesAcknowledgedName: text("rules_acknowledged_name"),
   rulesAcknowledgedAt: text("rules_acknowledged_at"),
-  // Unique (like nmiCustomerVaultId/nmiSubscriptionId below) so two members
+  // Unique (like the legacy nmiCustomerVaultId/nmiSubscriptionId below) so two members
   // can't end up sharing an NRA number -- SQLite treats each NULL as
   // distinct under a UNIQUE constraint, so this doesn't block members who
   // haven't provided one yet.
@@ -218,7 +218,7 @@ export const members = sqliteTable("members", {
   // paid through -- not a personal rolling anniversary. Set manually by a
   // board admin, or advanced automatically by lib/members.ts
   // recordDuesPayment right after a one-time charge succeeds (dues are never
-  // auto-billed -- see the guardrail comment atop lib/nmi.ts). Drives the
+  // auto-billed -- see the guardrail comment atop lib/stripe.ts). Drives the
   // 45- and 15-day-out renewal reminder texts and the annual termination
   // sweep, both keyed off this same cutoff.
   renewalDate: text("renewal_date"), // "YYYY-MM-DD"
@@ -238,13 +238,12 @@ export const members = sqliteTable("members", {
   // confirms it, after the fact rather than gating account creation on it.
   emailVerified: integer("email_verified").notNull().default(0),
   // Legacy-only: rows written before the board's no-auto-billing decision
-  // (see the guardrail comment atop lib/nmi.ts), back when a dues payment
+  // (see the guardrail comment atop lib/stripe.ts), back when a dues payment
   // created a recurring NMI subscription and stored the card on NMI's side.
-  // Nothing writes these anymore -- app/api/payments/pay and
-  // app/api/payments/invoice do a one-time, non-vaulted charge instead. Kept
-  // around so app/api/admin/payments/cancel-legacy-subscriptions can find and
-  // cancel any subscription still auto-charging at NMI; clears both fields
-  // once cancelled.
+  // Nothing writes these anymore -- live charges go through Stripe Checkout.
+  // Kept around so app/api/admin/payments/cancel-legacy-subscriptions can
+  // find and cancel any subscription still auto-charging at NMI; clears both
+  // fields once cancelled.
   nmiCustomerVaultId: text("nmi_customer_vault_id").unique(),
   nmiSubscriptionId: text("nmi_subscription_id").unique(),
   subscriptionStatus: text("subscription_status"), // "active" once dues are paid for the current cutoff; set directly by the payment routes, not by a webhook
