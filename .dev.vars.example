@@ -12,5 +12,6 @@ RESEND_WEBHOOK_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # gateway texts (lib/sms.ts) reach the right carrier domain.
 VERIPHONE_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-ADMIN_PROD=admin@example.com
-ADMIN_PASS=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+INITIAL_ADMIN_EMAIL=admin@example.com
+INITIAL_ADMIN_PASSWORD=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+INITIAL_ADMIN_NAME=Admin
