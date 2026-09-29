@@ -5,7 +5,7 @@ export const FROM_EMAIL = "kiowa@prairiewebstudio.com";
 
 export async function sendAdminEmail(to: string, subject: string, html: string) {
   const { env } = await getCloudflareContext({ async: true });
-  return sendResendEmail(env.RESEND_API, {
+  return sendResendEmail(env.RESEND_API_KEY, {
     from: { name: FROM_NAME, email: FROM_EMAIL },
     to,
     subject,

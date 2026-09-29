@@ -88,7 +88,7 @@ export async function sendGatewaySms(memberId: number, phone: string, text: stri
   if (!domain) return { error: `Unsupported carrier: ${carrier}`, gatewayEmail: null };
 
   const gatewayEmail = `${digits}@${domain}`;
-  const { error } = await sendResendEmail(env.RESEND_API, {
+  const { error } = await sendResendEmail(env.RESEND_API_KEY, {
     from: { name: SMS_FROM_NAME, email: SMS_FROM_EMAIL },
     to: gatewayEmail,
     subject: "",

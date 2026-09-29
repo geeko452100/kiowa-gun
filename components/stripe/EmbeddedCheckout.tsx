@@ -53,7 +53,7 @@ export default function EmbeddedCheckout({
 
   useEffect(() => {
     let cancelled = false;
-    let checkout: { destroy: () => void } | null = null;
+    let checkout: { destroy: () => void, mount: (selector: string) => void } | null = null;
 
     loadStripeJs()
       .then(async () => {

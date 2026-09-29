@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const chunk = recipients.slice(i, i + BATCH_SIZE);
     const results = await sendResendBatch(
-      env.RESEND_API,
+      env.RESEND_API_KEY,
       chunk.map((m) => ({ from: FROM, to: m.email, subject, html: sendHtml, attachments }))
     );
     chunk.forEach((m, idx) => sendResults.push({ member: m, ...results[idx] }));
