@@ -26,8 +26,15 @@ function fromHex(hex: string) {
 // Cloudflare Workers runtime only exposes SubtleCrypto, which doesn't support
 // bcrypt/argon2/scrypt, so PBKDF2 is the strongest option available here.
 const PBKDF2_ITERATIONS = 600_000;
+// Conservative fallback for runtimes (like Cloudflare Workers) that limit
+// PBKDF2 iterations. Keep this lower value in sync with parseHash's default.
+const PBKDF2_FALLBACK_ITERATIONS = 100_000;
 
-async function pbkdf2(password: string, salt: Uint8Array, iterations: number): Promise<ArrayBuffer> {
+async function pbkdf2(
+  password: string,
+  salt: Uint8Array,
+  iterations: number
+): Promise<{ derived: ArrayBuffer; iterationsUsed: number }> {
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
@@ -35,11 +42,30 @@ async function pbkdf2(password: string, salt: Uint8Array, iterations: number): P
     false,
     ["deriveBits"]
   );
-  return crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt: salt as BufferSource, iterations, hash: "SHA-256" },
-    keyMaterial,
-    256
-  );
+
+  try {
+    const derived = await crypto.subtle.deriveBits(
+      { name: "PBKDF2", salt: salt as BufferSource, iterations, hash: "SHA-256" },
+      keyMaterial,
+      256
+    );
+    return { derived, iterationsUsed: iterations };
+  } catch (err) {
+    // Some runtimes (Cloudflare Workers) throw when iteration counts are
+    // too large. Fall back to a conservative iteration count and continue.
+    try {
+      const fallback = PBKDF2_FALLBACK_ITERATIONS;
+      const derived = await crypto.subtle.deriveBits(
+        { name: "PBKDF2", salt: salt as BufferSource, iterations: fallback, hash: "SHA-256" },
+        keyMaterial,
+        256
+      );
+      console.warn(`pbkdf2: falling back to ${fallback} iterations`);
+      return { derived, iterationsUsed: fallback };
+    } catch (err2) {
+      throw err;
+    }
+  }
 }
 
 // Stored hashes are "<iterations>:<hex>" so a future bump to PBKDF2_ITERATIONS
@@ -54,8 +80,8 @@ function parseHash(hash: string): { iterations: number; hex: string } {
 
 export async function hashPassword(password: string) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const derived = await pbkdf2(password, salt, PBKDF2_ITERATIONS);
-  return { hash: `${PBKDF2_ITERATIONS}:${toHex(derived)}`, salt: toHex(salt) };
+  const { derived, iterationsUsed } = await pbkdf2(password, salt, PBKDF2_ITERATIONS);
+  return { hash: `${iterationsUsed}:${toHex(derived)}`, salt: toHex(salt) };
 }
 
 // True when a stored hash was written under a lower iteration count than the
@@ -79,7 +105,7 @@ export async function hashRandomPlaceholderPassword() {
 
 export async function verifyPassword(password: string, salt: string, hash: string) {
   const { iterations, hex } = parseHash(hash);
-  const derived = await pbkdf2(password, fromHex(salt), iterations);
+  const { derived } = await pbkdf2(password, fromHex(salt), iterations);
   const derivedHex = toHex(derived);
   if (derivedHex.length !== hex.length) return false;
   let diff = 0;
