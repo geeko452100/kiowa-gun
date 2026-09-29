@@ -391,8 +391,12 @@ export default function MembersAdmin() {
                 <td data-label="Renewal Date">
                   <input
                     type="date"
-                    value={m.renewalDate ?? ""}
-                    onChange={(e) => changeRenewalDate(m, e.target.value)}
+                    defaultValue={m.renewalDate ?? ""}
+                    onBlur={(e) => {
+                      if (e.target.value !== (m.renewalDate ?? "")) {
+                        changeRenewalDate(m, e.target.value);
+                      }
+                    }}
                   />
                 </td>
                 <td className="admin-row-actions">
