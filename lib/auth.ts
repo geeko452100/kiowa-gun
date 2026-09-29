@@ -107,7 +107,7 @@ export async function createSession(adminUserId: number, remember = false) {
   const store = await cookies();
   store.set(SESSION_COOKIE, id, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     // Omitting `expires` for a non-"remember me" login makes it a session

@@ -24,7 +24,7 @@ export async function createMemberSession(memberId: number, remember = false) {
   const store = await cookies();
   store.set(MEMBER_SESSION_COOKIE, id, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     // See lib/auth.ts createSession for why `expires` is only set when
