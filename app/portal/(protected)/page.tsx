@@ -79,7 +79,7 @@ export default async function PortalDashboardPage({
         <h2>Dues Payment</h2>
         <PaymentSection
           email={member.email}
-          tokenizationKey={env.NMI_TOKENIZATION_KEY}
+          publishableKey={env.STRIPE_PUBLISHABLE_KEY ?? null}
           renewalDate={member.renewalDate}
           canPay={!!member.canPay}
         />

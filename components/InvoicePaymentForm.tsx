@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import EmbeddedCheckout from "@/components/stripe/EmbeddedCheckout";
 
-export default function InvoicePaymentForm({ token, publishableKey }: { token: string; publishableKey: string }) {
+export default function InvoicePaymentForm({ token, publishableKey }: { token: string; publishableKey: string | null }) {
   const createSession = useCallback(async () => {
     const res = await fetch("/api/payments/invoice", {
       method: "POST",
@@ -16,6 +16,10 @@ export default function InvoicePaymentForm({ token, publishableKey }: { token: s
     }
     return data.clientSecret;
   }, [token]);
+
+  if (!publishableKey) {
+    return <p className="membership-form-error">Online card payment isn&apos;t configured yet. Contact the club to pay dues another way.</p>;
+  }
 
   return <EmbeddedCheckout publishableKey={publishableKey} createSession={createSession} />;
 }

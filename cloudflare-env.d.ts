@@ -7,10 +7,9 @@ interface __BaseEnv_CloudflareEnv {
 	ASSETS: Fetcher;
 	RESEND_API: string;
 	RESEND_WEBHOOK_SECRET: string;
-	NMI_ENVIRONMENT: string;
-	NMI_API_KEY: string;
-	NMI_TOKENIZATION_KEY: string;
-	NMI_WEBHOOK_SECRET: string;
+	STRIPE_PUBLISHABLE_KEY: string;
+	STRIPE_SECRET_KEY: string;
+	STRIPE_WEBHOOK_SECRET: string;
 	CRON_SECRET: string;
 	ADMIN_PROD: string;
 	ADMIN_PASS: string;
@@ -28,7 +27,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "RESEND_API" | "RESEND_WEBHOOK_SECRET" | "NMI_ENVIRONMENT" | "NMI_API_KEY" | "NMI_TOKENIZATION_KEY" | "NMI_WEBHOOK_SECRET" | "CRON_SECRET" | "ADMIN_PROD" | "ADMIN_PASS" | "VERIPHONE_API_KEY">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "RESEND_API" | "RESEND_WEBHOOK_SECRET" | "STRIPE_PUBLISHABLE_KEY" | "STRIPE_SECRET_KEY" | "STRIPE_WEBHOOK_SECRET" | "CRON_SECRET" | "ADMIN_PROD" | "ADMIN_PASS" | "VERIPHONE_API_KEY">> {}
 }
 
 // Begin runtime types

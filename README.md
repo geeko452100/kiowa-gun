@@ -62,10 +62,9 @@ INITIAL_ADMIN_EMAIL=... INITIAL_ADMIN_PASSWORD=... node scripts/seed-admin.mjs  
 npx wrangler secret put RESEND_API
 npx wrangler secret put RESEND_WEBHOOK_SECRET
 npx wrangler secret put VERIPHONE_API_KEY
-npx wrangler secret put NMI_ENVIRONMENT      # "sandbox" or "production"
-npx wrangler secret put NMI_API_KEY
-npx wrangler secret put NMI_TOKENIZATION_KEY
-npx wrangler secret put NMI_WEBHOOK_SECRET   # from NMI Merchant Portal > Settings > Webhooks
+npx wrangler secret put STRIPE_PUBLISHABLE_KEY
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET   # from Stripe Dashboard > Developers > Webhooks
 npx wrangler secret put CRON_SECRET   # also set as CRON_SECRET in ../kiowa-gun-cron — see below
 npm run cf:deploy
 ```

@@ -38,7 +38,7 @@ export default async function InvoicePaymentPage({ params }: { params: Promise<{
                 Welcome, {member.name} — your background check has been cleared. Pay your first
                 year&apos;s dues below to complete your membership.
               </p>
-              <InvoicePaymentForm token={token} tokenizationKey={env.NMI_TOKENIZATION_KEY} />
+              <InvoicePaymentForm token={token} publishableKey={env.STRIPE_PUBLISHABLE_KEY ?? null} />
             </>
           )}
         </section>

@@ -2,19 +2,19 @@ import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 // Every external origin the app actually loads content from:
-// - secure.nmi.com: Collect.js (payment card iframes -- see components/nmi/CardFields.tsx)
+// - js.stripe.com: Stripe's embedded checkout script
 // - cdn.jsdelivr.net: FullCalendar, loaded via next/script (components/CalendarView.tsx)
 // - fonts.googleapis.com / fonts.gstatic.com: Google Fonts stylesheet + font files (app/layout.tsx)
 // - www.google.com: the embedded range-location map (app/about/page.tsx)
 // Nothing else should ever need adding here without updating this comment.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://secure.nmi.com https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "connect-src 'self' https://secure.nmi.com",
-  "frame-src https://secure.nmi.com https://www.google.com",
+  "connect-src 'self' https://api.stripe.com",
+  "frame-src https://js.stripe.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alex_Brush } from "next/font/google";
-import CardFields from "@/components/nmi/CardFields";
+import EmbeddedCheckout from "@/components/stripe/EmbeddedCheckout";
 import FileField from "@/components/FileField";
 
 const signatureFont = Alex_Brush({ subsets: ["latin"], weight: "400" });
@@ -32,7 +32,7 @@ export default function MembershipForm({
   mode = "apply",
   initialValues,
   onSaved,
-  tokenizationKey,
+  publishableKey,
   agreementIntro,
   agreementBody,
   rulesDocuments,
@@ -42,9 +42,9 @@ export default function MembershipForm({
   // instead of starting from a blank public application.
   initialValues?: PortalInitialValues;
   onSaved?: () => void;
-  // Only used in apply mode, for the Collect.js payment step shown after the
+  // Only used in apply mode, for the Stripe checkout step shown after the
   // application itself is saved.
-  tokenizationKey?: string;
+  publishableKey?: string | null;
   // Range Rules text and printable copy shown inline in the Range Rules
   // Acknowledgement fieldset while it's unsigned.
   agreementIntro?: PageSection;
@@ -198,43 +198,34 @@ export default function MembershipForm({
     }
   }
 
-  async function onPaymentToken(paymentToken: string) {
-    setError("");
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/payments/pay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, paymentToken }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (!res.ok || !data.ok) {
-        setError(data.error ?? "Your application was saved, but payment didn't go through. Try again below.");
-        setSubmitting(false);
-        return;
-      }
-      router.push("/dues/success");
-    } catch {
-      setError("Couldn't reach the server. Check your internet connection and try again.");
-      setSubmitting(false);
+  const createPaymentSession = useCallback(async () => {
+    const res = await fetch("/api/payments/pay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { clientSecret?: string; error?: string };
+    if (!res.ok || !data.clientSecret) {
+      throw new Error(data.error ?? "Your application was saved, but payment couldn't be started. Please try again.");
     }
-  }
+    return data.clientSecret;
+  }, [email]);
 
   if (mode === "apply" && readyForPayment) {
     return (
       <div className="membership-form">
         <p>
-          Thanks — your application has been saved. Enter your card info below to pay your first
+          Thanks — your application has been saved. Complete checkout below to pay your first
           year&apos;s dues. Renewals are never billed automatically — you&apos;ll pay each year
           yourself, and we&apos;ll remind you before it&apos;s due.
         </p>
-        <CardFields
-          tokenizationKey={tokenizationKey ?? ""}
-          onToken={onPaymentToken}
-          onError={setError}
-          submitLabel={submitting ? "Processing…" : "Pay Dues"}
-          disabled={submitting}
-        />
+        {publishableKey ? (
+          <EmbeddedCheckout publishableKey={publishableKey} createSession={createPaymentSession} />
+        ) : (
+          <p className="membership-form-error">
+            Online card payment isn&apos;t configured yet. Contact the club to pay dues another way.
+          </p>
+        )}
         {error && <p className="membership-form-error">{error}</p>}
       </div>
     );
