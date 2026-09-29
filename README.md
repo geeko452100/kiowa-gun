@@ -73,14 +73,8 @@ npm run cf:deploy
 
 `/api/cron/renewal-reminders` texts members whose `renewal_date` (set per-member in
 `/admin/members`) is 45 or 15 days out, once per threshold per renewal cycle. It's a normal
-protected API route, and the daily scheduled trigger lives in the companion worker under
-`cron/`, which calls the app with a shared `CRON_SECRET` bearer token.
-
-Deploy that companion worker with:
-
-```bash
-npx wrangler deploy --config cron/wrangler.jsonc
-```
+protected API route, and it can be called by any external scheduler or a manual admin trigger
+with the shared `CRON_SECRET` bearer token. There is no separate Worker project required.
 
 > **Windows note:** `@opennextjs/cloudflare` builds a Workers bundle that relies on symlinks, which
 > plain Windows accounts can't create. Either enable Windows *Developer Mode* (Settings → Privacy &
