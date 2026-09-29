@@ -5,7 +5,7 @@ CRON_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Resend (https://resend.com) - member email (lib/email.ts) and the
 # carrier email-to-SMS gateway relay (lib/sms.ts).
-RESEND_API=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 RESEND_WEBHOOK_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Veriphone (https://veriphone.io) - looks up a member's phone carrier so
