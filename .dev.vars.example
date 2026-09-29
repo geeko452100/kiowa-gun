@@ -14,4 +14,4 @@ VERIPHONE_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 INITIAL_ADMIN_EMAIL=admin@example.com
 INITIAL_ADMIN_PASSWORD=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-INITIAL_ADMIN_NAME=Admin
+INITIAL_ADMIN_NAME=AdminName
