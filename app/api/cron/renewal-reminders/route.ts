@@ -5,8 +5,8 @@ import { getDb } from "@/lib/db";
 import { members, smsCampaigns } from "@/lib/schema";
 import { sendGatewaySms } from "@/lib/sms";
 
-// Triggered daily by a companion Cloudflare Worker's Cron Trigger (this app's
-// own Worker has no scheduled handler). Texts members whose renewal_date
+// Triggered daily by the companion cron worker in /cron. Texts members whose
+// renewal_date
 // (the shared annual dues cutoff every member is due by -- see
 // lib/renewalCycle -- not a personal anniversary) is within 45 or 15 days,
 // once per renewal cycle per threshold -- tracked via
@@ -18,10 +18,9 @@ import { sendGatewaySms } from "@/lib/sms";
 // the one that actually applies (a member added 10 days before the cutoff is
 // "within 15 days", not "within 45 days", even though both are technically
 // true) -- and it implies every larger threshold has effectively fired too.
-// Dues are never charged automatically (see the guardrail comment atop
-// lib/nmi.ts) -- this reminder is the only nudge a member gets; paying is
-// always their own action (or, for cash/check, a board member manually
-// recording it).
+// Dues are never charged automatically -- this reminder is the only nudge a
+// member gets; paying is always their own action (or, for cash/check, a board
+// member manually recording it).
 const THRESHOLDS = [
   { days: 15, field: "renewal15ReminderSentFor" as const },
   { days: 45, field: "renewal45ReminderSentFor" as const },

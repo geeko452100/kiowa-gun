@@ -195,10 +195,9 @@ export const members = sqliteTable("members", {
   rulesAcknowledgedPrintedName: text("rules_acknowledged_printed_name"),
   rulesAcknowledgedName: text("rules_acknowledged_name"),
   rulesAcknowledgedAt: text("rules_acknowledged_at"),
-  // Unique (like the legacy nmiCustomerVaultId/nmiSubscriptionId below) so two members
-  // can't end up sharing an NRA number -- SQLite treats each NULL as
-  // distinct under a UNIQUE constraint, so this doesn't block members who
-  // haven't provided one yet.
+  // Unique so two members can't end up sharing an NRA number -- SQLite treats
+  // each NULL as distinct under a UNIQUE constraint, so this doesn't block
+  // members who haven't provided one yet.
   nraNumber: text("nra_number").unique(),
   // Opt-in consent to receive texts (board broadcasts and automated renewal
   // reminders) -- defaults to not-opted-in so no member is texted without a
@@ -237,15 +236,6 @@ export const members = sqliteTable("members", {
   // address directly with no proof of ownership -- this is what actually
   // confirms it, after the fact rather than gating account creation on it.
   emailVerified: integer("email_verified").notNull().default(0),
-  // Legacy-only: rows written before the board's no-auto-billing decision
-  // (see the guardrail comment atop lib/stripe.ts), back when a dues payment
-  // created a recurring NMI subscription and stored the card on NMI's side.
-  // Nothing writes these anymore -- live charges go through Stripe Checkout.
-  // Kept around so app/api/admin/payments/cancel-legacy-subscriptions can
-  // find and cancel any subscription still auto-charging at NMI; clears both
-  // fields once cancelled.
-  nmiCustomerVaultId: text("nmi_customer_vault_id").unique(),
-  nmiSubscriptionId: text("nmi_subscription_id").unique(),
   subscriptionStatus: text("subscription_status"), // "active" once dues are paid for the current cutoff; set directly by the payment routes, not by a webhook
   // Admin-toggled once a new applicant's (status "Pending Review") background
   // check has been manually verified. Only meaningful pre-membership -- see
@@ -297,21 +287,15 @@ export const memberSessions = sqliteTable("member_sessions", {
   expiresAt: integer("expires_at").notNull(),
 });
 
-// One row per successful NMI sale for member dues (first payment and every
-// renewal alike, all one-time charges -- see the guardrail comment atop
-// lib/nmi.ts). Rows are written by lib/members.ts recordDuesPayment right
-// after app/api/payments/pay or app/api/payments/invoice gets a confirmed
-// success back from NMI -- there's no webhook step, since a one-time sale
-// has no async follow-up the way a subscription's recurring charge did.
+// One row per successful dues charge for a member. These are recorded by
+// lib/members.ts after Stripe confirms the checkout session is paid.
 export const payments = sqliteTable("payments", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   memberId: integer("member_id").notNull(),
   amountCents: integer("amount_cents").notNull(),
   currency: text("currency").notNull().default("usd"),
   paymentMethodType: text("payment_method_type"), // e.g. "card", "check"
-  // NMI's transaction id -- present on every sale, so it doubles as this
-  // table's idempotency key.
-  nmiTransactionId: text("nmi_transaction_id").unique(),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id").unique(),
   paidAt: text("paid_at").notNull().default(now),
 });
 

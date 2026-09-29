@@ -5,8 +5,8 @@ import { getDb } from "@/lib/db";
 import { members } from "@/lib/schema";
 import { recomputeCanPay } from "@/lib/members";
 
-// Triggered nightly by the companion Cloudflare Worker's Cron Trigger
-// (kiowa-gun-cron), alongside renewal-reminders. Suspends any Member whose
+// Triggered nightly by the companion cron worker in /cron, alongside
+// renewal-reminders. Suspends any Member whose
 // NRA membership has lapsed -- nraActive only ever gets flipped back on by
 // admin review of re-submitted proof (see app/portal/nra-expired), never
 // automatically here.

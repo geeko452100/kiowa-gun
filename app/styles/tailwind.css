@@ -1623,41 +1623,6 @@ html {
     @apply text-white underline;
   }
 
-  /* NMI Collect.js card fields -- the divs below are where Collect.js injects
-     its own iframes, so the height/border here is what gives the card number,
-     expiry, and CVV inputs a visible box before the iframe content loads. */
-  .nmi-card-fields {
-    @apply relative my-[12px] flex max-w-[320px] flex-col gap-[10px];
-  }
-
-  .nmi-card-fields > button {
-    @apply self-start;
-  }
-
-  .nmi-card-field-group {
-    @apply flex flex-col gap-[10px] [transition:opacity_0.15s_ease];
-  }
-
-  /* Collect.js's iframes take a moment (network round trip + postMessage
-     handshake) to load and render their own placeholder text -- dimming the
-     boxes in the meantime makes that gap read as "loading" instead of
-     "broken/frozen". Cleared by fieldsAvailableCallback, which only fires once
-     every field has actually finished loading.
-     No pointer-events-none here, even though the fields aren't interactive
-     yet anyway -- Collect.js's style sniffer runs at configure() time (before
-     fieldsAvailableCallback has ever fired, so this class is still present)
-     and copies the *computed* style of a bare input dropped inside each field
-     div, including inherited properties. pointer-events: none on this
-     ancestor gets inherited by that sniffed snapshot and baked permanently
-     into the field's style inside the iframe -- confirmed live: it left every
-     field completely unclickable forever, even after this class was removed. */
-  .nmi-card-field-group.loading {
-    @apply opacity-50;
-  }
-
-  .nmi-card-field {
-    @apply h-[42px] rounded-[4px] border border-border bg-header-bg;
-  }
 }
 
 @layer base {

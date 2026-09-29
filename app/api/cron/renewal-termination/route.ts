@@ -7,16 +7,15 @@ import { sendAdminEmail } from "@/lib/email";
 import { RENEWAL_TERMINATION_CUTOFF } from "@/lib/constants";
 import { cutoffDate } from "@/lib/renewalCycle";
 
-// Triggered nightly by the companion Cloudflare Worker's Cron Trigger
-// (kiowa-gun-cron), alongside renewal-reminders and nra-check. Once a year,
+// Triggered nightly by the companion cron worker in /cron, alongside
+// renewal-reminders and nra-check. Once a year,
 // on/after RENEWAL_TERMINATION_CUTOFF, soft-terminates any Member whose
 // renewalDate hasn't reached this year's cutoff (i.e. hasn't paid this
 // cycle's dues -- see lib/renewalCycle): status -> "Terminated", PII
 // scrubbed, uploaded documents deleted. `payments` rows are left untouched --
 // financial history stays linked via memberId to the now-anonymized shell
-// row. Dues are never auto-charged (see the guardrail comment atop
-// lib/nmi.ts), so this is the only thing that ever moves a member out of
-// "Member" for non-payment -- there's no NMI failure webhook doing it anymore.
+// row. Dues are never auto-charged, so this is the only thing that ever
+// moves a member out of "Member" for non-payment.
 export async function POST(request: Request) {
   const { env } = await getCloudflareContext({ async: true });
   const auth = request.headers.get("authorization");

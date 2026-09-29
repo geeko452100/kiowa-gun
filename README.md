@@ -65,7 +65,7 @@ npx wrangler secret put VERIPHONE_API_KEY
 npx wrangler secret put STRIPE_PUBLISHABLE_KEY
 npx wrangler secret put STRIPE_SECRET_KEY
 npx wrangler secret put STRIPE_WEBHOOK_SECRET   # from Stripe Dashboard > Developers > Webhooks
-npx wrangler secret put CRON_SECRET   # also set as CRON_SECRET in ../kiowa-gun-cron — see below
+npx wrangler secret put CRON_SECRET
 npm run cf:deploy
 ```
 
@@ -73,10 +73,14 @@ npm run cf:deploy
 
 `/api/cron/renewal-reminders` texts members whose `renewal_date` (set per-member in
 `/admin/members`) is 45 or 15 days out, once per threshold per renewal cycle. It's a normal
-protected API route, not a Cron Trigger itself — OpenNext's generated Worker has no `scheduled`
-handler to attach one to. A separate, minimal Worker at `../kiowa-gun-cron` has its own daily Cron
-Trigger and calls this route with a shared `CRON_SECRET` bearer token. See that project's README
-for its own setup/deploy steps.
+protected API route, and the daily scheduled trigger lives in the companion worker under
+`cron/`, which calls the app with a shared `CRON_SECRET` bearer token.
+
+Deploy that companion worker with:
+
+```bash
+npx wrangler deploy --config cron/wrangler.jsonc
+```
 
 > **Windows note:** `@opennextjs/cloudflare` builds a Workers bundle that relies on symlinks, which
 > plain Windows accounts can't create. Either enable Windows *Developer Mode* (Settings → Privacy &
