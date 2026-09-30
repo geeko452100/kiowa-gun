@@ -25,6 +25,13 @@ function formatDisplayDate(rawValue: string) {
   return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}`;
 }
 
+function formatDateTextInput(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
 function parseMmDdYyyy(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return "";
@@ -146,7 +153,7 @@ export default function NraUpdateForm({
             type="text"
             value={dateText}
             onChange={(e) => {
-              const nextValue = e.target.value.replace(/[^\d/]/g, "");
+              const nextValue = formatDateTextInput(e.target.value);
               setDateText(nextValue);
               const normalized = parseMmDdYyyy(nextValue);
               setNraExpirationDate(normalized);

@@ -26,6 +26,13 @@ function formatDisplayDate(rawValue: string) {
   return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}`;
 }
 
+function formatDateTextInput(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
 function parseMmDdYyyy(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return "";
@@ -92,9 +99,9 @@ export default function DocumentsStep() {
   };
 
   const handleDateTextChange = (value: string) => {
-    const cleaned = value.replace(/[^\d/]/g, "");
-    setDateText(cleaned);
-    const isoDate = parseMmDdYyyy(cleaned);
+    const formatted = formatDateTextInput(value);
+    setDateText(formatted);
+    const isoDate = parseMmDdYyyy(formatted);
     update({ nraExpirationDate: isoDate });
   };
 
