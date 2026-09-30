@@ -32,14 +32,14 @@ function daysUntil(dateStr: string, today: Date): number {
   return Math.round(diffMs / 86_400_000);
 }
 
-function messageFor(daysOut: number, renewalDate: string): string {
+function messageFor(daysOut: number, renewalDate: string, payLink: string): string {
   const formatted = new Date(`${renewalDate}T00:00:00Z`).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
     timeZone: "UTC",
   });
-  return `Kiowa Gun Club: Your annual membership dues are due in ${daysOut} days (by ${formatted}). Nothing is charged automatically -- log in to the member portal to pay. Questions? Contact the board.`;
+  return `Kiowa Gun Club: Your annual membership dues are due in ${daysOut} days (by ${formatted}). Pay here: ${payLink}. Questions? Contact the board.`;
 }
 
 export async function POST(request: Request) {
@@ -54,6 +54,8 @@ export async function POST(request: Request) {
     .select()
     .from(members)
     .where(and(eq(members.status, "Member"), eq(members.smsOptIn, 1)));
+  const origin = new URL(request.url).origin;
+  const payLink = `${origin}/dues`;
   const today = new Date();
 
   let sentCount = 0;
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
     );
     if (!due) continue;
 
-    const { error } = await sendGatewaySms(m.id, m.phone, messageFor(daysOut, m.renewalDate));
+    const { error } = await sendGatewaySms(m.id, m.phone, messageFor(daysOut, m.renewalDate, payLink));
 
     if (error) {
       failedCount += 1;

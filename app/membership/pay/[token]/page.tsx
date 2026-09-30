@@ -4,7 +4,6 @@ import { getDb } from "@/lib/db";
 import { membershipInvoices, members } from "@/lib/schema";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import InvoicePaymentForm from "@/components/InvoicePaymentForm";
 
 export const metadata = { title: "Pay Your Dues - Kiowa Gun Club" };
 export const dynamic = "force-dynamic";
@@ -15,6 +14,18 @@ export default async function InvoicePaymentPage({ params }: { params: Promise<{
   const [invoice] = await db.select().from(membershipInvoices).where(eq(membershipInvoices.token, token));
   const member = invoice ? (await db.select().from(members).where(eq(members.id, invoice.memberId)))[0] : null;
   const { env } = await getCloudflareContext({ async: true });
+  const paymentLink = env.STRIPE_PAYMENT_LINK_URL;
+  const checkoutUrl = paymentLink
+    ? (() => {
+        try {
+          const url = new URL(paymentLink);
+          url.searchParams.set("prefilled_email", member?.email ?? "");
+          return url.toString();
+        } catch {
+          return paymentLink;
+        }
+      })()
+    : null;
 
   return (
     <>
@@ -38,7 +49,30 @@ export default async function InvoicePaymentPage({ params }: { params: Promise<{
                 Welcome, {member.name} — your background check has been cleared. Pay your first
                 year&apos;s dues below to complete your membership.
               </p>
-              <InvoicePaymentForm token={token} publishableKey={env.STRIPE_PUBLISHABLE_KEY ?? null} />
+              {checkoutUrl ? (
+                <p>
+                  <a
+                    href={checkoutUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-block",
+                      padding: "0.8rem 1.4rem",
+                      background: "#2b6cb0",
+                      color: "white",
+                      borderRadius: 8,
+                      textDecoration: "none",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Pay Your Dues
+                  </a>
+                </p>
+              ) : (
+                <p className="membership-form-error">
+                  Online card payment isn&apos;t configured yet. Contact the club to pay dues another way.
+                </p>
+              )}
             </>
           )}
         </section>

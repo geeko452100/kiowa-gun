@@ -5,6 +5,7 @@ import { members, MEMBER_STATUSES, membershipInvoices, pageSections } from "@/li
 import { getCurrentAdmin } from "@/lib/auth";
 import { recomputeCanPay } from "@/lib/members";
 import { sendAdminEmail } from "@/lib/email";
+import { sendGatewaySms } from "@/lib/sms";
 import { DUES_AMOUNT_CENTS } from "@/lib/constants";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -81,7 +82,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .where(and(eq(pageSections.pageSlug, "membership"), eq(pageSections.sectionKey, "orientation-schedule")));
 
     const origin = new URL(request.url).origin;
-    const payLink = `${origin}/membership/pay/${token}`;
+    const payLink = `${origin}/dues`;
     await sendAdminEmail(
       String(email).toLowerCase().trim(),
       "Your Kiowa Gun Club Application Was Approved",
@@ -89,6 +90,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
        <p><a href="${payLink}">Pay your $${(DUES_AMOUNT_CENTS / 100).toFixed(2)} dues</a> to complete your membership.</p>
        ${orientation?.bodyHtml ?? ""}`
     );
+
+    if (String(email).trim() && existing.phone && existing.smsOptIn) {
+      const text = `Kiowa Gun Club: Your membership has been approved. Pay your dues here: ${payLink}`;
+      await sendGatewaySms(existing.id, existing.phone, text);
+    }
   }
 
   return NextResponse.json({ ok: true });
