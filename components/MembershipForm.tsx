@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alex_Brush } from "next/font/google";
 import EmbeddedCheckout from "@/components/stripe/EmbeddedCheckout";
@@ -10,6 +10,53 @@ const signatureFont = Alex_Brush({ subsets: ["latin"], weight: "400" });
 
 const NRA_NUMBER_PATTERN = /^\d{5,12}$/;
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
+
+function formatDisplayDate(rawValue: string) {
+  if (!rawValue || !/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
+    return "";
+  }
+
+  const [year, month, day] = rawValue.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return "";
+  }
+
+  return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}`;
+}
+
+function parseMmDdYyyy(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return "";
+
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  const year = Number(match[3]);
+
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+    return "";
+  }
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return "";
+  }
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
 
 type PageSection = { heading: string | null; bodyHtml: string | null };
 type RulesDocument = { id: number; title: string };
@@ -59,6 +106,8 @@ export default function MembershipForm({
   const [address, setAddress] = useState(initialValues?.address ?? "");
   const [nraNumber, setNraNumber] = useState(initialValues?.nraNumber ?? "");
   const [nraExpirationDate, setNraExpirationDate] = useState(initialValues?.nraExpirationDate ?? "");
+  const [dateText, setDateText] = useState(() => formatDisplayDate(initialValues?.nraExpirationDate ?? ""));
+  const nraExpirationDateInputRef = useRef<HTMLInputElement | null>(null);
   const [nraProof, setNraProof] = useState<File | null>(null);
   const [discountCard, setDiscountCard] = useState<File | null>(null);
   const [backgroundCheck, setBackgroundCheck] = useState<File | null>(null);
@@ -83,6 +132,23 @@ export default function MembershipForm({
 
   const alreadySigned = Boolean(initialValues?.rulesAcknowledgedName && initialValues?.rulesAcknowledgedAt);
   const isSigned = (alreadySigned || justSigned) && !resigning;
+
+  const openNraExpirationDatePicker = () => {
+    const input = nraExpirationDateInputRef.current;
+    if (!input) return;
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+      return;
+    }
+    input.focus();
+  };
+
+  const handleNraExpirationDateTextChange = (value: string) => {
+    const cleaned = value.replace(/[^\d/]/g, "");
+    setDateText(cleaned);
+    const normalized = parseMmDdYyyy(cleaned);
+    setNraExpirationDate(normalized);
+  };
 
   const docByField = new Map((initialValues?.documents ?? []).map((d) => [d.field, d]));
 
@@ -287,11 +353,54 @@ export default function MembershipForm({
         {mode === "portal" && (
           <label>
             NRA Expiration Date
-            <input
-              type="date"
-              value={nraExpirationDate}
-              onChange={(e) => setNraExpirationDate(e.target.value)}
-            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="text"
+                value={dateText}
+                onChange={(e) => handleNraExpirationDateTextChange(e.target.value)}
+                inputMode="numeric"
+                placeholder="MM/DD/YYYY"
+                pattern="^(0?[1-9]|1[0-2])/(0?[1-9]|[12][0-9]|3[01])/(\d{4})$"
+                title="MM/DD/YYYY"
+                style={{ flex: 1 }}
+                aria-label="NRA expiration date"
+              />
+              <input
+                ref={nraExpirationDateInputRef}
+                type="date"
+                value={nraExpirationDate}
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setNraExpirationDate(nextValue);
+                  setDateText(formatDisplayDate(nextValue));
+                }}
+                aria-label="Choose an NRA expiration date"
+                style={{
+                  position: "absolute",
+                  width: 1,
+                  height: 1,
+                  opacity: 0,
+                  pointerEvents: "none",
+                }}
+              />
+              <button
+                type="button"
+                aria-label="Open calendar"
+                title="Choose a date"
+                onClick={openNraExpirationDatePicker}
+                style={{
+                  minWidth: 42,
+                  height: 42,
+                  borderRadius: 8,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  background: "rgba(255,255,255,0.04)",
+                  color: "inherit",
+                  cursor: "pointer",
+                }}
+              >
+                📅
+              </button>
+            </div>
           </label>
         )}
       </fieldset>

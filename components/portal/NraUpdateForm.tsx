@@ -1,9 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import FileField from "@/components/FileField";
 
 const NRA_NUMBER_PATTERN = /^\d{5,12}$/;
+
+function formatDisplayDate(rawValue: string) {
+  if (!rawValue || !/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
+    return "";
+  }
+
+  const [year, month, day] = rawValue.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return "";
+  }
+
+  return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}`;
+}
+
+function parseMmDdYyyy(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return "";
+
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  const year = Number(match[3]);
+
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+    return "";
+  }
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return "";
+  }
+
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
 
 export default function NraUpdateForm({
   initialNraNumber,
@@ -14,10 +61,22 @@ export default function NraUpdateForm({
 }) {
   const [nraNumber, setNraNumber] = useState(initialNraNumber);
   const [nraExpirationDate, setNraExpirationDate] = useState(initialNraExpirationDate);
+  const [dateText, setDateText] = useState(() => formatDisplayDate(initialNraExpirationDate));
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [nraProof, setNraProof] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const openDatePicker = () => {
+    const input = dateInputRef.current;
+    if (!input) return;
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+      return;
+    }
+    input.focus();
+  };
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,12 +141,59 @@ export default function NraUpdateForm({
       </label>
       <label>
         NRA Expiration Date
-        <input
-          type="date"
-          value={nraExpirationDate}
-          onChange={(e) => setNraExpirationDate(e.target.value)}
-          required
-        />
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            type="text"
+            value={dateText}
+            onChange={(e) => {
+              const nextValue = e.target.value.replace(/[^\d/]/g, "");
+              setDateText(nextValue);
+              const normalized = parseMmDdYyyy(nextValue);
+              setNraExpirationDate(normalized);
+            }}
+            inputMode="numeric"
+            placeholder="MM/DD/YYYY"
+            pattern="^(0?[1-9]|1[0-2])/(0?[1-9]|[12][0-9]|3[01])/(\d{4})$"
+            title="MM/DD/YYYY"
+            required
+            style={{ flex: 1 }}
+          />
+          <input
+            ref={dateInputRef}
+            type="date"
+            value={nraExpirationDate}
+            onChange={(e) => {
+              const nextValue = e.target.value;
+              setNraExpirationDate(nextValue);
+              setDateText(formatDisplayDate(nextValue));
+            }}
+            aria-label="Choose an NRA expiration date"
+            style={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              opacity: 0,
+              pointerEvents: "none",
+            }}
+          />
+          <button
+            type="button"
+            aria-label="Open calendar"
+            title="Choose a date"
+            onClick={openDatePicker}
+            style={{
+              minWidth: 42,
+              height: 42,
+              borderRadius: 8,
+              border: "1px solid rgba(255,255,255,0.25)",
+              background: "rgba(255,255,255,0.04)",
+              color: "inherit",
+              cursor: "pointer",
+            }}
+          >
+            📅
+          </button>
+        </div>
       </label>
       <FileField
         label="Current NRA Card (photo)"
