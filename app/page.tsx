@@ -41,7 +41,7 @@ export default async function HomePage() {
 
         <ScrollReveal delay={80}>
           <p className="register-cta">
-            <a href="/membership/apply" target="_blank" rel="noopener noreferrer" className="register-button">
+            <a href="/membership/apply" className="register-button">
               Register for Membership
             </a>
           </p>

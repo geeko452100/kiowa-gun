@@ -56,7 +56,7 @@ export default async function MembershipPage() {
             it&apos;s due.
           </p>
           <p className="opacity-[0.85]">
-            <a href="/membership/apply" target="_blank" rel="noopener noreferrer" className="register-button">
+            <a href="/membership/apply" className="register-button">
               Register for Membership
             </a>
           </p>
