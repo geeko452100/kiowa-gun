@@ -4,53 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useConfirm } from "./useConfirm";
 import { adminFetch } from "./adminFetch";
 
-function formatDisplayDate(rawValue: string) {
-  if (!rawValue || !/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
-    return "";
-  }
-
-  const [year, month, day] = rawValue.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-
-  if (
-    Number.isNaN(date.getTime()) ||
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return "";
-  }
-
-  return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${year}`;
-}
-
-function parseMmDdYyyy(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-
-  const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return "";
-
-  const month = Number(match[1]);
-  const day = Number(match[2]);
-  const year = Number(match[3]);
-
-  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
-    return "";
-  }
-
-  const date = new Date(year, month - 1, day);
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return "";
-  }
-
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
 function formatDisplayDate(rawValue: string | null) {
   if (!rawValue || !/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
     return "";
@@ -129,7 +82,20 @@ export default function MembersAdmin() {
   const [csv, setCsv] = useState("");
   const [importMsg, setImportMsg] = useState("");
   const [error, setError] = useState("");
+  const [renewalDateText, setRenewalDateText] = useState<Record<number, string>>({});
   const renewalDateRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  useEffect(() => {
+    setRenewalDateText((prev) => {
+      const next: Record<number, string> = {};
+      for (const member of members) {
+        const existingValue = prev[member.id];
+        const formattedValue = formatDisplayDate(member.renewalDate ?? "");
+        next[member.id] = existingValue && existingValue !== formattedValue ? existingValue : formattedValue;
+      }
+      return next;
+    });
+  }, [members]);
 
   async function load() {
     const res = await fetch("/api/admin/members");
@@ -498,15 +464,24 @@ export default function MembersAdmin() {
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <input
                       type="text"
-                      defaultValue={formatDisplayDate(m.renewalDate)}
-                      placeholder="MM/DD/YYYY"
-                      inputMode="numeric"
-                      onBlur={(e) => {
-                        const nextValue = parseMmDdYyyy(e.target.value);
-                        if (nextValue !== (m.renewalDate ?? "")) {
-                          changeRenewalDate(m, nextValue);
+                      value={renewalDateText[m.id] ?? formatDisplayDate(m.renewalDate ?? "")}
+                      onChange={(e) => {
+                        const nextValue = e.target.value.replace(/[^\d/]/g, "");
+                        setRenewalDateText((prev) => ({ ...prev, [m.id]: nextValue }));
+                        if (nextValue === "") {
+                          if (m.renewalDate) changeRenewalDate(m, "");
+                          return;
+                        }
+                        const normalized = parseMmDdYyyy(nextValue);
+                        if (normalized && normalized !== (m.renewalDate ?? "")) {
+                          changeRenewalDate(m, normalized);
                         }
                       }}
+                      placeholder="MM/DD/YYYY"
+                      inputMode="numeric"
+                      pattern="^(0?[1-9]|1[0-2])/(0?[1-9]|[12][0-9]|3[01])/((\d{4}))$"
+                      title="MM/DD/YYYY"
+                      style={{ flex: 1 }}
                     />
                     <input
                       ref={(el) => {
@@ -516,6 +491,7 @@ export default function MembersAdmin() {
                       value={m.renewalDate ?? ""}
                       onChange={(e) => {
                         const nextValue = e.target.value;
+                        setRenewalDateText((prev) => ({ ...prev, [m.id]: formatDisplayDate(nextValue) }));
                         if (nextValue !== (m.renewalDate ?? "")) {
                           changeRenewalDate(m, nextValue);
                         }
